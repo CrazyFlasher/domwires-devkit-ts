@@ -1,0 +1,22 @@
+{
+  "name": "domwires-devkit",
+  "version": "0.9.0",
+  "description": "Devkit based on DomWires Framework",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "dependencies": {
+    "domwires": "0.9.0",
+    "inversify": "^6.0.1"
+  },
+  "scripts": {
+    "test": "mocha -r ts-node/register test/*.ts",
+    "eslint-setup": "npm install eslint --save-dev",
+    "eslint-run": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.1"
+  }
+}
