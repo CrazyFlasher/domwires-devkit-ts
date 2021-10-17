@@ -7,16 +7,26 @@
   "files": [
     "/dist"
   ],
-  "dependencies": {
-    "domwires": "0.9.0",
-    "inversify": "^6.0.1"
+  "devDependencies": {
+    "@types/chai": "^4.2.22",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.9.6",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "chai": "^4.3.4",
+    "domwires": "0.9.9",
+    "eslint": "^8.0.0",
+    "inversify": "^5.1.1",
+    "inversify-inject-decorators": "^3.1.0",
+    "mocha": "^9.1.1",
+    "reflect-metadata": "^0.1.13",
+    "ts-node": "^10.2.1",
+    "tslog": "^3.2.2",
+    "typescript": "^4.4.3"
   },
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
     "eslint-setup": "npm install eslint --save-dev",
     "eslint-run": "eslint . --ext .ts"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.1"
   }
 }

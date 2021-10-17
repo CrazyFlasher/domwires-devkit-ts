@@ -2,15 +2,15 @@ import "reflect-metadata";
 import {AbstractModel, IAppFactory, logger} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
 import {inject, optional} from "inversify";
-import * as dk from "../types";
 import {DwError} from "../DwError";
+import {DW_TYPES} from "../dw_consts";
 
 export abstract class AbstractService extends AbstractModel implements IService
 {
-    @inject(dk.TYPES.ServiceConfig)
+    @inject(DW_TYPES.ServiceConfig)
     private _config: ServiceConfig;
 
-    @inject(dk.TYPES.IAppFactory) @optional()
+    @inject(DW_TYPES.IAppFactory) @optional()
     private _factory: IAppFactory;
 
     private _initialized = false;
@@ -20,7 +20,8 @@ export abstract class AbstractService extends AbstractModel implements IService
         if (this.preInitSuccess())
         {
             this.continueInit();
-        } else
+        }
+        else
         {
             this.initFail();
         }
