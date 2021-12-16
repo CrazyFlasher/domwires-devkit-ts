@@ -39,6 +39,9 @@
     "tslog": "3.2.2",
     "typescript": "4.4.3"
   },
+  "engines": {
+    "node": ">=14.18.1"
+  },
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
     "eslint-setup": "npm install eslint --save-dev",
