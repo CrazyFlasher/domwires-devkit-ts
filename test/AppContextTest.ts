@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
-import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import {Factory} from "domwires";
 import {IMockModel} from "./mock/MockModels";
+import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
 import "./mock/MockContexts";
 
