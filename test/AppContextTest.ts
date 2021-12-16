@@ -4,6 +4,8 @@ import {expect} from "chai";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import {Factory} from "domwires";
 import {IMockModel} from "./mock/MockModels";
+import "./mock/MockModels";
+import "./mock/MockContexts";
 
 describe('AppContextTest', function (this: Suite)
 {
