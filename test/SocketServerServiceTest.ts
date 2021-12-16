@@ -104,16 +104,22 @@ describe('SocketServerServiceTest', function (this: Suite)
 
     it('testClientConnectedDisconnectedByServer', (done: Done) =>
     {
+        let client: Socket;
+
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            io("ws://127.0.0.1:3000");
+            client = io("ws://127.0.0.1:3000", {autoConnect: false});
+            client.connect();
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
         {
             expect(server.connectionsCount).equals(1);
 
-            server.disconnectClient(server.connectedClientId);
+            // TODO: doesn't stop test session without timeout!
+            setTimeout(() => {
+                server.disconnectClient(server.connectedClientId);
+            }, 500);
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_DISCONNECTED, () =>
