@@ -104,22 +104,16 @@ describe('SocketServerServiceTest', function (this: Suite)
 
     it('testClientConnectedDisconnectedByServer', (done: Done) =>
     {
-        let client: Socket;
-
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            client = io("ws://127.0.0.1:3000", {autoConnect: false});
-            client.connect();
+            io("ws://127.0.0.1:3000");
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
         {
             expect(server.connectionsCount).equals(1);
 
-            // TODO: doesn't stop test session without timeout!
-            setTimeout(() => {
-                server.disconnectClient(server.connectedClientId);
-            }, 500);
+            server.disconnectClient(server.connectedClientId);
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_DISCONNECTED, () =>
@@ -145,6 +139,8 @@ describe('SocketServerServiceTest', function (this: Suite)
             {
                 expect(json.id).equals("test");
                 expect(json.data).equals("otvet");
+
+                client.disconnect();
 
                 done();
             });
