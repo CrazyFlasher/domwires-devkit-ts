@@ -12,7 +12,7 @@
   "files": [
     "/dist"
   ],
-  "dependencies": {
+  "devDependencies": {
     "domwires": "0.9.16",
     "@types/chai": "4.2.22",
     "@types/express": "4.17.13",

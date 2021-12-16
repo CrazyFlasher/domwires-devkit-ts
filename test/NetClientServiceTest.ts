@@ -205,12 +205,12 @@ describe('NetClientServiceTest', function (this: Suite)
 
     it('testGet', (done: Done) =>
     {
-        client.addMessageListener<string>(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
+        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.GET);
             expect(client.responseData.data).equals("hi");
-            expect(data).equals("hi");
+            expect(data.data).equals("hi");
 
             done();
         });
@@ -220,12 +220,12 @@ describe('NetClientServiceTest', function (this: Suite)
 
     it('testPost', (done: Done) =>
     {
-        client.addMessageListener<string>(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
+        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.POST);
             expect(client.responseData.data).equals("hi");
-            expect(data).equals("hi");
+            expect(data.data).equals("hi");
 
             done();
         });
@@ -235,12 +235,12 @@ describe('NetClientServiceTest', function (this: Suite)
 
     it('testTcp', (done: Done) =>
     {
-        client.addMessageListener<string>(NetClientServiceMessageType.TCP_RESPONSE, (message, data) =>
+        client.addMessageListener(NetClientServiceMessageType.TCP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.TCP);
             expect(client.responseData.data).equals("hi");
-            expect(data).equals("hi");
+            expect(data.data).equals("hi");
 
             done();
         });

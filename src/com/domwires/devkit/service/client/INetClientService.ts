@@ -17,12 +17,12 @@ export class ClientServiceRequestType extends Enum
     public static readonly TCP: ClientServiceRequestType = new ClientServiceRequestType();
 }
 
-export class NetClientServiceMessageType extends Enum
+export class NetClientServiceMessageType<T = void> extends Enum
 {
     public static readonly CONNECTED: NetClientServiceMessageType = new NetClientServiceMessageType();
     public static readonly DISCONNECTED: NetClientServiceMessageType = new NetClientServiceMessageType();
-    public static readonly HTTP_RESPONSE: NetClientServiceMessageType = new NetClientServiceMessageType();
-    public static readonly TCP_RESPONSE: NetClientServiceMessageType = new NetClientServiceMessageType();
+    public static readonly HTTP_RESPONSE: Enum<RequestResponse<ClientServiceRequestType>> = new NetClientServiceMessageType();
+    public static readonly TCP_RESPONSE: Enum<RequestResponse<ClientServiceRequestType>> = new NetClientServiceMessageType();
     public static readonly HTTP_ERROR: NetClientServiceMessageType = new NetClientServiceMessageType();
 }
 
