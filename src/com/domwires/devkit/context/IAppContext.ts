@@ -3,9 +3,9 @@
 
 import {
     AbstractContext,
-    AppFactory,
-    IAppFactory,
-    IAppFactoryImmutable,
+    Factory,
+    IFactory,
+    IFactoryImmutable,
     IContext,
     IContextImmutable,
     IHierarchyObject,
@@ -26,7 +26,7 @@ export interface IAppContextImmutable extends IContextImmutable
 
 export interface IAppContext extends IAppContextImmutable, IContext
 {
-    getInstance<T>(factory: IAppFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T;
+    getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T;
 }
 
 export class AppContext extends AbstractContext implements IAppContext
@@ -34,17 +34,17 @@ export class AppContext extends AbstractContext implements IAppContext
     private static readonly ADD_ERROR: string = "Use 'add' method instead";
     private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
 
-    @inject(DW_TYPES.IAppFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
-    protected contextFactory: IAppFactory;
+    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
+    protected contextFactory: IFactory;
 
-    @inject(DW_TYPES.IAppFactory) @named(FACTORIES_NAMES.MODEL) @optional()
-    protected modelFactory: IAppFactory;
+    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MODEL) @optional()
+    protected modelFactory: IFactory;
 
-    @inject(DW_TYPES.IAppFactory) @named(FACTORIES_NAMES.MEDIATOR) @optional()
-    protected mediatorFactory: IAppFactory;
+    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MEDIATOR) @optional()
+    protected mediatorFactory: IFactory;
 
-    @inject(DW_TYPES.IAppFactory) @named(FACTORIES_NAMES.VIEW) @optional()
-    protected viewFactory: IAppFactory;
+    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.VIEW) @optional()
+    protected viewFactory: IFactory;
 
     protected override init()
     {
@@ -58,22 +58,22 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected createFactories()
     {
-        this.contextFactory = new AppFactory();
-        this.modelFactory = new AppFactory();
-        this.mediatorFactory = new AppFactory();
-        this.viewFactory = new AppFactory();
+        this.contextFactory = new Factory();
+        this.modelFactory = new Factory();
+        this.mediatorFactory = new Factory();
+        this.viewFactory = new Factory();
 
-        this.contextFactory.mapToValue(DW_TYPES.IAppFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
-        this.contextFactory.mapToValue(DW_TYPES.IAppFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
-        this.contextFactory.mapToValue(DW_TYPES.IAppFactory, this.mediatorFactory, FACTORIES_NAMES.MEDIATOR);
-        this.contextFactory.mapToValue(DW_TYPES.IAppFactory, this.viewFactory, FACTORIES_NAMES.VIEW);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.mediatorFactory, FACTORIES_NAMES.MEDIATOR);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.viewFactory, FACTORIES_NAMES.VIEW);
 
-        this.modelFactory.mapToValue(DW_TYPES.IAppFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
+        this.modelFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
 
-        this.mediatorFactory.mapToValue(DW_TYPES.IAppFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
+        this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
     }
 
-    public add(child: IHierarchyObject, index?: number): boolean
+    public override add(child: IHierarchyObject, index?: number): boolean
     {
         if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
         {
@@ -96,7 +96,7 @@ export class AppContext extends AbstractContext implements IAppContext
         return success;
     }
 
-    public remove(child: IHierarchyObject, dispose?: boolean): boolean
+    public override remove(child: IHierarchyObject, dispose?: boolean): boolean
     {
         if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
         {
@@ -119,27 +119,27 @@ export class AppContext extends AbstractContext implements IAppContext
         return success;
     }
 
-    public addModel(model: IModel): IModelContainer
+    public override addModel(model: IModel): IModelContainer
     {
         throw new Error(AppContext.ADD_ERROR);
     }
 
-    public addMediator(mediator: IMediator): IMediatorContainer
+    public override addMediator(mediator: IMediator): IMediatorContainer
     {
         throw new Error(AppContext.ADD_ERROR);
     }
 
-    public removeModel(model: IModel, dispose?: boolean): IModelContainer
+    public override removeModel(model: IModel, dispose?: boolean): IModelContainer
     {
         throw new Error(AppContext.REMOVE_ERROR);
     }
 
-    public removeMediator(mediator: IMediator, dispose?: boolean): IMediatorContainer
+    public override removeMediator(mediator: IMediator, dispose?: boolean): IMediatorContainer
     {
         throw new Error(AppContext.REMOVE_ERROR);
     }
 
-    public getInstance<T>(factory: IAppFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T
+    public getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T
     {
         const instance: T = factory.getInstance(type, name);
 

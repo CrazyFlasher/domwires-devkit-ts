@@ -1,19 +1,26 @@
 import "reflect-metadata";
-import {AbstractModel, IAppFactory, logger} from "domwires";
+import {AbstractModel, IFactoryImmutable, logger} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
-import {inject, optional} from "inversify";
+import {inject, optional, postConstruct} from "inversify";
 import {DwError} from "../DwError";
 import {DW_TYPES} from "../dw_consts";
 
 export abstract class AbstractService extends AbstractModel implements IService
 {
     @inject(DW_TYPES.ServiceConfig)
-    private _config: ServiceConfig;
+    protected config: ServiceConfig;
 
-    @inject(DW_TYPES.IAppFactory) @optional()
-    private _factory: IAppFactory;
+    @inject(DW_TYPES.IFactoryImmutable) @optional()
+    protected factory: IFactoryImmutable;
 
     private _initialized = false;
+    private _enabled: boolean;
+
+    @postConstruct()
+    private postConstruct(): void
+    {
+        this._enabled = this.config.enabled === undefined || this.config.enabled;
+    }
 
     public init(): IService
     {
@@ -29,7 +36,7 @@ export abstract class AbstractService extends AbstractModel implements IService
         return this;
     }
 
-    protected continueInit()
+    protected continueInit(): void
     {
         // override and call 'initSuccess' when initialization is completed
         throw new Error(DwError.OVERRIDE.name);
@@ -58,12 +65,12 @@ export abstract class AbstractService extends AbstractModel implements IService
 
     protected checkEnabled(): boolean
     {
-        if (!this._config.enabled)
+        if (!this.enabled)
         {
             logger.warn("Service is disabled on config level!");
         }
 
-        return this._config.enabled;
+        return this.enabled;
     }
 
     protected checkInitialized(): boolean
@@ -81,8 +88,8 @@ export abstract class AbstractService extends AbstractModel implements IService
         return this._initialized;
     }
 
-    public get config(): ServiceConfig
+    public get enabled(): boolean
     {
-        return this._config;
+        return this._enabled;
     }
 }

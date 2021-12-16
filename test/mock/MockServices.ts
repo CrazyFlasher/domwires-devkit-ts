@@ -20,7 +20,7 @@ export class MockService2 extends AbstractService
     @inject(MOCK_TYPES.MockServiceConfig)
     private _mockServiceConfig: MockServiceConfig;
 
-    protected continueInit()
+    protected override continueInit()
     {
         this.initSuccess();
     }

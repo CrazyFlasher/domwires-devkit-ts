@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import {AppContext, IAppContext, IAppContextImmutable} from "../../src/com/domwires/devkit/context/IAppContext";
-import {IAppFactoryImmutable} from "../../../domwires-ts";
+import {IFactoryImmutable} from "../../../domwires-ts";
 import {setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
 
@@ -31,40 +31,40 @@ export interface IBaseMockContext extends IBaseMockContextImmutable, IAppContext
 
 export interface IBaseMockContextImmutable extends IAppContextImmutable
 {
-    getModelFactory(): IAppFactoryImmutable;
+    getModelFactory(): IFactoryImmutable;
 
-    getContextFactory(): IAppFactoryImmutable;
+    getContextFactory(): IFactoryImmutable;
 
-    getMediatorFactory(): IAppFactoryImmutable;
+    getMediatorFactory(): IFactoryImmutable;
 
-    getViewFactory(): IAppFactoryImmutable;
+    getViewFactory(): IFactoryImmutable;
 
-    getFactory(): IAppFactoryImmutable;
+    getFactory(): IFactoryImmutable;
 }
 
 export class BaseMockContext extends AppContext implements IBaseMockContext
 {
-    public getModelFactory(): IAppFactoryImmutable
+    public getModelFactory(): IFactoryImmutable
     {
         return this.modelFactory;
     }
 
-    public getContextFactory(): IAppFactoryImmutable
+    public getContextFactory(): IFactoryImmutable
     {
         return this.contextFactory;
     }
 
-    public getMediatorFactory(): IAppFactoryImmutable
+    public getMediatorFactory(): IFactoryImmutable
     {
         return this.mediatorFactory;
     }
 
-    public getViewFactory(): IAppFactoryImmutable
+    public getViewFactory(): IFactoryImmutable
     {
         return this.viewFactory;
     }
 
-    public getFactory(): IAppFactoryImmutable
+    public getFactory(): IFactoryImmutable
     {
         return this.factory;
     }

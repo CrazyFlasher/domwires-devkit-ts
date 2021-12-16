@@ -1,4 +1,4 @@
-import {AbstractModel, IAppFactoryImmutable, IModel, IModelImmutable} from "../../../domwires-ts";
+import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable} from "../../../domwires-ts";
 import {setDefaultImplementation} from "domwires";
 import {inject, named, optional} from "inversify";
 import {DW_TYPES, FACTORIES_NAMES} from "../../src/com/domwires/devkit/dw_consts";
@@ -9,45 +9,45 @@ export interface IMockModel extends IMockModelImmutable, IModel
 
 export interface IMockModelImmutable extends IModelImmutable
 {
-    getModelFactory(): IAppFactoryImmutable;
+    getModelFactory(): IFactoryImmutable;
 
-    getContextFactory(): IAppFactoryImmutable;
+    getContextFactory(): IFactoryImmutable;
 
-    getMediatorFactory(): IAppFactoryImmutable;
+    getMediatorFactory(): IFactoryImmutable;
 
-    getViewFactory(): IAppFactoryImmutable;
+    getViewFactory(): IFactoryImmutable;
 }
 
 export class MockModel extends AbstractModel implements IMockModel
 {
-    @inject(DW_TYPES.IAppFactoryImmutable) @named(FACTORIES_NAMES.MODEL)
-    private modelFactory: IAppFactoryImmutable;
+    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MODEL)
+    private modelFactory: IFactoryImmutable;
 
-    @inject(DW_TYPES.IAppFactoryImmutable) @named(FACTORIES_NAMES.CONTEXT) @optional()
-    private contextFactory: IAppFactoryImmutable;
+    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.CONTEXT) @optional()
+    private contextFactory: IFactoryImmutable;
 
-    @inject(DW_TYPES.IAppFactoryImmutable) @named(FACTORIES_NAMES.MEDIATOR) @optional()
-    private mediatorFactory: IAppFactoryImmutable;
+    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MEDIATOR) @optional()
+    private mediatorFactory: IFactoryImmutable;
 
-    @inject(DW_TYPES.IAppFactoryImmutable) @named(FACTORIES_NAMES.VIEW) @optional()
-    private viewFactory: IAppFactoryImmutable;
+    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.VIEW) @optional()
+    private viewFactory: IFactoryImmutable;
 
-    public getModelFactory(): IAppFactoryImmutable
+    public getModelFactory(): IFactoryImmutable
     {
         return this.modelFactory;
     }
 
-    public getContextFactory(): IAppFactoryImmutable
+    public getContextFactory(): IFactoryImmutable
     {
         return this.contextFactory;
     }
 
-    public getMediatorFactory(): IAppFactoryImmutable
+    public getMediatorFactory(): IFactoryImmutable
     {
         return this.mediatorFactory;
     }
 
-    public getViewFactory(): IAppFactoryImmutable
+    public getViewFactory(): IFactoryImmutable
     {
         return this.viewFactory;
     }

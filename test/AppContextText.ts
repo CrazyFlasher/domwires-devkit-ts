@@ -2,14 +2,14 @@ import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
-import {AppFactory} from "domwires";
+import {Factory} from "domwires";
 import {IMockModel} from "./mock/MockModels";
 
 describe('AppContextTest', function (this: Suite)
 {
     it('testCreateMainContextWithChildContext', () =>
     {
-        const mainContext: IMainMockContext = new AppFactory().getInstance("IMainMockContext");
+        const mainContext: IMainMockContext = new Factory().getInstance("IMainMockContext");
         const childContext: IChildMockContext = mainContext.getChildContext();
         const model: IMockModel = childContext.getModel();
 

@@ -2,18 +2,18 @@ import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
 import {MockService1, MockService2, MockServiceConfig} from "./mock/MockServices";
-import {AppFactory, IAppFactory} from "domwires";
+import {Factory, IFactory} from "domwires";
 import {ServiceConfig, ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
 import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
 import {MOCK_TYPES} from "./mock/mock_types";
 
 describe('ServiceTest', function (this: Suite)
 {
-    let factory: IAppFactory;
+    let factory: IFactory;
 
     beforeEach(() =>
     {
-        factory = new AppFactory();
+        factory = new Factory();
     });
 
     afterEach(() =>
@@ -26,6 +26,15 @@ describe('ServiceTest', function (this: Suite)
         expect(() => factory.getInstance(MockService1)).to.throw("No matching bindings found");
     });
 
+    it('testEnabledTrueByDefault', () =>
+    {
+        factory.mapToValue(DW_TYPES.ServiceConfig, {});
+
+        const service: MockService1 = factory.getInstance(MockService1);
+
+        expect(service.enabled).true;
+    });
+
     it('testEnabledInitializedFalse', () =>
     {
         const config: ServiceConfig = {enabled: false};
@@ -33,7 +42,7 @@ describe('ServiceTest', function (this: Suite)
 
         const service: MockService1 = factory.getInstance(MockService1);
 
-        expect(service.config.enabled).false;
+        expect(service.enabled).false;
 
         let initComplete: boolean;
 
@@ -51,7 +60,7 @@ describe('ServiceTest', function (this: Suite)
 
         const service: MockService1 = factory.getInstance(MockService1);
 
-        expect(service.config.enabled).true;
+        expect(service.enabled).true;
 
         let initComplete: boolean;
 
@@ -70,7 +79,7 @@ describe('ServiceTest', function (this: Suite)
 
         const service: MockService2 = factory.getInstance(MockService2);
 
-        expect(service.config.enabled).true;
+        expect(service.enabled).true;
         expect(service.mockServiceConfig.id).equals("mockServ");
 
         let initComplete: boolean;
