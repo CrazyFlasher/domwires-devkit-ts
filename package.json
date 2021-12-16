@@ -7,13 +7,13 @@
     "url": "https://github.com/CrazyFlasher/domwires-devkit-ts"
   },
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "/dist"
+    "dist/"
   ],
   "dependencies": {
-    "domwires": "0.9.16",
+    "domwires": "0.9.17",
     "inversify": "5.1.1",
     "inversify-inject-decorators": "3.1.0",
     "npm": "8.1.1",
