@@ -39,5 +39,5 @@ export interface INetClientService extends IService, INetClientServiceImmutable
 
     disconnect(): INetClientService;
 
-    send(request: RequestResponse<ClientServiceRequestType>): INetClientService;
+    send<ReqResDataType>(request: RequestResponse<ClientServiceRequestType, ReqResDataType>): INetClientService;
 }

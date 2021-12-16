@@ -40,7 +40,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
         return this._responseData;
     }
 
-    public send(request: RequestResponse<ClientServiceRequestType>): INetClientService
+    public send<ReqResDataType>(request: RequestResponse<ClientServiceRequestType, ReqResDataType>): INetClientService
     {
         if (!this.checkEnabled())
         {

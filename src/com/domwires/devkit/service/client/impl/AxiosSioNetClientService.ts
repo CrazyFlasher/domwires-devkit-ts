@@ -33,7 +33,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
                 {
                     this._responseData = {id: data.id, type: ClientServiceRequestType.TCP, data: data.data};
 
-                    this.dispatchMessage(NetClientServiceMessageType.TCP_RESPONSE);
+                    this.dispatchMessage(NetClientServiceMessageType.TCP_RESPONSE, data.data);
                 });
 
                 this._isConnected = true;
@@ -79,7 +79,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
 
             this._responseData = {id: request.id, type: request.type, data: response.data};
 
-            this.dispatchMessage(NetClientServiceMessageType.HTTP_RESPONSE);
+            this.dispatchMessage(NetClientServiceMessageType.HTTP_RESPONSE, response.data);
         } catch (e)
         {
             logger.info("Http request error:", request, e);

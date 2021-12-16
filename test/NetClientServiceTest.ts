@@ -205,44 +205,47 @@ describe('NetClientServiceTest', function (this: Suite)
 
     it('testGet', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, () =>
+        client.addMessageListener<string>(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.GET);
             expect(client.responseData.data).equals("hi");
+            expect(data).equals("hi");
 
             done();
         });
 
-        client.send({id: "test", type: ClientServiceRequestType.GET, data: {say: "hello"}});
+        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.GET, data: {say: "hello"}});
     });
 
     it('testPost', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, () =>
+        client.addMessageListener<string>(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.POST);
             expect(client.responseData.data).equals("hi");
+            expect(data).equals("hi");
 
             done();
         });
 
-        client.send({id: "test", type: ClientServiceRequestType.POST, data: {say: "hello"}});
+        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.POST, data: {say: "hello"}});
     });
 
     it('testTcp', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.TCP_RESPONSE, () =>
+        client.addMessageListener<string>(NetClientServiceMessageType.TCP_RESPONSE, (message, data) =>
         {
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.TCP);
             expect(client.responseData.data).equals("hi");
+            expect(data).equals("hi");
 
             done();
         });
 
-        client.send({id: "test", type: ClientServiceRequestType.TCP, data: {say: "hello"}});
+        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.TCP, data: {say: "hello"}});
     });
 
 });
@@ -265,3 +268,7 @@ class ClientData
         this._created = true;
     }
 }
+
+type TalkAction = {
+    say: string;
+};
