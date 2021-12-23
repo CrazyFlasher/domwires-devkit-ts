@@ -21,7 +21,7 @@ export class HttpRequestResponseType extends Enum
 
 export interface IHttpServerServiceImmutable extends INetServerServiceImmutable<HttpRequestResponseType>
 {
-    getQueryParam(id: string): string;
+    getRequestQueryParam(id: string): string;
 }
 
 export interface IHttpServerService extends IHttpServerServiceImmutable, INetServerService<HttpRequestResponseType>

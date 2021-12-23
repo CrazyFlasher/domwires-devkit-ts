@@ -105,7 +105,7 @@ describe('NetClientServiceTest', function (this: Suite)
 
                 if (http.requestData.type === HttpRequestResponseType.GET)
                 {
-                    if (http.getQueryParam("say") === "hello")
+                    if (http.getRequestQueryParam("say") === "hello")
                     {
                         sentHttpResponse(true);
                     }

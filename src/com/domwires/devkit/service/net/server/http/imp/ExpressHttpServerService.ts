@@ -87,7 +87,7 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
         return this;
     }
 
-    public getQueryParam(id: string): string
+    public getRequestQueryParam(id: string): string
     {
         return this.requestQuery ? this.requestQuery[id] as string : null;
     }

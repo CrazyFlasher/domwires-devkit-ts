@@ -173,7 +173,7 @@ describe('HttpServiceTest', function (this: Suite)
 
         http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
         {
-            expect(http.getQueryParam("id")).equals("olo");
+            expect(http.getRequestQueryParam("id")).equals("olo");
             done();
         });
 
