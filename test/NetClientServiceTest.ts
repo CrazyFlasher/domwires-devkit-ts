@@ -21,12 +21,11 @@ import {
 } from "../src/com/domwires/devkit/service/net/INetServerService";
 import {
     ISocketServerService,
-    SocketRequestResponseType
+    SocketRequestResponseType, SocketServerServiceConfig
 } from "../src/com/domwires/devkit/service/net/server/socket/ISocketServerService";
 import {SioSocketServerService} from "../src/com/domwires/devkit/service/net/server/socket/impl/SioSocketServerService";
 import {injectable, postConstruct} from "inversify";
 import {expect} from "chai";
-import {SocketServerServiceConfig} from "../dist/com/domwires/devkit/service/net/server/socket/ISocketServerService";
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
 {
