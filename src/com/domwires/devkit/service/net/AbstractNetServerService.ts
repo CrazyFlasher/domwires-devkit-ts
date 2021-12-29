@@ -6,7 +6,6 @@ import {
     NetServerServiceMessageType,
     RequestResponse
 } from "./INetServerService";
-import {logger} from "domwires";
 import {inject} from "inversify";
 import {DW_TYPES} from "../../dw_consts";
 
@@ -39,7 +38,7 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected openSuccess(): void
     {
-        logger.info("Server started: " + this.serverName);
+        this.logger.info("Server started: " + this.serverName);
 
         this._isOpened = true;
 
@@ -48,15 +47,15 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected openFail(err: Error): void
     {
-        logger.warn("Failed to start server: " + this.serverName);
-        logger.warn(err);
+        this.logger.warn("Failed to start server: " + this.serverName);
+        this.logger.warn(err);
 
         this.dispatchMessage(NetServerServiceMessageType.OPEN_FAIL);
     }
 
     protected closeSuccess(): void
     {
-        logger.info("Server closed: " + this.serverName);
+        this.logger.info("Server closed: " + this.serverName);
 
         this._isOpened = false;
 
@@ -65,8 +64,8 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected closeFail(err: Error): void
     {
-        logger.warn("Failed to close server: " + this.serverName);
-        logger.error(err);
+        this.logger.warn("Failed to close server: " + this.serverName);
+        this.logger.error(err);
 
         this.dispatchMessage(NetServerServiceMessageType.CLOSE_FAIL);
     }
@@ -132,7 +131,7 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
         if (!this._isOpened)
         {
-            logger.warn("Server is not opened!");
+            this.logger.warn("Server is not opened!");
 
             return false;
         }

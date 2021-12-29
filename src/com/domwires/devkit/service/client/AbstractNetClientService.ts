@@ -10,7 +10,6 @@ import {RequestResponse} from "../net/INetServerService";
 import {inject} from "inversify";
 import {DW_TYPES} from "../../dw_consts";
 import {DwError} from "../../DwError";
-import {logger} from "domwires";
 
 export abstract class AbstractNetClientService extends AbstractService implements INetClientService
 {
@@ -76,7 +75,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
 
         if (!this._isConnected)
         {
-            logger.warn("Not connected to socket server!");
+            this.logger.warn("Not connected to socket server!");
 
             return false;
         }

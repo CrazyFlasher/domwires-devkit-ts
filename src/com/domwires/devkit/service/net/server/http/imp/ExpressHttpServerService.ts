@@ -92,6 +92,11 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
         return this.requestQuery ? this.requestQuery[id] as string : null;
     }
 
+    public get nodeHttpServer(): Server
+    {
+        return this.server;
+    }
+
     public sendResponse<T>(data: T, statusCode = 200,
                            customHeaders?: Map<string, number | string | ReadonlyArray<string>>): IHttpServerService
     {

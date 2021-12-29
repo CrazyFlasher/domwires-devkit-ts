@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {SioSocketServerService} from "../src/com/domwires/devkit/service/net/server/socket/impl/SioSocketServerService";
-import {Factory, IFactory} from "domwires";
+import {Factory, IFactory, Logger} from "domwires";
 import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
 import {NetServerServiceMessageType} from "../src/com/domwires/devkit/service/net/INetServerService";
 import {ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
@@ -29,7 +29,7 @@ describe('SocketServerServiceTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory();
+        factory = new Factory(new Logger());
         factory.mapToType(DW_TYPES.ISocketServerService, SioSocketServerService);
 
         const socketConfig: SocketServerServiceConfig = {host: "127.0.0.1", port: 3000};

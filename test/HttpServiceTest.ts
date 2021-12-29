@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, logger} from "domwires";
+import {Factory, IFactory, Logger} from "domwires";
 import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
 import {ExpressHttpServerService} from "../src/com/domwires/devkit/service/net/server/http/imp/ExpressHttpServerService";
 import {
@@ -16,6 +16,8 @@ import {ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
 import {expect} from "chai";
 import * as Http from "http";
 
+const logger = new Logger();
+
 // describe('ExpressHttpServiceTest', function (this: Suite)
 // {
 //     run(ExpressHttpServerService);
@@ -30,7 +32,7 @@ describe('HttpServiceTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory();
+        factory = new Factory(logger);
         factory.mapToType(DW_TYPES.IHttpServerService, ExpressHttpServerService);
         // factory.mapToType(DW_TYPES.IHttpServerService, implementationClass);
 

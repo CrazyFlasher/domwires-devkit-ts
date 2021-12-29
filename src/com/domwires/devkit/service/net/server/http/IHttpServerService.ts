@@ -1,6 +1,7 @@
 import {INetServerService, INetServerServiceImmutable} from "../../INetServerService";
 import {Enum} from "domwires";
 import {DwError} from "../../../../DwError";
+import {Server} from "http";
 
 export class HttpRequestResponseType extends Enum
 {
@@ -28,4 +29,6 @@ export interface IHttpServerService extends IHttpServerServiceImmutable, INetSer
 {
     sendResponse<T>(data: T, statusCode?: number,
                     customHeaders?: Map<string, number | string | ReadonlyArray<string>>): IHttpServerService;
+
+    get nodeHttpServer(): Server;
 }

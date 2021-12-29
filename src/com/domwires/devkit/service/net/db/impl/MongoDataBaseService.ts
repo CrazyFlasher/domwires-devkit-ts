@@ -2,7 +2,6 @@ import {AbstractService} from "../../../AbstractService";
 import {DataBaseServiceConfig, DataBaseServiceMessageType, IDataBaseService, UpdateOperator} from "../IDataBaseService";
 import {inject} from "inversify";
 import {DW_TYPES} from "../../../../dw_consts";
-import {logger} from "domwires";
 import {Db, Filter, FindCursor, FindOptions, MongoClient} from "mongodb";
 
 // TODO: make final
@@ -62,7 +61,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             {
                 if (error)
                 {
-                    logger.warn("Failed to disconnect");
+                    this.logger.warn("Failed to disconnect");
 
                     this.dispatchMessage(DataBaseServiceMessageType.DISCONNECT_FAIL);
                 }
@@ -96,7 +95,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             }
         } catch (e)
         {
-            logger.warn("Cannot create collection:", name, uniqueIndexList, e);
+            this.logger.warn("Cannot create collection:", name, uniqueIndexList, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.CREATE_COLLECTION_FAIL);
         }
@@ -125,7 +124,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS);
         } catch (e)
         {
-            logger.error("Cannot drop collection:", name, e);
+            this.logger.error("Cannot drop collection:", name, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_FAIL);
         }
@@ -149,7 +148,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.INSERT_SUCCESS);
         } catch (e)
         {
-            logger.warn("Cannot insert:", collectionName, itemList, e);
+            this.logger.warn("Cannot insert:", collectionName, itemList, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.INSERT_FAIL);
         }
@@ -187,7 +186,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
             if (await cursor.count() === 0)
             {
-                logger.warn("Nothing found:", collectionName, filter);
+                this.logger.warn("Nothing found:", collectionName, filter);
 
                 this.dispatchMessage(DataBaseServiceMessageType.FIND_FAIL);
             }
@@ -199,7 +198,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             }
         } catch (e)
         {
-            logger.warn("Cannot find:", collectionName, filter, e);
+            this.logger.warn("Cannot find:", collectionName, filter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.FIND_FAIL);
         }
@@ -263,7 +262,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_SUCCESS);
         } catch (e)
         {
-            logger.warn("Cannot update:", collectionName, filter, updateFilter, e);
+            this.logger.warn("Cannot update:", collectionName, filter, updateFilter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_FAIL);
         }
@@ -287,7 +286,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_SUCCESS, result.deletedCount);
         } catch (e)
         {
-            logger.warn("Cannot delete:", collectionName, filter, e);
+            this.logger.warn("Cannot delete:", collectionName, filter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_FAIL);
         }
@@ -313,7 +312,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
         if (!this._isConnected)
         {
-            logger.warn("Not connected to database");
+            this.logger.warn("Not connected to database");
 
             return false;
         }
@@ -332,7 +331,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
     private connectFail(): void
     {
-        logger.warn("Failed to connect to data base:", this.dataBaseServiceConfig.uri);
+        this.logger.warn("Failed to connect to data base:", this.dataBaseServiceConfig.uri);
 
         this.dispatchMessage(DataBaseServiceMessageType.CONNECT_FAIL);
     }

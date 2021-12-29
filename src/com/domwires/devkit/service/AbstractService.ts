@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import {AbstractModel, IFactoryImmutable, logger} from "domwires";
+import {AbstractModel, IFactoryImmutable} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
 import {inject, optional, postConstruct} from "inversify";
 import {DwError} from "../DwError";
@@ -49,7 +49,7 @@ export abstract class AbstractService extends AbstractModel implements IService
 
     protected initSuccess(): void
     {
-        logger.info("Init success!");
+        this.logger.info("Init success!");
 
         this._initialized = true;
 
@@ -58,7 +58,7 @@ export abstract class AbstractService extends AbstractModel implements IService
 
     protected initFail(): void
     {
-        logger.warn("Init fail!");
+        this.logger.warn("Init fail!");
 
         this.dispatchMessage(ServiceMessageType.INIT_FAIL);
     }
@@ -67,7 +67,7 @@ export abstract class AbstractService extends AbstractModel implements IService
     {
         if (!this.enabled)
         {
-            logger.warn("Service is disabled on config level!");
+            this.logger.warn("Service is disabled on config level!");
         }
 
         return this.enabled;
@@ -77,7 +77,7 @@ export abstract class AbstractService extends AbstractModel implements IService
     {
         if (!this._initialized)
         {
-            logger.warn("Service is not initialized. Did you call 'init'?");
+            this.logger.warn("Service is not initialized. Did you call 'init'?");
         }
 
         return this._initialized;

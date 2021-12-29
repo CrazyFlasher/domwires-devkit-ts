@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, IMessage} from "domwires";
+import {Factory, IFactory, IMessage, Logger} from "domwires";
 import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
 import {expect} from "chai";
 import {
@@ -26,7 +26,7 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     beforeEach((done: Done) =>
     {
-        factory = new Factory();
+        factory = new Factory(new Logger());
         factory.mapToType(DW_TYPES.IDataBaseService, MongoDataBaseService);
 
         const config: DataBaseServiceConfig = {uri: "mongodb://127.0.0.1:27017", dataBaseName: "test_data_base"};

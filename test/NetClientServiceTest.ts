@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, logger} from "domwires";
+import {Factory, IFactory, Logger} from "domwires";
 import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
 import {
     ClientServiceRequestType,
@@ -26,6 +26,7 @@ import {
 import {SioSocketServerService} from "../src/com/domwires/devkit/service/net/server/socket/impl/SioSocketServerService";
 import {injectable, postConstruct} from "inversify";
 import {expect} from "chai";
+import {SocketServerServiceConfig} from "../dist/com/domwires/devkit/service/net/server/socket/ISocketServerService";
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
 {
@@ -36,6 +37,8 @@ import {expect} from "chai";
 // {
 describe('NetClientServiceTest', function (this: Suite)
 {
+    const logger = new Logger();
+
     let factory: IFactory;
     let client: INetClientService;
     let http: IHttpServerService;
@@ -43,7 +46,7 @@ describe('NetClientServiceTest', function (this: Suite)
 
     beforeEach((done: Done) =>
     {
-        factory = new Factory();
+        factory = new Factory(logger);
 
         factory.mapToType(DW_TYPES.INetClientService, AxiosSioNetClientService);
         factory.mapToType(DW_TYPES.IHttpServerService, ExpressHttpServerService);
@@ -65,17 +68,6 @@ describe('NetClientServiceTest', function (this: Suite)
         factory.mapToValue(DW_TYPES.ServiceConfig, httpConfig);
 
         http = factory.getInstance(DW_TYPES.IHttpServerService);
-
-        const socketConfig: NetServerServiceConfig = {host: httpConfig.host, port: 3001};
-
-        factory.mapToValue(DW_TYPES.SocketServerServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.NetServerServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.ServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.Class, ClientData, "clientDataClass");
-        factory.mapToValue(DW_TYPES.IFactoryImmutable, socketConfig);
-        factory.mapToValue(DW_TYPES.IFactoryImmutable, factory);
-
-        socket = factory.getInstance(DW_TYPES.ISocketServerService);
 
         const httpOpenSuccess = () =>
         {
@@ -126,6 +118,17 @@ describe('NetClientServiceTest', function (this: Suite)
                     }
                 }
             });
+
+            const socketConfig: SocketServerServiceConfig = {host: httpConfig.host, port: 3001, http: http.nodeHttpServer};
+
+            factory.mapToValue(DW_TYPES.SocketServerServiceConfig, socketConfig);
+            factory.mapToValue(DW_TYPES.NetServerServiceConfig, socketConfig);
+            factory.mapToValue(DW_TYPES.ServiceConfig, socketConfig);
+            factory.mapToValue(DW_TYPES.Class, ClientData, "clientDataClass");
+            factory.mapToValue(DW_TYPES.IFactoryImmutable, socketConfig);
+            factory.mapToValue(DW_TYPES.IFactoryImmutable, factory);
+
+            socket = factory.getInstance(DW_TYPES.ISocketServerService);
 
             socket.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
             {

@@ -14,7 +14,7 @@
     "dist/"
   ],
   "dependencies": {
-    "domwires": "0.9.22",
+    "domwires": "0.9.24",
     "inversify": "5.1.1",
     "inversify-inject-decorators": "3.1.0",
     "reflect-metadata": "0.1.13",
@@ -36,7 +36,6 @@
     "mocha": "9.1.1",
     "nodemon": "2.0.13",
     "ts-node": "10.2.1",
-    "tslog": "3.2.2",
     "@types/express": "4.17.13",
     "typescript": "4.4.3"
   },

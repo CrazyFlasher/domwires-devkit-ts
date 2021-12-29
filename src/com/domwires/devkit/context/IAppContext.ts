@@ -58,10 +58,10 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected createFactories()
     {
-        this.contextFactory = new Factory();
-        this.modelFactory = new Factory();
-        this.mediatorFactory = new Factory();
-        this.viewFactory = new Factory();
+        this.contextFactory = new Factory(this.logger);
+        this.modelFactory = new Factory(this.logger);
+        this.mediatorFactory = new Factory(this.logger);
+        this.viewFactory = new Factory(this.logger);
 
         this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
         this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
