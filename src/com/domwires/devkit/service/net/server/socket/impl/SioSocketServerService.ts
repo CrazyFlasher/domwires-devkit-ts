@@ -31,11 +31,11 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
     {
         if (!this.socketServerServiceConfig.http)
         {
-            this.logger.info("No http server specified. Creating");
+            this.info("No http server specified. Creating");
         }
         else
         {
-            this.logger.info("Using created http server");
+            this.info("Using created http server");
         }
 
         this.server = new Server(this.socketServerServiceConfig.http);
@@ -59,7 +59,7 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
         {
             socket.on("disconnect", (reason) =>
             {
-                this.logger.info("Client disconnected:", socket.id, reason);
+                this.info("Client disconnected:", socket.id, reason);
 
                 this._disconnectedClientId = socket.id;
 
@@ -72,12 +72,12 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
             {
                 if (json)
                 {
-                    this.logger.info("Data received:", json, "\n", "Client id:", socket.id);
+                    this.info("Data received:", json, "\n", "Client id:", socket.id);
                 }
 
                 if (!json.id)
                 {
-                    this.logger.warn("Request should be a json and contain 'id' field");
+                    this.warn("Request should be a json and contain 'id' field");
                 }
                 else
                 {
@@ -91,12 +91,12 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
                     }
                     else
                     {
-                        this.logger.warn("Ignoring socket request: " + json.id);
+                        this.warn("Ignoring socket request: " + json.id);
                     }
                 }
             });
 
-            this.logger.info("Client connected:", socket.id);
+            this.info("Client connected:", socket.id);
 
             this._connectedClientId = socket.id;
 
@@ -153,12 +153,12 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
             const socket = this.server.sockets.sockets.get(clientId);
             if (socket)
             {
-                this.logger.info("Disconnecting client:", clientId);
+                this.info("Disconnecting client:", clientId);
                 socket.disconnect(true);
             }
             else
             {
-                this.logger.warn("Cannot disconnect client. Not found:", clientId);
+                this.warn("Cannot disconnect client. Not found:", clientId);
             }
         }
 
@@ -178,7 +178,7 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
 
             if (!clientData)
             {
-                this.logger.warn("Client not found:", clientId);
+                this.warn("Client not found:", clientId);
 
                 return null;
             }
@@ -214,7 +214,7 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
         const socket = this.server.sockets.sockets.get(clientId);
         if (!socket)
         {
-            this.logger.warn("Socket client not found:", clientId);
+            this.warn("Socket client not found:", clientId);
         }
         return socket;
     }

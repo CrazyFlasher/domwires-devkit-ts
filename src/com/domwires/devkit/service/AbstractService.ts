@@ -49,7 +49,7 @@ export abstract class AbstractService extends AbstractModel implements IService
 
     protected initSuccess(): void
     {
-        this.logger.info("Init success!");
+        this.info("Init success!");
 
         this._initialized = true;
 
@@ -58,7 +58,7 @@ export abstract class AbstractService extends AbstractModel implements IService
 
     protected initFail(): void
     {
-        this.logger.warn("Init fail!");
+        this.warn("Init fail!");
 
         this.dispatchMessage(ServiceMessageType.INIT_FAIL);
     }
@@ -67,7 +67,7 @@ export abstract class AbstractService extends AbstractModel implements IService
     {
         if (!this.enabled)
         {
-            this.logger.warn("Service is disabled on config level!");
+            this.warn("Service is disabled on config level!");
         }
 
         return this.enabled;
@@ -77,7 +77,7 @@ export abstract class AbstractService extends AbstractModel implements IService
     {
         if (!this._initialized)
         {
-            this.logger.warn("Service is not initialized. Did you call 'init'?");
+            this.warn("Service is not initialized. Did you call 'init'?");
         }
 
         return this._initialized;

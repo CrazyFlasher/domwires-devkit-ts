@@ -38,7 +38,7 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected openSuccess(): void
     {
-        this.logger.info("Server started: " + this.serverName);
+        this.info("Server started: " + this.serverName);
 
         this._isOpened = true;
 
@@ -47,15 +47,15 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected openFail(err: Error): void
     {
-        this.logger.warn("Failed to start server: " + this.serverName);
-        this.logger.warn(err);
+        this.warn("Failed to start server: " + this.serverName);
+        this.warn(err);
 
         this.dispatchMessage(NetServerServiceMessageType.OPEN_FAIL);
     }
 
     protected closeSuccess(): void
     {
-        this.logger.info("Server closed: " + this.serverName);
+        this.info("Server closed: " + this.serverName);
 
         this._isOpened = false;
 
@@ -64,8 +64,8 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
     protected closeFail(err: Error): void
     {
-        this.logger.warn("Failed to close server: " + this.serverName);
-        this.logger.error(err);
+        this.warn("Failed to close server: " + this.serverName);
+        this.error(err);
 
         this.dispatchMessage(NetServerServiceMessageType.CLOSE_FAIL);
     }
@@ -131,7 +131,7 @@ export abstract class AbstractNetServerService<ReqResType> extends AbstractServi
 
         if (!this._isOpened)
         {
-            this.logger.warn("Server is not opened!");
+            this.warn("Server is not opened!");
 
             return false;
         }

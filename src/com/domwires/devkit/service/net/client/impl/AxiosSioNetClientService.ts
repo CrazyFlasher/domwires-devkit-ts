@@ -21,7 +21,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
     {
         if (this._isConnected)
         {
-            this.logger.warn("Client already connected to socket server!");
+            this.warn("Client already connected to socket server!");
         }
         else
         {
@@ -37,7 +37,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
 
                 this._isConnected = true;
 
-                this.logger.info("Client connected to socket server:", this.netClientServiceConfig.socketUri);
+                this.info("Client connected to socket server:", this.netClientServiceConfig.socketUri);
 
                 this.dispatchMessage(NetClientServiceMessageType.CONNECTED);
             });
@@ -81,7 +81,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
             this.dispatchMessage(NetClientServiceMessageType.HTTP_RESPONSE, this._responseData);
         } catch (e)
         {
-            this.logger.info("Http request error:", request, e);
+            this.info("Http request error:", request, e);
 
             this.dispatchMessage(NetClientServiceMessageType.HTTP_ERROR);
         }

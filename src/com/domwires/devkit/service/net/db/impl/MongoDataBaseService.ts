@@ -61,7 +61,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             {
                 if (error)
                 {
-                    this.logger.warn("Failed to disconnect");
+                    this.warn("Failed to disconnect");
 
                     this.dispatchMessage(DataBaseServiceMessageType.DISCONNECT_FAIL);
                 }
@@ -95,7 +95,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             }
         } catch (e)
         {
-            this.logger.warn("Cannot create collection:", name, uniqueIndexList, e);
+            this.warn("Cannot create collection:", name, uniqueIndexList, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.CREATE_COLLECTION_FAIL);
         }
@@ -124,7 +124,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS);
         } catch (e)
         {
-            this.logger.error("Cannot drop collection:", name, e);
+            this.error("Cannot drop collection:", name, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_FAIL);
         }
@@ -148,7 +148,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.INSERT_SUCCESS);
         } catch (e)
         {
-            this.logger.warn("Cannot insert:", collectionName, itemList, e);
+            this.warn("Cannot insert:", collectionName, itemList, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.INSERT_FAIL);
         }
@@ -186,7 +186,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
             if (await cursor.count() === 0)
             {
-                this.logger.warn("Nothing found:", collectionName, filter);
+                this.warn("Nothing found:", collectionName, filter);
 
                 this.dispatchMessage(DataBaseServiceMessageType.FIND_FAIL);
             }
@@ -198,7 +198,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             }
         } catch (e)
         {
-            this.logger.warn("Cannot find:", collectionName, filter, e);
+            this.warn("Cannot find:", collectionName, filter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.FIND_FAIL);
         }
@@ -262,7 +262,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_SUCCESS);
         } catch (e)
         {
-            this.logger.warn("Cannot update:", collectionName, filter, updateFilter, e);
+            this.warn("Cannot update:", collectionName, filter, updateFilter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_FAIL);
         }
@@ -286,7 +286,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_SUCCESS, result.deletedCount);
         } catch (e)
         {
-            this.logger.warn("Cannot delete:", collectionName, filter, e);
+            this.warn("Cannot delete:", collectionName, filter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_FAIL);
         }
@@ -312,7 +312,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
         if (!this._isConnected)
         {
-            this.logger.warn("Not connected to database");
+            this.warn("Not connected to database");
 
             return false;
         }
@@ -331,7 +331,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
     private connectFail(): void
     {
-        this.logger.warn("Failed to connect to data base:", this.dataBaseServiceConfig.uri);
+        this.warn("Failed to connect to data base:", this.dataBaseServiceConfig.uri);
 
         this.dispatchMessage(DataBaseServiceMessageType.CONNECT_FAIL);
     }

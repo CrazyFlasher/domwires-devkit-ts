@@ -75,7 +75,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
 
         if (!this._isConnected)
         {
-            this.logger.warn("Not connected to socket server!");
+            this.warn("Not connected to socket server!");
 
             return false;
         }
