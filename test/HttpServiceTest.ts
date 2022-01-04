@@ -1,18 +1,18 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {Factory, IFactory, Logger} from "domwires";
-import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
-import {ExpressHttpServerService} from "../src/com/domwires/devkit/service/net/server/http/imp/ExpressHttpServerService";
+import {DW_TYPES} from "../src";
+import {ExpressHttpServerService} from "../src";
 import {
     HttpRequestResponseType,
     IHttpServerService
-} from "../src/com/domwires/devkit/service/net/server/http/IHttpServerService";
+} from "../src";
 import {
     NetServerServiceConfig,
     NetServerServiceMessageType,
     RequestResponse
-} from "../src/com/domwires/devkit/service/net/INetServerService";
-import {ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
+} from "../src";
+import {ServiceMessageType} from "../src";
 import {expect} from "chai";
 import * as Http from "http";
 

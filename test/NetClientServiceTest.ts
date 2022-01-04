@@ -1,29 +1,29 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {Factory, IFactory, Logger} from "domwires";
-import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
+import {DW_TYPES} from "../src";
 import {
     ClientServiceRequestType,
     INetClientService,
     NetClientServiceConfig,
     NetClientServiceMessageType
-} from "../src/com/domwires/devkit/service/client/INetClientService";
-import {AxiosSioNetClientService} from "../src/com/domwires/devkit/service/client/impl/AxiosSioNetClientService";
-import {ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
+} from "../src";
+import {AxiosSioNetClientService} from "../src";
+import {ServiceMessageType} from "../src";
 import {
     HttpRequestResponseType,
     IHttpServerService
-} from "../src/com/domwires/devkit/service/net/server/http/IHttpServerService";
-import {ExpressHttpServerService} from "../src/com/domwires/devkit/service/net/server/http/imp/ExpressHttpServerService";
+} from "../src";
+import {ExpressHttpServerService} from "../src";
 import {
     NetServerServiceConfig,
     NetServerServiceMessageType
-} from "../src/com/domwires/devkit/service/net/INetServerService";
+} from "../src";
 import {
     ISocketServerService,
     SocketRequestResponseType, SocketServerServiceConfig
-} from "../src/com/domwires/devkit/service/net/server/socket/ISocketServerService";
-import {SioSocketServerService} from "../src/com/domwires/devkit/service/net/server/socket/impl/SioSocketServerService";
+} from "../src";
+import {SioSocketServerService} from "../src";
 import {injectable, postConstruct} from "inversify";
 import {expect} from "chai";
 

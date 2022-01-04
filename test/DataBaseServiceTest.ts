@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {Factory, IFactory, IMessage, Logger} from "domwires";
-import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
+import {DW_TYPES} from "../src";
 import {expect} from "chai";
 import {
     DataBaseServiceConfig,
     DataBaseServiceMessageType,
     FilterOperator,
     IDataBaseService
-} from "../src/com/domwires/devkit/service/net/db/IDataBaseService";
-import {MongoDataBaseService} from "../src/com/domwires/devkit/service/net/db/impl/MongoDataBaseService";
+} from "../src";
+import {MongoDataBaseService} from "../src";
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
 {

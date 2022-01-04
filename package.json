@@ -1,20 +1,19 @@
 {
   "name": "domwires-devkit",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Devkit based on DomWires Framework",
   "repository": {
     "type": "git",
     "url": "https://github.com/CrazyFlasher/domwires-devkit-ts"
   },
   "license": "MIT",
-  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/"
   ],
   "dependencies": {
-    "domwires": "0.9.24",
+    "domwires": "0.9.25",
     "inversify": "5.1.1",
     "inversify-inject-decorators": "3.1.0",
     "reflect-metadata": "0.1.13",

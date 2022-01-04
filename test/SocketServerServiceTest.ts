@@ -1,16 +1,16 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {SioSocketServerService} from "../src/com/domwires/devkit/service/net/server/socket/impl/SioSocketServerService";
+import {SioSocketServerService} from "../src";
 import {Factory, IFactory, Logger} from "domwires";
-import {DW_TYPES} from "../src/com/domwires/devkit/dw_consts";
-import {NetServerServiceMessageType} from "../src/com/domwires/devkit/service/net/INetServerService";
-import {ServiceMessageType} from "../src/com/domwires/devkit/service/IService";
+import {DW_TYPES} from "../src";
+import {NetServerServiceMessageType} from "../src";
+import {ServiceMessageType} from "../src";
 import {
     ISocketServerService,
     SocketRequestResponseType,
     SocketServerServiceConfig,
     SocketServerServiceMessageType
-} from "../src/com/domwires/devkit/service/net/server/socket/ISocketServerService";
+} from "../src";
 import {io, Socket} from "socket.io-client";
 import {expect} from "chai";
 import {injectable, postConstruct} from "inversify";
