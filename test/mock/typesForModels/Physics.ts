@@ -1,3 +1,4 @@
+/* @Suffix = Component */
 /* @Model */
 export type Physics = {
     readonly position: number;
