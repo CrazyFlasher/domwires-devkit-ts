@@ -1,0 +1,14 @@
+export class ${model_name} extends ${model_base_name} implements I${model_name}
+{
+    @inject("${typedef_name}")
+    private ${data}: ${typedef_name};
+
+${content}
+
+    @postConstruct()
+    protected ${_override}init(): void
+    {
+        ${assign}
+        ${_super}
+    }
+}

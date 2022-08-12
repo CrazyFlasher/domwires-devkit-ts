@@ -1,0 +1,10 @@
+    private _${name}: ${type};
+
+    public set${u_name}(value: ${type}): I${model_name}
+    {
+        this._${name} = value;
+
+        this.dispatchMessage(${enum_name}MessageType.${message_type});
+
+        return this;
+    }

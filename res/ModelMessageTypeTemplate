@@ -1,0 +1,4 @@
+export class ${model_name}MessageType extends Enum
+{
+    ${content}
+}

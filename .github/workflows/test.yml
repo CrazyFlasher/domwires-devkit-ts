@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
+      - run: npm run model_gen
       - run: npm run test
       - run: npm run eslint-setup
       - run: npm run eslint-run

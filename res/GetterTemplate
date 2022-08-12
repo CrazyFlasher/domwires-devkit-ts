@@ -1,0 +1,4 @@
+    public get ${name}(): ${type}
+    {
+        return this._${name};
+    }
