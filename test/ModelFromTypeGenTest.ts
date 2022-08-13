@@ -4,18 +4,18 @@ import {expect} from "chai";
 import {Factory, IFactory, Logger, setDefaultImplementation} from "domwires";
 import {GameObject} from "./mock/typesForModels/GameObject";
 import {
-    GameObjectModel,
-    GameObjectModelMessageType,
-    IGameObjectModel
-} from "./mock/typesForModels/gameObject/IGameObjectModel";
+    GameObjectComponent,
+    GameObjectComponentMessageType,
+    IGameObjectComponent
+} from "./mock/typesForModels/gameObject/IGameObjectComponent";
 import {Building} from "./mock/typesForModels/Building";
-import {BuildingModel, IBuildingModel} from "./mock/typesForModels/building/IBuildingModel";
+import {BuildingComponent, IBuildingComponent} from "./mock/typesForModels/building/IBuildingComponent";
 import {CrazyFormat1} from "./mock/typesForModels/CrazyFormat1";
-import {CrazyFormat1Model, ICrazyFormat1Model} from "./mock/typesForModels/crazyFormat1/ICrazyFormat1Model";
+import {CrazyFormat1Component, ICrazyFormat1Component} from "./mock/typesForModels/crazyFormat1/ICrazyFormat1Component";
 
-setDefaultImplementation("IGameObjectModel", GameObjectModel);
-setDefaultImplementation("IBuildingModel", BuildingModel);
-setDefaultImplementation("ICrazyFormat1Model", CrazyFormat1Model);
+setDefaultImplementation("IGameObjectComponent", GameObjectComponent);
+setDefaultImplementation("IBuildingComponent", BuildingComponent);
+setDefaultImplementation("ICrazyFormat1Component", CrazyFormat1Component);
 
 describe('ModelFromTypeDefTest', function (this: Suite)
 {
@@ -39,7 +39,7 @@ describe('ModelFromTypeDefTest', function (this: Suite)
         const data: GameObject = {id: id, name: name};
         factory.mapToValue("GameObject", data);
 
-        const model: IGameObjectModel = factory.getInstance("IGameObjectModel");
+        const model: IGameObjectComponent = factory.getInstance("IGameObjectComponent");
 
         expect(id).equals(model.id);
         expect(name).equals(model.name);
@@ -67,7 +67,7 @@ describe('ModelFromTypeDefTest', function (this: Suite)
         factory.mapToValue("GameObject", data);
         factory.mapToValue("Building", data);
 
-        const model: IBuildingModel = factory.getInstance("IBuildingModel");
+        const model: IBuildingComponent = factory.getInstance("IBuildingComponent");
 
         expect(id).equals(model.id);
         expect(name).equals(model.name);
@@ -88,12 +88,12 @@ describe('ModelFromTypeDefTest', function (this: Suite)
         const data: GameObject = {id: "id", name: "name"};
         factory.mapToValue("GameObject", data);
 
-        const model: IGameObjectModel = factory.getInstance("IGameObjectModel");
-        model.addMessageListener(GameObjectModelMessageType.ON_SET_ID, () =>
+        const model: IGameObjectComponent = factory.getInstance("IGameObjectComponent");
+        model.addMessageListener(GameObjectComponentMessageType.ON_SET_ID, () =>
         {
             done();
         });
-        model.dispatchMessage(GameObjectModelMessageType.ON_SET_ID);
+        model.dispatchMessage(GameObjectComponentMessageType.ON_SET_ID);
     });
 
     it('testUglyTypeDef', () =>
@@ -110,7 +110,7 @@ describe('ModelFromTypeDefTest', function (this: Suite)
         factory.mapToValue("Building", data);
         factory.mapToValue("CrazyFormat1", data);
 
-        const model: ICrazyFormat1Model = factory.getInstance("ICrazyFormat1Model");
+        const model: ICrazyFormat1Component = factory.getInstance("ICrazyFormat1Component");
 
         expect(1).equals(model.a);
         expect("two").equals(model.b);

@@ -41,6 +41,7 @@ class ModelFromTypeGen
     private suffix: string;
     private typeDefImports: string;
     private readonly relatedImportPath: string;
+    private importBaseFrom: string;
 
     public constructor()
     {
@@ -161,11 +162,13 @@ class ModelFromTypeGen
     private findSuffix(): void
     {
         this.suffix = "Model";
+        this.importBaseFrom = "domwires";
 
         const suffixArr: string[] = this.typedefFile.split("/*@Suffix=");
         if (suffixArr.length > 1)
         {
             this.suffix = suffixArr[1].slice(0, suffixArr[1].indexOf("*/"));
+            this.importBaseFrom = "../I" + this.suffix;
             this.typedefFile = this.typedefFile.split("/*@Suffix=" + this.suffix + "*/").join("");
 
             console.info("SUFFIX: " + this.suffix);
@@ -304,7 +307,7 @@ class ModelFromTypeGen
             if (ampersandSplit.length > 1)
             {
                 baseTypeDefWithPackage = ampersandSplit[0].substring(ampersandSplit[0].indexOf("=") + 1, ampersandSplit[0].length);
-                baseModelName = baseTypeDefWithPackage + "Model";
+                baseModelName = baseTypeDefWithPackage + this.suffix;
                 baseData = baseTypeDefWithPackage.charAt(0).toLowerCase() + baseTypeDefWithPackage.substring(1, baseTypeDefWithPackage.length);
 
                 console.info("Base model: " + baseModelName);
@@ -318,11 +321,11 @@ class ModelFromTypeGen
         const modelPrefix: string = typeDefName + this.suffix;
         this.modelName = isBase ? "ModelGen" : modelPrefix;
         const enumName: string = modelPrefix;
-        let modelBaseName = "AbstractModel";
-        let modelBaseInterface = "IModel";
+        let modelBaseName = "Abstract" + this.suffix;
+        let modelBaseInterface = "I" + this.suffix;
         const data: string = modelPrefix.charAt(0).toLowerCase() + modelPrefix.substring(1, modelPrefix.length) + "Data";
         let imports = "";
-        let _override = "";
+        let _override = this.suffix == "Model" ? "" : "override ";
         let _super = "";
 
         if (baseModelName != null || !isBase)
@@ -350,7 +353,8 @@ class ModelFromTypeGen
                 if (ampersandSplit.length == 1)
                 {
                     imports =
-                        "import {IModelImmutable, IModel, AbstractModel} from \"domwires\";" + this.sep() +
+                        "import {I" + this.suffix + "Immutable, I" + this.suffix + ", Abstract" + this.suffix + "} from " +
+                            "\"" + this.importBaseFrom + "\";" + this.sep() +
                         "import {inject, postConstruct} from \"inversify\";" + this.sep() +
                         "import {${typedef_name}" + this.suffix + "MessageType} from \"./I${typedef_name}" + this.suffix + "\";" + this.sep() +
                         "import {" + typeDefName + "} from \"../" + typeDefName + "\";" + this.sep() + this.typeDefImports;
@@ -361,7 +365,7 @@ class ModelFromTypeGen
                         "import {" + modelBaseInterface + ", " + modelBaseInterface + "Immutable, " + modelBaseName + "} from \"../" + baseData + "/I" + modelBaseName + "\";" + this.sep() +
                         "import {inject, postConstruct} from \"inversify\";" + this.sep() +
                         "import {" + typeDefName + "} from \"../" + typeDefName + "\";" + this.sep() +
-                        "import {${typedef_name}ModelMessageType} from \"./I${typedef_name}Model\";";
+                        "import {${typedef_name}" + this.suffix + "MessageType} from \"./I${typedef_name}" + this.suffix + "\";";
                 }
             }
         }
