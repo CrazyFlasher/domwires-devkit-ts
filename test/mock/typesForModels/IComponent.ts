@@ -13,8 +13,7 @@ export interface IComponent extends IModel, IComponentImmutable
 {
 }
 
-
-export class AbstractComponent extends AbstractModel implements IModel
+export abstract class AbstractComponent extends AbstractModel implements IModel
 {
     @postConstruct()
     protected init(): void
