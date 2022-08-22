@@ -1,5 +1,5 @@
-import {DwError} from "../../DwError";
-import {AbstractService} from "../AbstractService";
+import {DwError} from "../../../DwError";
+import {AbstractService} from "../../AbstractService";
 import {
     INetServerService,
     NetServerServiceConfig,
@@ -7,7 +7,7 @@ import {
     RequestResponse
 } from "./INetServerService";
 import {inject} from "inversify";
-import {DW_TYPES} from "../../dw_consts";
+import {DW_TYPES} from "../../../dw_consts";
 
 export abstract class AbstractNetServerService<ReqResType> extends AbstractService implements INetServerService<ReqResType>
 {

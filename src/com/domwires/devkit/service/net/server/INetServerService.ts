@@ -1,4 +1,4 @@
-import {IService, IServiceImmutable, ServiceConfig} from "../IService";
+import {IService, IServiceImmutable, ServiceConfig} from "../../IService";
 import {Enum} from "domwires";
 
 export type NetServerServiceConfig = ServiceConfig & {

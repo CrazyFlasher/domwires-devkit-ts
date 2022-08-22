@@ -3,7 +3,7 @@ import {
     INetServerServiceImmutable,
     NetServerServiceConfig,
     RequestResponse
-} from "../../INetServerService";
+} from "../INetServerService";
 import {Server} from "http";
 import {Enum} from "domwires";
 

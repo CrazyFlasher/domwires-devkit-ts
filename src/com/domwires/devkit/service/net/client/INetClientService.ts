@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {IService, IServiceImmutable, ServiceConfig} from "../../IService";
-import {RequestResponse} from "../INetServerService";
+import {RequestResponse} from "../server/INetServerService";
 import {Enum} from "domwires";
 
 export type NetClientServiceConfig = ServiceConfig & {

@@ -1,6 +1,6 @@
-import {AbstractNetServerService} from "../../../AbstractNetServerService";
+import {AbstractNetServerService} from "../../AbstractNetServerService";
 import {HttpRequestResponseType, IHttpServerService} from "../IHttpServerService";
-import {INetServerService, NetServerServiceMessageType, RequestResponse} from "../../../INetServerService";
+import {INetServerService, NetServerServiceMessageType, RequestResponse} from "../../INetServerService";
 import express, {Response} from "express";
 import {Express, Router} from "express/ts4.0";
 import {Server} from "http";

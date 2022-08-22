@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import {IService, IServiceImmutable} from "../../IService";
+import {IService, IServiceImmutable} from "../../../IService";
 import {Enum} from "domwires";
 
 export type DataBaseServiceConfig = {

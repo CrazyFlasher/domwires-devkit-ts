@@ -1,4 +1,4 @@
-import {INetServerService, INetServerServiceImmutable} from "../../INetServerService";
+import {INetServerService, INetServerServiceImmutable} from "../INetServerService";
 import {Enum} from "domwires";
 import {DwError} from "../../../../DwError";
 import {Server} from "http";

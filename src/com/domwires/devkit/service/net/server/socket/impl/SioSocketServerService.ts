@@ -1,11 +1,11 @@
-import {AbstractNetServerService} from "../../../AbstractNetServerService";
+import {AbstractNetServerService} from "../../AbstractNetServerService";
 import {
     ISocketServerService,
     SocketRequestResponseType,
     SocketServerServiceConfig,
     SocketServerServiceMessageType
 } from "../ISocketServerService";
-import {INetServerService, NetServerServiceMessageType, RequestResponse} from "../../../INetServerService";
+import {INetServerService, NetServerServiceMessageType, RequestResponse} from "../../INetServerService";
 import {inject, named} from "inversify";
 import {DW_TYPES} from "../../../../../dw_consts";
 import {Server, Socket} from "socket.io";

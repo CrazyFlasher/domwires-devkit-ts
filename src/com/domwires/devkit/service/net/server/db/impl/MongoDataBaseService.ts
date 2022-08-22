@@ -1,7 +1,7 @@
-import {AbstractService} from "../../../AbstractService";
+import {AbstractService} from "../../../../AbstractService";
 import {DataBaseServiceConfig, DataBaseServiceMessageType, IDataBaseService, UpdateOperator} from "../IDataBaseService";
 import {inject} from "inversify";
-import {DW_TYPES} from "../../../../dw_consts";
+import {DW_TYPES} from "../../../../../dw_consts";
 import {Db, Filter, FindCursor, FindOptions, MongoClient} from "mongodb";
 
 // TODO: make final
