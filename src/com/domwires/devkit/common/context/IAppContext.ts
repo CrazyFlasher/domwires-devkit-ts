@@ -17,7 +17,7 @@ import {
     Type
 } from "domwires";
 import {inject, named, optional} from "inversify";
-import {DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
+import { DW_TYPES, FACTORIES_NAMES } from "../dw_consts";
 
 export interface IAppContextImmutable extends IContextImmutable
 {

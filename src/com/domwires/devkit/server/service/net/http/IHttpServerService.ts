@@ -1,7 +1,7 @@
 import {INetServerService, INetServerServiceImmutable} from "../INetServerService";
 import {Enum} from "domwires";
-import {DwError} from "../../../../DwError";
 import {Server} from "http";
+import { DwError } from "../../../../common/DwError";
 
 export class HttpRequestResponseType extends Enum
 {

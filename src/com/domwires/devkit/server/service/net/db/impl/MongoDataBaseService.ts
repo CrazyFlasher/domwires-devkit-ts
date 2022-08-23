@@ -1,8 +1,8 @@
-import {AbstractService} from "../../../../AbstractService";
+import {AbstractService} from "../../../../../common/service/AbstractService";
 import {DataBaseServiceConfig, DataBaseServiceMessageType, IDataBaseService, UpdateOperator} from "../IDataBaseService";
 import {inject} from "inversify";
-import {DW_TYPES} from "../../../../../dw_consts";
 import {Db, Filter, FindCursor, FindOptions, MongoClient} from "mongodb";
+import { DW_TYPES } from "../../../../../common/dw_consts";
 
 // TODO: make final
 export class MongoDataBaseService extends AbstractService implements IDataBaseService

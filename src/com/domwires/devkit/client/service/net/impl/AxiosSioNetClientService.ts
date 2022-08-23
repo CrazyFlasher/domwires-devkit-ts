@@ -2,8 +2,8 @@ import {AbstractNetClientService} from "../AbstractNetClientService";
 import {ClientServiceRequestType, INetClientService, NetClientServiceMessageType} from "../INetClientService";
 import axios, {AxiosInstance} from "axios";
 import * as querystring from "querystring";
-import {RequestResponse} from "../../server/INetServerService";
 import {io, Socket} from "socket.io-client";
+import { RequestResponse } from "../../../../common/net/RequestResponse";
 
 export class AxiosSioNetClientService extends AbstractNetClientService implements INetClientService
 {

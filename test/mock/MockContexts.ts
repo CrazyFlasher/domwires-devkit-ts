@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {AppContext, IAppContext, IAppContextImmutable} from "../../src/com/domwires/devkit/context/IAppContext";
+import {AppContext, IAppContext, IAppContextImmutable} from "../../src/com/domwires/devkit/common/context/IAppContext";
 import {IFactoryImmutable} from "domwires";
 import {setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";

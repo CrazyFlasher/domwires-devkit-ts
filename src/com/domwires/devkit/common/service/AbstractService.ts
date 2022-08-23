@@ -2,8 +2,8 @@ import "reflect-metadata";
 import {AbstractModel, IFactoryImmutable} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
 import {inject, optional, postConstruct} from "inversify";
-import {DwError} from "../DwError";
-import {DW_TYPES} from "../dw_consts";
+import { DW_TYPES } from "../dw_consts";
+import { DwError } from "../DwError";
 
 export abstract class AbstractService extends AbstractModel implements IService
 {

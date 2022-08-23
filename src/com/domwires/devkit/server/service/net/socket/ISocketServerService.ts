@@ -2,10 +2,10 @@ import {
     INetServerService,
     INetServerServiceImmutable,
     NetServerServiceConfig,
-    RequestResponse
 } from "../INetServerService";
 import {Server} from "http";
 import {Enum} from "domwires";
+import {RequestResponse} from "../../../../common/net/RequestResponse";
 
 export class SocketRequestResponseType extends Enum
 {

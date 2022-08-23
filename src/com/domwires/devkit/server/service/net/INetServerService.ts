@@ -1,17 +1,10 @@
-import {IService, IServiceImmutable, ServiceConfig} from "../../IService";
+import {IService, IServiceImmutable, ServiceConfig} from "../../../common/service/IService";
 import {Enum} from "domwires";
+import {RequestResponse} from "../../../common/net/RequestResponse";
 
 export type NetServerServiceConfig = ServiceConfig & {
     readonly host: string;
     readonly port: number;
-};
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: remove default any
-export type RequestResponse<TypeType, DataType = any> = {
-    readonly id: string;
-    readonly type: TypeType;
-    readonly data?: DataType;
 };
 
 export class NetServerServiceMessageType extends Enum

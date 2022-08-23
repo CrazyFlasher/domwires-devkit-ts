@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import {IService, IServiceImmutable, ServiceConfig} from "../../IService";
-import {RequestResponse} from "../server/INetServerService";
+import {IService, IServiceImmutable, ServiceConfig} from "../../../common/service/IService";
 import {Enum} from "domwires";
+import { RequestResponse } from "../../../common/net/RequestResponse";
 
 export type NetClientServiceConfig = ServiceConfig & {
     readonly httpBaseUrl: string;

@@ -1,7 +1,7 @@
 import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable} from "domwires";
 import {setDefaultImplementation} from "domwires";
 import {inject, named, optional} from "inversify";
-import {DW_TYPES, FACTORIES_NAMES} from "../../src/com/domwires/devkit/dw_consts";
+import {DW_TYPES, FACTORIES_NAMES} from "../../src/com/domwires/devkit/common/dw_consts";
 
 export interface IMockModel extends IMockModelImmutable, IModel
 {

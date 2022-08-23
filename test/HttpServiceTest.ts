@@ -1,20 +1,22 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {Factory, IFactory, Logger} from "domwires";
-import {DW_TYPES} from "../src";
-import {ExpressHttpServerService} from "../src";
+import {expect} from "chai";
+import * as Http from "http";
+import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
+import {RequestResponse} from "../src/com/domwires/devkit/common/net/RequestResponse";
 import {
     HttpRequestResponseType,
     IHttpServerService
-} from "../src";
+} from "../src/com/domwires/devkit/server/service/net/http/IHttpServerService";
+import {
+    ExpressHttpServerService
+} from "../src/com/domwires/devkit/server/service/net/http/impl/ExpressHttpServerService";
 import {
     NetServerServiceConfig,
-    NetServerServiceMessageType,
-    RequestResponse
-} from "../src";
-import {ServiceMessageType} from "../src";
-import {expect} from "chai";
-import * as Http from "http";
+    NetServerServiceMessageType
+} from "../src/com/domwires/devkit/server/service/net/INetServerService";
+import {ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
 
 const logger = new Logger();
 

@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import {AbstractService} from "../../AbstractService";
+import {AbstractService} from "../../../common/service/AbstractService";
 import {
     ClientServiceRequestType,
     INetClientService,
     NetClientServiceConfig
 } from "./INetClientService";
-import {RequestResponse} from "../server/INetServerService";
 import {inject} from "inversify";
-import {DW_TYPES} from "../../../dw_consts";
-import {DwError} from "../../../DwError";
+import {RequestResponse} from "../../../common/net/RequestResponse";
+import { DW_TYPES } from "../../../common/dw_consts";
+import { DwError } from "../../../common/DwError";
 
 export abstract class AbstractNetClientService extends AbstractService implements INetClientService
 {

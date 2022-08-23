@@ -1,17 +1,40 @@
 {
   "name": "domwires-devkit",
-  "version": "0.9.11",
+  "version": "0.9.26",
   "description": "Devkit based on DomWires Framework",
   "repository": {
     "type": "git",
     "url": "https://github.com/CrazyFlasher/domwires-devkit-ts"
   },
   "license": "MIT",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist/"
-  ],
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "import": "./dist/index.common.js",
+      "require": "./dist/index.common.js"
+    },
+    "./client": {
+      "import": "./dist/index.client.js",
+      "require": "./dist/index.client.js"
+    },
+    "./server": {
+      "import": "./dist/index.server.js",
+      "require": "./dist/index.server.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.common.d.ts"
+      ],
+      "client": [
+        "dist/index.client.d.ts"
+      ],
+      "server": [
+        "dist/index.server.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "axios": "0.27.2",
     "cors": "2.8.5",

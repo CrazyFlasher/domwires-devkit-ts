@@ -1,5 +1,5 @@
-import {AbstractService} from "../../src/com/domwires/devkit/service/AbstractService";
-import {ServiceConfig} from "../../src/com/domwires/devkit/service/IService";
+import {AbstractService} from "../../src/com/domwires/devkit/common/service/AbstractService";
+import {ServiceConfig} from "../../src/com/domwires/devkit/common/service/IService";
 import {inject} from "inversify";
 import {MOCK_TYPES} from "./mock_types";
 
