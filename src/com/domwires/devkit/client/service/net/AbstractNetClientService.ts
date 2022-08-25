@@ -14,10 +14,10 @@ import { DwError } from "../../../common/DwError";
 export abstract class AbstractNetClientService extends AbstractService implements INetClientService
 {
     @inject(DW_TYPES.NetClientServiceConfig)
-    protected netClientServiceConfig: NetClientServiceConfig;
+    protected netClientServiceConfig!: NetClientServiceConfig;
 
-    protected _responseData: RequestResponse<ClientServiceRequestType>;
-    protected _isConnected: boolean;
+    protected _responseData!: RequestResponse<ClientServiceRequestType>;
+    protected _isConnected!: boolean;
 
     public connect(): INetClientService
     {
@@ -57,6 +57,8 @@ export abstract class AbstractNetClientService extends AbstractService implement
                 this.sendTcpRequest(request);
             }
         }
+
+        return this;
     }
 
     protected sendTcpRequest(request: RequestResponse<ClientServiceRequestType>): void

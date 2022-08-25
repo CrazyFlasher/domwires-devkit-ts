@@ -7,7 +7,7 @@ export const DW_TYPES = {
     SocketServerServiceConfig: "SocketServerServiceConfig",
     DataBaseServiceConfig: "DataBaseServiceConfig",
     IHttpServerService: "IHttpServerService<HttpRequestResponseType>",
-    ISocketServerService: "ISocketServerService",
+    ISocketServerService: "ISocketServerService<ClientDataType>",
     IDataBaseService: "IDataBaseService",
     INetClientService: "INetClientService",
     Class: "Class"

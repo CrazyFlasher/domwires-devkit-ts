@@ -11,25 +11,25 @@
 
 class ModelFromTypeGen
 {
-    private modelTemplate: string;
-    private iModelTemplate: string;
-    private iModelImmutableTemplate: string;
-    private modelMessageTypeTemplate: string;
+    private modelTemplate!: string;
+    private iModelTemplate!: string;
+    private iModelImmutableTemplate!: string;
+    private modelMessageTypeTemplate!: string;
 
-    private getterTemplate: string;
-    private setterTemplate: string;
+    private getterTemplate!: string;
+    private setterTemplate!: string;
 
-    private modelName: string;
+    private modelName!: string;
 
     private readonly input: string;
     private readonly templatesPath: string;
-    private output: string;
+    private output!: string;
     private readonly overwrite: boolean;
     private readonly verbose: boolean;
 
-    private enumValueList: Array<string>;
-    private typedefFile: string;
-    private typeDefFileName: string;
+    private enumValueList!: Array<string>;
+    private typedefFile!: string;
+    private typeDefFileName!: string;
     private hasErrors = false;
 
     private readonly workingDirectory: string;
@@ -38,10 +38,10 @@ class ModelFromTypeGen
     private minimist = require('minimist');
     private os = require('os');
 
-    private suffix: string;
-    private typeDefImports: string;
-    private readonly relatedImportPath: string;
-    private importBaseFrom: string;
+    private suffix!: string;
+    private typeDefImports!: string;
+    private readonly relatedImportPath!: string;
+    private importBaseFrom!: string;
 
     public constructor()
     {
@@ -262,7 +262,7 @@ class ModelFromTypeGen
 
     private generate(type: number, isBase = false): OutData
     {
-        let template: string = null;
+        let template = "";
 
         if (type == ObjectType.Enum)
         {
@@ -299,7 +299,7 @@ class ModelFromTypeGen
         const typeDefName: string = typeDefSplit[1].split("=")[0];
 
         let baseTypeDefWithPackage = "";
-        let baseModelName: string = null;
+        let baseModelName: string | undefined;
         let baseData = "";
 
         if (isBase)
@@ -321,14 +321,14 @@ class ModelFromTypeGen
         const modelPrefix: string = typeDefName + this.suffix;
         this.modelName = isBase ? "ModelGen" : modelPrefix;
         const enumName: string = modelPrefix;
-        let modelBaseName = "Abstract" + this.suffix;
+        let modelBaseName: string | undefined = "Abstract" + this.suffix;
         let modelBaseInterface = "I" + this.suffix;
         const data: string = modelPrefix.charAt(0).toLowerCase() + modelPrefix.substring(1, modelPrefix.length) + "Data";
         let imports = "";
         let _override = this.suffix == "Model" ? "" : "override ";
         let _super = "";
 
-        if (baseModelName != null || !isBase)
+        if (baseModelName || !isBase)
         {
             modelBaseName = baseModelName;
             modelBaseInterface = "I" + modelBaseName;
@@ -371,7 +371,7 @@ class ModelFromTypeGen
         }
         else
         {
-            out = out.split(this.tab() + "@inject(\"${typedef_name}\")" + this.sep() + this.tab() + "private ${data}: ${typedef_name};").join("");
+            out = out.split(this.tab() + "@inject(\"${typedef_name}\")" + this.sep() + this.tab() + "private ${data}!: ${typedef_name};").join("");
 
             if (type === ObjectType.Immutable)
             {
@@ -503,19 +503,19 @@ class ModelFromTypeGen
         let formattedText = "";
         const lineList: Array<string> = text.split(this.sep());
 
-        let prevLine: string = null;
+        let prevLine: string | undefined;
         let add = true;
 
         for (let i = 0; i < lineList.length; i++)
         {
             const line: string = lineList[i];
-            const nextLine: string = i < lineList.length - 1 ? lineList[i + 1] : null;
+            const nextLine: string | undefined = i < lineList.length - 1 ? lineList[i + 1] : undefined;
 
             if (!this.isEmpty(line))
             {
                 add = true;
             }
-            else if (prevLine == null)
+            else if (!prevLine)
             {
                 add = true;
             }
@@ -523,7 +523,7 @@ class ModelFromTypeGen
             {
                 add = true;
             }
-            else if (this.isEmpty(prevLine) || (nextLine.split("}").length == 2) || (prevLine.split("{").length == 2))
+            else if (this.isEmpty(prevLine) || (nextLine && nextLine.split("}").length == 2) || (prevLine.split("{").length == 2))
             {
                 add = false;
             }

@@ -8,13 +8,13 @@ import { DwError } from "../DwError";
 export abstract class AbstractService extends AbstractModel implements IService
 {
     @inject(DW_TYPES.ServiceConfig)
-    protected config: ServiceConfig;
+    protected config!: ServiceConfig;
 
     @inject(DW_TYPES.IFactoryImmutable) @optional()
-    protected factory: IFactoryImmutable;
+    protected factory!: IFactoryImmutable;
 
     private _initialized = false;
-    private _enabled: boolean;
+    private _enabled!: boolean;
 
     @postConstruct()
     private postConstruct(): void

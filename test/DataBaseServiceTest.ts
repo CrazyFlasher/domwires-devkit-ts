@@ -25,7 +25,7 @@ describe('DataBaseServiceTest', function (this: Suite)
     beforeEach((done: Done) =>
     {
         factory = new Factory(new Logger());
-        factory.mapToType(DW_TYPES.IDataBaseService, MongoDataBaseService);
+        factory.mapToType<IDataBaseService>(DW_TYPES.IDataBaseService, MongoDataBaseService);
 
         const config: DataBaseServiceConfig = {uri: "mongodb://127.0.0.1:27017", dataBaseName: "test_data_base"};
 
@@ -93,27 +93,27 @@ describe('DataBaseServiceTest', function (this: Suite)
             done();
         };
 
-        const findSuccess_1 = (m: IMessage, people: PermLiver[]) =>
+        const findSuccess_1 = (m?: IMessage, people?: PermLiver[]) =>
         {
-            expect(people.length).equals(1);
-            expect(people[0].firstName).equals("Siplqy");
+            expect(people && people.length).equals(1);
+            expect(people && people[0].firstName).equals("Siplqy");
 
             db.update<PermLiver>(COLLECTION_NAME,
                 {firstName: "Gidroponka"},
                 {$set: {lastName: "Nitokaja"}});
         };
 
-        const findSuccess_2 = (m: IMessage, people: PermLiver[]) =>
+        const findSuccess_2 = (m?: IMessage, people?: PermLiver[]) =>
         {
-            expect(people[0].firstName).equals("Gidroponka");
-            expect(people[0].lastName).equals("Nitokaja");
+            expect(people && people[0].firstName).equals("Gidroponka");
+            expect(people && people[0].lastName).equals("Nitokaja");
 
             db.delete<PermLiver>(COLLECTION_NAME, {firstName: {$regexMatch: "Sipl"}});
         };
 
-        const findSuccess_3 = (m: IMessage, people: PermLiver[]) =>
+        const findSuccess_3 = (m?: IMessage, people?: PermLiver[]) =>
         {
-            expect(people.length).equals(2);
+            expect(people && people.length).equals(2);
 
             complete();
         };
@@ -133,7 +133,7 @@ describe('DataBaseServiceTest', function (this: Suite)
             db.find<PermLiver>(COLLECTION_NAME, {firstName: "Gidroponka"});
         });
 
-        db.addMessageListener(DataBaseServiceMessageType.DELETE_SUCCESS, (m: IMessage, deletedCount) =>
+        db.addMessageListener(DataBaseServiceMessageType.DELETE_SUCCESS, (m?: IMessage, deletedCount?) =>
         {
             expect(deletedCount).equals(1);
 

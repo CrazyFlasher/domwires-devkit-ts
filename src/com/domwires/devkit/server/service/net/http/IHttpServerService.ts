@@ -6,7 +6,7 @@ import { DwError } from "../../../../common/DwError";
 export class HttpRequestResponseType extends Enum
 {
     // This prop is needed for transpiler to define HttpRequestResponseType as unique type
-    private readonly instance: HttpRequestResponseType;
+    private readonly instance!: HttpRequestResponseType;
 
     public static readonly GET: HttpRequestResponseType = new HttpRequestResponseType();
     public static readonly POST: HttpRequestResponseType = new HttpRequestResponseType();
@@ -22,7 +22,7 @@ export class HttpRequestResponseType extends Enum
 
 export interface IHttpServerServiceImmutable extends INetServerServiceImmutable<HttpRequestResponseType>
 {
-    getRequestQueryParam(id: string): string;
+    getRequestQueryParam(id: string): string | undefined;
 }
 
 export interface IHttpServerService extends IHttpServerServiceImmutable, INetServerService<HttpRequestResponseType>

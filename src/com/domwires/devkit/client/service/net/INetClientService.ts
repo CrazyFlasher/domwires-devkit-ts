@@ -12,7 +12,7 @@ export type NetClientServiceConfig = ServiceConfig & {
 export class ClientServiceRequestType extends Enum
 {
     // This prop is needed for transpiler to define ClientServiceRequestType as unique type
-    private readonly instance: ClientServiceRequestType;
+    private readonly instance!: ClientServiceRequestType;
 
     public static readonly GET: ClientServiceRequestType = new ClientServiceRequestType();
     public static readonly POST: ClientServiceRequestType = new ClientServiceRequestType();

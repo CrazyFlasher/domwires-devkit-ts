@@ -72,8 +72,8 @@ export class BaseMockContext extends AppContext implements IBaseMockContext
 
 export class ChildMockContext extends BaseMockContext implements IChildMockContext
 {
-    private model: IMockModel;
-    private model2: IMockModel;
+    private model!: IMockModel;
+    private model2!: IMockModel;
 
     protected override init(): void
     {
@@ -96,7 +96,7 @@ export class ChildMockContext extends BaseMockContext implements IChildMockConte
 
 export class MainMockContext extends BaseMockContext implements IMainMockContext
 {
-    private childContext: IChildMockContext;
+    private childContext!: IChildMockContext;
 
     protected override init(): void
     {
@@ -111,5 +111,5 @@ export class MainMockContext extends BaseMockContext implements IMainMockContext
     }
 }
 
-setDefaultImplementation("IMainMockContext", MainMockContext);
-setDefaultImplementation("IChildMockContext", ChildMockContext);
+setDefaultImplementation<IMainMockContext>("IMainMockContext", MainMockContext);
+setDefaultImplementation<IChildMockContext>("IChildMockContext", ChildMockContext);

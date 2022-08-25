@@ -32,7 +32,7 @@ export interface ISocketServerServiceImmutable<ClientDataType> extends INetServe
 
     get requestFromClientId(): string;
 
-    getClientDataById(clientId: string): ClientDataType;
+    getClientDataById(clientId: string): ClientDataType | undefined;
 }
 
 export interface ISocketServerService<ClientDataType> extends ISocketServerServiceImmutable<ClientDataType>, INetServerService<SocketRequestResponseType>

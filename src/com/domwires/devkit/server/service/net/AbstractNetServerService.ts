@@ -12,9 +12,9 @@ import { DwError } from "../../../common/DwError";
 export abstract class AbstractNetServerService<ReqResType> extends AbstractService implements INetServerService<ReqResType>
 {
     @inject(DW_TYPES.NetServerServiceConfig)
-    protected netServerServiceConfig: NetServerServiceConfig;
+    protected netServerServiceConfig!: NetServerServiceConfig;
 
-    protected _requestData: RequestResponse<ReqResType>;
+    protected _requestData!: RequestResponse<ReqResType>;
     protected _isOpened = false;
 
     protected reqMap: Map<string, RequestResponse<ReqResType>> = new Map<string, RequestResponse<ReqResType>>();

@@ -7,8 +7,8 @@ import { RequestResponse } from "../../../../common/net/RequestResponse";
 
 export class AxiosSioNetClientService extends AbstractNetClientService implements INetClientService
 {
-    private http: AxiosInstance;
-    private socket: Socket;
+    private http!: AxiosInstance;
+    private socket!: Socket;
 
     protected override continueInit(): void
     {
@@ -51,7 +51,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         if (!this.checkConnected()) return this;
 
         this.socket.disconnect();
-        this.socket = null;
+        // this.socket = undefined;
 
         this._isConnected = false;
 

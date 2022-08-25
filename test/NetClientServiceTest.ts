@@ -50,9 +50,9 @@ describe('NetClientServiceTest', function (this: Suite)
     {
         factory = new Factory(logger);
 
-        factory.mapToType(DW_TYPES.INetClientService, AxiosSioNetClientService);
-        factory.mapToType(DW_TYPES.IHttpServerService, ExpressHttpServerService);
-        factory.mapToType(DW_TYPES.ISocketServerService, SioSocketServerService);
+        factory.mapToType<INetClientService>(DW_TYPES.INetClientService, AxiosSioNetClientService);
+        factory.mapToType<IHttpServerService>(DW_TYPES.IHttpServerService, ExpressHttpServerService);
+        factory.mapToType<ISocketServerService<ClientData>>(DW_TYPES.ISocketServerService, SioSocketServerService);
 
         const clientConfig: NetClientServiceConfig = {
             httpBaseUrl: "http://127.0.0.1:3000",
@@ -215,7 +215,7 @@ describe('NetClientServiceTest', function (this: Suite)
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.GET);
             expect(client.responseData.data).equals("hi");
-            expect(data.data).equals("hi");
+            expect(data && data.data).equals("hi");
 
             done();
         });
@@ -230,7 +230,7 @@ describe('NetClientServiceTest', function (this: Suite)
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.POST);
             expect(client.responseData.data).equals("hi");
-            expect(data.data).equals("hi");
+            expect(data && data.data).equals("hi");
 
             done();
         });
@@ -245,7 +245,7 @@ describe('NetClientServiceTest', function (this: Suite)
             expect(client.responseData.id).equals("test");
             expect(client.responseData.type).equals(ClientServiceRequestType.TCP);
             expect(client.responseData.data).equals("hi");
-            expect(data.data).equals("hi");
+            expect(data && data.data).equals("hi");
 
             done();
         });
@@ -260,7 +260,7 @@ describe('NetClientServiceTest', function (this: Suite)
 @injectable()
 class ClientData
 {
-    private _created: boolean;
+    private _created!: boolean;
 
     public get created(): boolean
     {

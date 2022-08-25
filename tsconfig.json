@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "noImplicitOverride": true,
     "moduleResolution": "Node",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "strict": true
   },
   "include": ["src/**/*", "scripts/**/*"]
 }

@@ -23,14 +23,14 @@ describe('ServiceTest', function (this: Suite)
 
     it('testConstructThrowsBindingError', () =>
     {
-        expect(() => factory.getInstance(MockService1)).to.throw("No matching bindings found");
+        expect(() => factory.getInstance<MockService1>(MockService1)).to.throw("No matching bindings found");
     });
 
     it('testEnabledTrueByDefault', () =>
     {
         factory.mapToValue(DW_TYPES.ServiceConfig, {});
 
-        const service: MockService1 = factory.getInstance(MockService1);
+        const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
         expect(service.enabled).true;
     });
@@ -40,17 +40,15 @@ describe('ServiceTest', function (this: Suite)
         const config: ServiceConfig = {enabled: false};
         factory.mapToValue(DW_TYPES.ServiceConfig, config);
 
-        const service: MockService1 = factory.getInstance(MockService1);
+        const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
         expect(service.enabled).false;
 
-        let initComplete: boolean;
-
-        service.addMessageListener(ServiceMessageType.INIT_FAIL, () => initComplete = true);
+        service.addMessageListener(ServiceMessageType.INIT_FAIL, () =>
+        {
+            expect(service.initialized).false;
+        });
         service.init();
-
-        expect(initComplete).true;
-        expect(service.initialized).false;
     });
 
     it('testEnabledInitializedTrue', () =>
@@ -58,17 +56,15 @@ describe('ServiceTest', function (this: Suite)
         const config: ServiceConfig = {enabled: true};
         factory.mapToValue(DW_TYPES.ServiceConfig, config);
 
-        const service: MockService1 = factory.getInstance(MockService1);
+        const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
         expect(service.enabled).true;
 
-        let initComplete: boolean;
-
-        service.addMessageListener(ServiceMessageType.INIT_SUCCESS, () => initComplete = true);
+        service.addMessageListener(ServiceMessageType.INIT_SUCCESS, () =>
+        {
+            expect(service.initialized).true;
+        });
         service.init();
-
-        expect(initComplete).true;
-        expect(service.initialized).true;
     });
 
     it('testWithSpecificConfig', () =>
@@ -77,17 +73,15 @@ describe('ServiceTest', function (this: Suite)
         factory.mapToValue(DW_TYPES.ServiceConfig, config);
         factory.mapToValue(MOCK_TYPES.MockServiceConfig, config);
 
-        const service: MockService2 = factory.getInstance(MockService2);
+        const service: MockService2 = factory.getInstance<MockService2>(MockService2);
 
         expect(service.enabled).true;
         expect(service.mockServiceConfig.id).equals("mockServ");
 
-        let initComplete: boolean;
-
-        service.addMessageListener(ServiceMessageType.INIT_SUCCESS, () => initComplete = true);
+        service.addMessageListener(ServiceMessageType.INIT_SUCCESS, () =>
+        {
+            expect(service.initialized).true;
+        });
         service.init();
-
-        expect(initComplete).true;
-        expect(service.initialized).true;
     });
 });

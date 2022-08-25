@@ -13,9 +13,9 @@ import {BuildingComponent, IBuildingComponent} from "./mock/typesForModels/build
 import {CrazyFormat1} from "./mock/typesForModels/CrazyFormat1";
 import {CrazyFormat1Component, ICrazyFormat1Component} from "./mock/typesForModels/crazyFormat1/ICrazyFormat1Component";
 
-setDefaultImplementation("IGameObjectComponent", GameObjectComponent);
-setDefaultImplementation("IBuildingComponent", BuildingComponent);
-setDefaultImplementation("ICrazyFormat1Component", CrazyFormat1Component);
+setDefaultImplementation<IGameObjectComponent>("IGameObjectComponent", GameObjectComponent);
+setDefaultImplementation<IBuildingComponent>("IBuildingComponent", BuildingComponent);
+setDefaultImplementation<ICrazyFormat1Component>("ICrazyFormat1Component", CrazyFormat1Component);
 
 describe('ModelFromTypeDefTest', function (this: Suite)
 {

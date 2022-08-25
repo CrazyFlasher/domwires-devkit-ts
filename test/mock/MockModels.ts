@@ -21,16 +21,16 @@ export interface IMockModelImmutable extends IModelImmutable
 export class MockModel extends AbstractModel implements IMockModel
 {
     @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MODEL)
-    private modelFactory: IFactoryImmutable;
+    private modelFactory!: IFactoryImmutable;
 
     @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.CONTEXT) @optional()
-    private contextFactory: IFactoryImmutable;
+    private contextFactory!: IFactoryImmutable;
 
     @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MEDIATOR) @optional()
-    private mediatorFactory: IFactoryImmutable;
+    private mediatorFactory!: IFactoryImmutable;
 
     @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.VIEW) @optional()
-    private viewFactory: IFactoryImmutable;
+    private viewFactory!: IFactoryImmutable;
 
     public getModelFactory(): IFactoryImmutable
     {
@@ -53,4 +53,4 @@ export class MockModel extends AbstractModel implements IMockModel
     }
 }
 
-setDefaultImplementation("IMockModel", MockModel);
+setDefaultImplementation<IMockModel>("IMockModel", MockModel);

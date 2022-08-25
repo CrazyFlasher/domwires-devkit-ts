@@ -12,12 +12,12 @@ import {RequestResponse} from "../../../../../common/net/RequestResponse";
 // TODO: make final
 export class ExpressHttpServerService extends AbstractNetServerService<HttpRequestResponseType> implements IHttpServerService
 {
-    private app: Express;
-    private server: Server;
-    private router: Router;
+    private app!: Express;
+    private server!: Server;
+    private router!: Router;
 
-    private pendingResponse: Response;
-    private requestQuery: ParsedQs;
+    private pendingResponse!: Response | undefined;
+    private requestQuery!: ParsedQs;
 
     protected override createServer()
     {
@@ -69,7 +69,7 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
             if (this.pendingResponse)
             {
                 this.pendingResponse.end("Server closed!");
-                this.pendingResponse = null;
+                this.pendingResponse = undefined;
             }
 
             this.server.close((err?: Error) =>
@@ -88,9 +88,9 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
         return this;
     }
 
-    public getRequestQueryParam(id: string): string
+    public getRequestQueryParam(id: string): string | undefined
     {
-        return this.requestQuery ? this.requestQuery[id] as string : null;
+        return this.requestQuery ? this.requestQuery[id] as string : undefined;
     }
 
     public get nodeHttpServer(): Server
@@ -107,7 +107,7 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
         }
 
         const pr = this.pendingResponse;
-        this.pendingResponse = null;
+        this.pendingResponse = undefined;
 
         pr.statusCode = statusCode;
 

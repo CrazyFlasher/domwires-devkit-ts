@@ -35,16 +35,16 @@ export class AppContext extends AbstractContext implements IAppContext
     private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
-    protected contextFactory: IFactory;
+    protected contextFactory!: IFactory;
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MODEL) @optional()
-    protected modelFactory: IFactory;
+    protected modelFactory!: IFactory;
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MEDIATOR) @optional()
-    protected mediatorFactory: IFactory;
+    protected mediatorFactory!: IFactory;
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.VIEW) @optional()
-    protected viewFactory: IFactory;
+    protected viewFactory!: IFactory;
 
     protected override init()
     {

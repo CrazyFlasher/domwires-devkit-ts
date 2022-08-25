@@ -84,8 +84,10 @@ describe('SocketServerServiceTest', function (this: Suite)
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
         {
+            const c = server.getClientDataById(server.connectedClientId);
+
             expect(server.connectionsCount).equals(1);
-            expect(server.getClientDataById(server.connectedClientId).created).true;
+            expect(c && c.created).true;
 
             client.disconnect();
         });
@@ -165,7 +167,7 @@ describe('SocketServerServiceTest', function (this: Suite)
 @injectable()
 class ClientData
 {
-    private _created: boolean;
+    private _created!: boolean;
 
     public get created(): boolean
     {

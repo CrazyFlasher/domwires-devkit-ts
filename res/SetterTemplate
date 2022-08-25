@@ -1,4 +1,4 @@
-    private _${name}: ${type};
+    private _${name}!: ${type};
 
     public set${u_name}(value: ${type}): I${model_name}
     {

@@ -8,12 +8,12 @@ import { DW_TYPES } from "../../../../../common/dw_consts";
 export class MongoDataBaseService extends AbstractService implements IDataBaseService
 {
     @inject(DW_TYPES.DataBaseServiceConfig)
-    protected dataBaseServiceConfig: DataBaseServiceConfig;
+    protected dataBaseServiceConfig!: DataBaseServiceConfig;
 
-    private _isConnected: boolean;
+    private _isConnected!: boolean;
 
-    private client: MongoClient;
-    private db: Db;
+    private client!: MongoClient;
+    private db!: Db;
 
     private readonly filterOperatorMap: Map<string, string> = new Map<string, string>([
         ["$equals", "$eq"],
@@ -83,7 +83,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
         {
             const resultCollection = await this.db.collection(name);
 
-            if (uniqueIndexList != null && uniqueIndexList.length > 0)
+            if (uniqueIndexList && uniqueIndexList.length > 0)
             {
                 await resultCollection.createIndex(uniqueIndexList, {unique: true});
 
@@ -167,7 +167,7 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
     {
         try
         {
-            let opts: FindOptions;
+            let opts: FindOptions | undefined = undefined;
             if (limit !== undefined || sort)
             {
                 opts = {};
@@ -230,8 +230,12 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
 
         for (const key in filter)
         {
-            Object.defineProperty(out, key,
-                Object.getOwnPropertyDescriptor(filter, key));
+            const pd:PropertyDescriptor | undefined = Object.getOwnPropertyDescriptor(filter, key);
+
+            if (pd)
+            {
+                Object.defineProperty(out, key, pd);
+            }
 
             operatorMap.forEach((v, k) =>
             {
@@ -341,8 +345,12 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
     {
         if (obj[key] === undefined) return;
 
-        Object.defineProperty(obj, to,
-            Object.getOwnPropertyDescriptor(obj, key));
+        const pd:PropertyDescriptor | undefined = Object.getOwnPropertyDescriptor(obj, key);
+
+        if (pd)
+        {
+            Object.defineProperty(obj, to, pd);
+        }
 
         delete obj[key];
     }

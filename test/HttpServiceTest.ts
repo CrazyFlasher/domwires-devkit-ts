@@ -35,7 +35,7 @@ describe('HttpServiceTest', function (this: Suite)
     beforeEach(() =>
     {
         factory = new Factory(logger);
-        factory.mapToType(DW_TYPES.IHttpServerService, ExpressHttpServerService);
+        factory.mapToType<IHttpServerService>(DW_TYPES.IHttpServerService, ExpressHttpServerService);
         // factory.mapToType(DW_TYPES.IHttpServerService, implementationClass);
 
         const httpConfig: NetServerServiceConfig = {host: "127.0.0.1", port: 3000};
@@ -127,7 +127,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             http.startListen({id: "test", type: HttpRequestResponseType.GET});
 
-            clientRequest("http://127.0.0.1:3000/test", (data: string, code: number) =>
+            clientRequest("http://127.0.0.1:3000/test", (data: string, code?: number) =>
             {
                 expect(data).equals("PIZDEC!");
                 expect(code).equals(200);
@@ -150,7 +150,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             http.startListen({id: "test", type: HttpRequestResponseType.GET});
 
-            clientRequest("http://127.0.0.1:3000/tes", (data: string, code: number) =>
+            clientRequest("http://127.0.0.1:3000/tes", (data: string, code?: number) =>
             {
                 expect(code).equals(404);
 
@@ -187,7 +187,7 @@ describe('HttpServiceTest', function (this: Suite)
 
 // }
 
-function clientRequest(url: string, callback?: (data: string, code: number) => void, method?: string): void
+function clientRequest(url: string, callback?: (data: string, code?: number) => void, method?: string): void
 {
     const m = !method ? "GET" : method;
 

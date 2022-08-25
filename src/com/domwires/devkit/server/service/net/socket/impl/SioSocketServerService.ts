@@ -16,15 +16,15 @@ import {RequestResponse} from "../../../../../common/net/RequestResponse";
 export class SioSocketServerService<ClientDataType> extends AbstractNetServerService<SocketRequestResponseType> implements ISocketServerService<ClientDataType>
 {
     @inject(DW_TYPES.SocketServerServiceConfig)
-    private socketServerServiceConfig: SocketServerServiceConfig;
+    private socketServerServiceConfig!: SocketServerServiceConfig;
 
     @inject(DW_TYPES.Class) @named("clientDataClass")
-    private clientImpl: Class<ClientDataType>;
+    private clientImpl!: Class<ClientDataType>;
 
-    private server: Server;
-    private _connectedClientId: string;
-    private _disconnectedClientId: string;
-    private _requestFromClientId: string;
+    private server!: Server;
+    private _connectedClientId!: string;
+    private _disconnectedClientId!: string;
+    private _requestFromClientId!: string;
 
     private clientIdToDataMap: Map<string, ClientDataType> = new Map<string, ClientDataType>();
 
@@ -82,8 +82,8 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
                 }
                 else
                 {
-                    const req: RequestResponse<SocketRequestResponseType> = this.reqMap.get(json.id);
-                    if (req != null)
+                    const req = this.reqMap.get(json.id);
+                    if (req)
                     {
                         this._requestFromClientId = socket.id;
                         this._requestData = {id: json.id, data: json.data, type: SocketRequestResponseType.TCP};
@@ -171,7 +171,7 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
         return this._disconnectedClientId;
     }
 
-    public getClientDataById(clientId: string): ClientDataType
+    public getClientDataById(clientId: string): ClientDataType | undefined
     {
         if (this.checkIsOpened())
         {
@@ -181,13 +181,13 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
             {
                 this.warn("Client not found:", clientId);
 
-                return null;
+                return undefined;
             }
 
             return this.clientIdToDataMap.get(clientId);
         }
 
-        return null;
+        return undefined;
     }
 
     public get requestFromClientId(): string
@@ -210,13 +210,14 @@ export class SioSocketServerService<ClientDataType> extends AbstractNetServerSer
         return this;
     }
 
-    private getSocketClientById(clientId: string): Socket
+    private getSocketClientById(clientId: string): Socket | undefined
     {
         const socket = this.server.sockets.sockets.get(clientId);
         if (!socket)
         {
             this.warn("Socket client not found:", clientId);
         }
+
         return socket;
     }
 }
