@@ -1,17 +1,78 @@
 import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
-import {Factory, Logger} from "domwires";
+import {AbstractCommand, definableFromString, Factory, IFactory, lazyInject, Logger} from "domwires";
 import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
 import "./mock/MockContexts";
+import {AppContextConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
+import {injectable} from "inversify";
+import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
+
+@injectable()
+export class TestObj
+{
+    private _d = 0;
+
+    public get d(): number
+    {
+        return this._d;
+    }
+
+    public set d(value: number)
+    {
+        this._d = value;
+    }
+}
+
+export class TestCommand extends AbstractCommand
+{
+    @lazyInject(TestObj)
+    private obj!: TestObj;
+
+    public override execute(): void
+    {
+        this.obj.d += 7;
+    }
+}
 
 describe('AppContextTest', function (this: Suite)
 {
+    let mainContext: IMainMockContext;
+    let mainContextFactory: IFactory;
+
+    beforeEach(() =>
+    {
+        mainContextFactory = new Factory(new Logger());
+        mainContextFactory.mapToValue<AppContextConfig>("AppContextConfig", {
+            forwardMessageFromMediatorsToModels: false,
+            forwardMessageFromMediatorsToMediators: true,
+            forwardMessageFromModelsToMediators: true,
+            forwardMessageFromModelsToModels: false,
+            defaultCliUI: true,
+            isFrontEndApp: false
+        });
+        mainContextFactory.mapToValue(DW_TYPES.IFactory, mainContextFactory);
+
+        mainContext = mainContextFactory.getInstance("IMainMockContext");
+    });
+
+    it('testCliCommand', () =>
+    {
+        definableFromString<TestCommand>(TestCommand, "test_cmd");
+
+        const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
+        mainContextFactory.mapToValue<TestObj>(TestObj, to);
+
+        mainContext.dispatchMessage(UIMediatorMessageType.INPUT, {value: "cmd test_cmd"});
+
+        expect(to.d).equals(7);
+    });
+
     it('testCreateMainContextWithChildContext', () =>
     {
-        const mainContext: IMainMockContext = new Factory(new Logger()).getInstance("IMainMockContext");
         const childContext: IChildMockContext = mainContext.getChildContext();
         const model: IMockModel = childContext.getModel();
 

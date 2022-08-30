@@ -1,5 +1,13 @@
+export const CONSTS = {
+    CLI_COMMAND: "cmd"
+};
+
 export const DW_TYPES = {
+    ContextConfig: "ContextConfig",
+    AppContextConfig: "AppContextConfig",
     IFactory: "IFactory",
+    ICommandMapper: "ICommandMapper",
+    ICommandMapperImmutable: "ICommandMapperImmutable",
     IFactoryImmutable: "IFactoryImmutable",
     ServiceConfig: "ServiceConfig",
     NetServerServiceConfig: "NetServerServiceConfig",

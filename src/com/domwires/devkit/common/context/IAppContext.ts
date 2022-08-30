@@ -3,11 +3,12 @@
 
 import {
     AbstractContext,
+    ContextConfig,
     Factory,
-    IFactory,
-    IFactoryImmutable,
     IContext,
     IContextImmutable,
+    IFactory,
+    IFactoryImmutable,
     IHierarchyObject,
     IMediator,
     IMediatorContainer,
@@ -17,7 +18,11 @@ import {
     Type
 } from "domwires";
 import {inject, named, optional} from "inversify";
-import { DW_TYPES, FACTORIES_NAMES } from "../dw_consts";
+import {DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
+import {IUIMediator, UIMediator, UIMediatorMessageType} from "../mediator/IUIMediator";
+import {BrowserConsoleInputView, CLIInputView, IInputView} from "../view/IInputView";
+import {ExecuteCliCommand} from "../command/ExecuteCliCommand";
+import {IsCliCommandGuards} from "../command/guards/IsCliCommandGuards";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
@@ -29,10 +34,18 @@ export interface IAppContext extends IAppContextImmutable, IContext
     getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T;
 }
 
+export type AppContextConfig = ContextConfig & {
+    readonly defaultCliUI?: boolean;
+    readonly isFrontEndApp?: boolean;
+};
+
 export class AppContext extends AbstractContext implements IAppContext
 {
     private static readonly ADD_ERROR: string = "Use 'add' method instead";
     private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
+
+    @inject(DW_TYPES.AppContextConfig) @optional()
+    private appContextConfig!:AppContextConfig;
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
     protected contextFactory!: IFactory;
@@ -50,27 +63,34 @@ export class AppContext extends AbstractContext implements IAppContext
     {
         super.init();
 
+        if (!this.appContextConfig)
+        {
+            this.appContextConfig = {
+                forwardMessageFromMediatorsToModels: this.config.forwardMessageFromMediatorsToModels,
+                forwardMessageFromMediatorsToMediators: this.config.forwardMessageFromMediatorsToMediators,
+                forwardMessageFromModelsToMediators: this.config.forwardMessageFromModelsToMediators,
+                forwardMessageFromModelsToModels: this.config.forwardMessageFromModelsToModels,
+                defaultCliUI: false
+            };
+        }
+
         if (!this.contextFactory)
         {
             this.createFactories();
         }
+
+        this.mapTypes();
+        this.mapValues();
+        this.createMediators();
+        this.mapCommands();
     }
 
-    protected createFactories()
+    private createFactories()
     {
         this.contextFactory = new Factory(this.logger);
         this.modelFactory = new Factory(this.logger);
         this.mediatorFactory = new Factory(this.logger);
         this.viewFactory = new Factory(this.logger);
-
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.mediatorFactory, FACTORIES_NAMES.MEDIATOR);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.viewFactory, FACTORIES_NAMES.VIEW);
-
-        this.modelFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
-
-        this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
     }
 
     public override add(child: IHierarchyObject, index?: number): boolean
@@ -162,4 +182,41 @@ export class AppContext extends AbstractContext implements IAppContext
         return instance;
     }
 
+    private createMediators(): void
+    {
+        if (this.appContextConfig.defaultCliUI)
+        {
+            const uiMediator: IUIMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
+            this.add(uiMediator);
+        }
+    }
+
+    private mapTypes(): void
+    {
+        if (this.appContextConfig.defaultCliUI)
+        {
+            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", UIMediator);
+            this.viewFactory.mapToType<IInputView>("IInputView",
+                this.appContextConfig.isFrontEndApp ? BrowserConsoleInputView : CLIInputView);
+        }
+    }
+
+    private mapCommands(): void
+    {
+        this.map(UIMediatorMessageType.INPUT, ExecuteCliCommand).addGuards(IsCliCommandGuards);
+    }
+
+    private mapValues(): void
+    {
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.mediatorFactory, FACTORIES_NAMES.MEDIATOR);
+        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.viewFactory, FACTORIES_NAMES.VIEW);
+
+        this.modelFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
+
+        this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
+
+        this.factory.mapToValue(DW_TYPES.ICommandMapper, this);
+    }
 }

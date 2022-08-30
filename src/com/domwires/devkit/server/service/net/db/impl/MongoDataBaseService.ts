@@ -181,10 +181,11 @@ export class MongoDataBaseService extends AbstractService implements IDataBaseSe
                 }
             }
 
-            const cursor: FindCursor = await this.db.collection<T>(collectionName)
+            const collection = this.db.collection<T>(collectionName);
+            const cursor: FindCursor = await collection
                 .find<T>(this.toMongoOperators(filter, this.filterOperatorMap), opts);
 
-            if (await cursor.count() === 0)
+            if (await collection.countDocuments() === 0)
             {
                 this.warn("Nothing found:", collectionName, filter);
 
