@@ -1,5 +1,5 @@
 export const CONSTS = {
-    CLI_COMMAND: "cmd"
+    CLI_COMMAND: "/cmd:"
 };
 
 export const DW_TYPES = {

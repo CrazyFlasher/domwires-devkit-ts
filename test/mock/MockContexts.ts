@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {AppContext, IAppContext, IAppContextImmutable} from "../../src/com/domwires/devkit/common/context/IAppContext";
-import {IFactoryImmutable} from "domwires";
-import {setDefaultImplementation} from "domwires";
+import {IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
+import {IFactoryImmutable, setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
+import {
+    IServerAppContext,
+    IServerAppContextImmutable,
+    ServerAppContext
+} from "../../src/com/domwires/devkit/server/context/IServerAppContext";
 
 export interface IMainMockContext extends IMainMockContextImmutable, IBaseMockContext
 {
@@ -29,7 +33,7 @@ export interface IBaseMockContext extends IBaseMockContextImmutable, IAppContext
 {
 }
 
-export interface IBaseMockContextImmutable extends IAppContextImmutable
+export interface IBaseMockContextImmutable extends IServerAppContextImmutable
 {
     getModelFactory(): IFactoryImmutable;
 
@@ -42,7 +46,7 @@ export interface IBaseMockContextImmutable extends IAppContextImmutable
     getFactory(): IFactoryImmutable;
 }
 
-export class BaseMockContext extends AppContext implements IBaseMockContext
+export class BaseMockContext extends ServerAppContext implements IServerAppContext
 {
     public getModelFactory(): IFactoryImmutable
     {

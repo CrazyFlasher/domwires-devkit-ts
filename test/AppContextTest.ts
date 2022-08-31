@@ -27,7 +27,7 @@ export class TestObj
     }
 }
 
-export class TestCommand extends AbstractCommand
+class TestCommand extends AbstractCommand
 {
     @lazyInject(TestObj)
     private obj!: TestObj;
@@ -51,8 +51,7 @@ describe('AppContextTest', function (this: Suite)
             forwardMessageFromMediatorsToMediators: true,
             forwardMessageFromModelsToMediators: true,
             forwardMessageFromModelsToModels: false,
-            defaultCliUI: true,
-            isFrontEndApp: false
+            defaultCliUI: true
         });
         mainContextFactory.mapToValue(DW_TYPES.IFactory, mainContextFactory);
 
@@ -66,7 +65,7 @@ describe('AppContextTest', function (this: Suite)
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         mainContextFactory.mapToValue<TestObj>(TestObj, to);
 
-        mainContext.dispatchMessage(UIMediatorMessageType.INPUT, {value: "cmd test_cmd"});
+        mainContext.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd"});
 
         expect(to.d).equals(7);
     });

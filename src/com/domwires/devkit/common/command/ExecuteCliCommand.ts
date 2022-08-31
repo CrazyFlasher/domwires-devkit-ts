@@ -1,6 +1,6 @@
 import {AbstractCommand, Class, getClassFromString, ICommand, ICommandMapper, lazyInjectNamed} from "domwires";
 import {inject} from "inversify";
-import {DW_TYPES} from "../dw_consts";
+import {CONSTS, DW_TYPES} from "../dw_consts";
 
 export class ExecuteCliCommand extends AbstractCommand
 {
@@ -14,9 +14,10 @@ export class ExecuteCliCommand extends AbstractCommand
     {
         super.execute();
 
-        console.log("ExecuteCliCommand: ", this.value);
+        const commandAlias = this.value.split(CONSTS.CLI_COMMAND)[1];
+        console.log("ExecuteCliCommand:", commandAlias);
 
-        const cmd: Class<ICommand> = getClassFromString(this.value.split("cmd ")[1]);
+        const cmd: Class<ICommand> = getClassFromString(commandAlias);
         this.commandMapper.executeCommand(cmd);
     }
 }

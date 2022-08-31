@@ -21,14 +21,14 @@ export class UIMediator extends AbstractMediator
     private init(): void
     {
         this.inputView = this.viewFactory.getInstance<IInputView>("IInputView");
-        this.inputView.addMessageListener(InputViewMessageType.INPUT, this.handleInput);
+        this.inputView.addMessageListener(InputViewMessageType.INPUT, this.handleInput.bind(this));
     }
 
     private handleInput(m?: IMessage, data?: { value: string }): void
     {
         if (data)
         {
-            this.dispatchMessage(UIMediatorMessageType.INPUT, data);
+            this.dispatchMessage(UIMediatorMessageType.INPUT, {value: data});
         }
     }
 }

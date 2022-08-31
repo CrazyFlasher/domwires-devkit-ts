@@ -8,6 +8,6 @@ export class IsCliCommandGuards extends AbstractGuards
 
     public override get allows(): boolean
     {
-        return this.value.substring(0, 4) === CONSTS.CLI_COMMAND + " ";
+        return this.value.substring(0, 5) === CONSTS.CLI_COMMAND;
     }
 }

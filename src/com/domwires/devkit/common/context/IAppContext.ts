@@ -3,6 +3,7 @@
 
 import {
     AbstractContext,
+    Class,
     ContextConfig,
     Factory,
     IContext,
@@ -20,9 +21,10 @@ import {
 import {inject, named, optional} from "inversify";
 import {DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
 import {IUIMediator, UIMediator, UIMediatorMessageType} from "../mediator/IUIMediator";
-import {BrowserConsoleInputView, CLIInputView, IInputView} from "../view/IInputView";
+import {IInputView} from "../view/IInputView";
 import {ExecuteCliCommand} from "../command/ExecuteCliCommand";
 import {IsCliCommandGuards} from "../command/guards/IsCliCommandGuards";
+import {DwError} from "../DwError";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
@@ -36,7 +38,6 @@ export interface IAppContext extends IAppContextImmutable, IContext
 
 export type AppContextConfig = ContextConfig & {
     readonly defaultCliUI?: boolean;
-    readonly isFrontEndApp?: boolean;
 };
 
 export class AppContext extends AbstractContext implements IAppContext
@@ -195,12 +196,21 @@ export class AppContext extends AbstractContext implements IAppContext
     {
         if (this.appContextConfig.defaultCliUI)
         {
-            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", UIMediator);
-            this.viewFactory.mapToType<IInputView>("IInputView",
-                this.appContextConfig.isFrontEndApp ? BrowserConsoleInputView : CLIInputView);
+            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediator);
+            this.viewFactory.mapToType<IInputView>("IInputView", this.defaultUIView);
         }
     }
 
+    protected get defaultUIMediator():Class<IUIMediator>
+    {
+        return UIMediator;
+    }
+
+    protected get defaultUIView():Class<IInputView>
+    {
+        throw new Error(DwError.OVERRIDE.name);
+    }
+    
     private mapCommands(): void
     {
         this.map(UIMediatorMessageType.INPUT, ExecuteCliCommand).addGuards(IsCliCommandGuards);

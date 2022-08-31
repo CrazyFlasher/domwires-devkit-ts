@@ -6,3 +6,5 @@ export * from "./com/domwires/devkit/server/service/net/http/IHttpServerService"
 export * from "./com/domwires/devkit/server/service/net/http/impl/ExpressHttpServerService";
 export * from "./com/domwires/devkit/server/service/net/socket/ISocketServerService";
 export * from "./com/domwires/devkit/server/service/net/socket/impl/SioSocketServerService";
+export * from "./com/domwires/devkit/server/context/IServerAppContext";
+export * from "./com/domwires/devkit/server/view/CliInputView";
