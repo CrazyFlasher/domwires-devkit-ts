@@ -28,7 +28,7 @@ export class UIMediator extends AbstractMediator
     {
         if (data)
         {
-            this.dispatchMessage(UIMediatorMessageType.INPUT, {value: data});
+            this.dispatchMessage(UIMediatorMessageType.INPUT, data);
         }
     }
 }

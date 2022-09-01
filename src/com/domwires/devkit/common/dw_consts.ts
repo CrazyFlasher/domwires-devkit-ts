@@ -3,6 +3,7 @@ export const CONSTS = {
 };
 
 export const DW_TYPES = {
+    ILogger: "ILogger",
     ContextConfig: "ContextConfig",
     AppContextConfig: "AppContextConfig",
     IFactory: "IFactory",

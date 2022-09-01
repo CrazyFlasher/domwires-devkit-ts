@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import {Enum, IMessageDispatcher, MessageDispatcher} from "domwires";
+import {CONSTS} from "../dw_consts";
 
 export interface IInputView extends IMessageDispatcher
 {
@@ -16,6 +17,6 @@ export abstract class NoUIInputView extends MessageDispatcher implements IInputV
 {
     protected dispatchInput(value: string): void
     {
-        this.dispatchMessage(InputViewMessageType.INPUT, "/cmd:" + value);
+        this.dispatchMessage(InputViewMessageType.INPUT, {value: CONSTS.CLI_COMMAND + value});
     }
 }
