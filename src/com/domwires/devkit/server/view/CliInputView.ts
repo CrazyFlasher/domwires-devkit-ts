@@ -1,29 +1,51 @@
 import {postConstruct} from "inversify";
 import {NoUIInputView} from "../../common/view/IInputView";
+import {clearTimeout} from "timers";
+import {Interface} from "readline";
 
 export class CliInputView extends NoUIInputView
 {
-    private cli = require("inquirer");
+    private cli = require("readline");
+
+    private initTimeout!: NodeJS.Timeout | undefined;
+
+    private readLine!: Interface;
 
     @postConstruct()
     private init(): void
     {
-        this.listenCliInput();
+        this.initTimeout = setTimeout(this.listenCliInput.bind(this), 500);
+    }
+
+    public override dispose(): void
+    {
+        if (this.initTimeout)
+        {
+            clearTimeout(this.initTimeout);
+        }
+
+        super.dispose();
     }
 
     private listenCliInput(): void
     {
-        this.cli.prompt([
-            {
-                type: "input",
-                name: "cmd",
-                message: "Enter command alias to execute: "
-            }
-        ]).then((value: string) =>
-        {
-            this.dispatchInput(value);
+        this.initTimeout = undefined;
 
-            this.listenCliInput();
+        this.readLine = this.cli.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+
+        this.listenPrompt();
+    }
+
+    private listenPrompt(): void
+    {
+        this.readLine.question("\x1b[1mEnter command to execute:\x1b[0m ", (text: string) =>
+        {
+            this.dispatchInput(text);
+
+            this.listenPrompt();
         });
     }
 }
