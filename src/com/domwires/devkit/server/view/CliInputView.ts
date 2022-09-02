@@ -23,6 +23,10 @@ export class CliInputView extends NoUIInputView
         {
             clearTimeout(this.initTimeout);
         }
+        if (this.readLine)
+        {
+            this.readLine.close();
+        }
 
         super.dispose();
     }

@@ -17,7 +17,7 @@ export interface IServerAppContext extends IServerAppContextImmutable, IAppConte
 
 export class ServerAppContext extends AppContext implements IServerAppContext
 {
-    protected override get defaultUIView(): Class<IInputView>
+    protected override get defaultUIViewClass(): Class<IInputView>
     {
         return CliInputView;
     }

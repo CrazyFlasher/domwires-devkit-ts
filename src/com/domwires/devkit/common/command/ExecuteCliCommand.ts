@@ -8,12 +8,15 @@ import {
     lazyInject,
     lazyInjectNamed
 } from "domwires";
-import {CONSTS, DW_TYPES} from "../dw_consts";
+import {DW_TYPES} from "../dw_consts";
 
 export class ExecuteCliCommand extends AbstractCommand
 {
     @lazyInject(DW_TYPES.ICommandMapper)
     private commandMapper!: ICommandMapper;
+
+    @lazyInjectNamed("string", "commandMapperId")
+    private commandMapperId!: string;
 
     @lazyInject(DW_TYPES.ILogger)
     private logger!: ILogger;
@@ -25,16 +28,22 @@ export class ExecuteCliCommand extends AbstractCommand
     {
         super.execute();
 
-        const commandAlias = this.value.split(CONSTS.CLI_COMMAND)[1];
-        this.logger.info("ExecuteCliCommand:", commandAlias);
+        const splittedValue: string[] = this.value.split(":");
+        const commandContextId = splittedValue[1];
+        const commandAlias = splittedValue[2];
 
-        try
+        if (commandContextId === this.commandMapperId)
         {
-            const cmd: Class<ICommand> = getClassFromString(commandAlias);
-            this.commandMapper.executeCommand(cmd);
-        } catch (e)
-        {
-            this.logger.error(e);
+            this.logger.info("ExecuteCliCommand in '" + this.commandMapper.constructor.name + "': ", commandAlias);
+
+            try
+            {
+                const cmd: Class<ICommand> = getClassFromString(commandAlias);
+                this.commandMapper.executeCommand(cmd);
+            } catch (e)
+            {
+                this.logger.error(e);
+            }
         }
     }
 }

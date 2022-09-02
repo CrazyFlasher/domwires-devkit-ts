@@ -17,7 +17,7 @@ export interface IClientAppContext extends IClientAppContextImmutable, IAppConte
 
 export class ClientAppContext extends AppContext implements IClientAppContext
 {
-    protected override get defaultUIView(): Class<IInputView>
+    protected override get defaultUIViewClass(): Class<IInputView>
     {
         return BrowserConsoleInputView;
     }

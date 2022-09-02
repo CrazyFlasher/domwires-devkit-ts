@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
-import {AbstractCommand, definableFromString, Factory, IFactory, lazyInject, Logger} from "domwires";
+import {AbstractCommand, ContextConfig, definableFromString, Factory, IFactory, lazyInject, Logger} from "domwires";
 import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
@@ -38,6 +38,17 @@ class TestCommand extends AbstractCommand
     }
 }
 
+class TestCommandForChildContext extends AbstractCommand
+{
+    @lazyInject("IMockModel")
+    private model!: IMockModel;
+
+    public override execute(): void
+    {
+        this.model.v += 5;
+    }
+}
+
 describe('AppContextTest', function (this: Suite)
 {
     let mainContext: IMainMockContext;
@@ -46,16 +57,25 @@ describe('AppContextTest', function (this: Suite)
     beforeEach(() =>
     {
         mainContextFactory = new Factory(new Logger());
-        mainContextFactory.mapToValue<AppContextConfig>("AppContextConfig", {
+        const config: AppContextConfig = {
             forwardMessageFromMediatorsToModels: false,
             forwardMessageFromMediatorsToMediators: true,
             forwardMessageFromModelsToMediators: true,
             forwardMessageFromModelsToModels: false,
+            forwardMessageFromMediatorsToContexts: true,
+            forwardMessageFromModelsToContexts: true,
             defaultCliUI: true
-        });
+        };
+        mainContextFactory.mapToValue<ContextConfig>("ContextConfig", config);
+        mainContextFactory.mapToValue<AppContextConfig>("AppContextConfig", config);
         mainContextFactory.mapToValue(DW_TYPES.IFactory, mainContextFactory);
 
         mainContext = mainContextFactory.getInstance("IMainMockContext");
+    });
+
+    afterEach(() =>
+    {
+        mainContext.dispose();
     });
 
     it('testCliCommand', () =>
@@ -65,9 +85,22 @@ describe('AppContextTest', function (this: Suite)
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         mainContextFactory.mapToValue<TestObj>(TestObj, to);
 
-        mainContext.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd"});
+        mainContext.getMediatorMutable().dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:main:test_cmd"});
 
         expect(to.d).equals(7);
+
+        definableFromString<TestCommandForChildContext>(TestCommandForChildContext, "test_cmd_for_child");
+
+        const childContext: IChildMockContext = mainContext.getChildContext();
+        const model: IMockModel = childContext.getModel();
+        mainContext.add(childContext);
+        childContext.add(model);
+
+        childContext.getFactoryMutable().mapToValue<IMockModel>("IMockModel", model);
+
+        mainContext.getMediatorMutable().dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:child:test_cmd_for_child"});
+
+        expect(model.v).equals(5);
     });
 
     it('testCreateMainContextWithChildContext', () =>

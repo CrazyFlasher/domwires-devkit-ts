@@ -31,6 +31,13 @@ export class UIMediator extends AbstractMediator
             this.dispatchMessage(UIMediatorMessageType.INPUT, data);
         }
     }
+
+    public override dispose(): void
+    {
+        this.inputView.dispose();
+
+        super.dispose();
+    }
 }
 
 export class UIMediatorMessageType extends Enum<string>

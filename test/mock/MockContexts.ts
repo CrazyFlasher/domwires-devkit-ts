@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import {IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
-import {IFactoryImmutable, setDefaultImplementation} from "domwires";
+import {IFactory, IFactoryImmutable, IMediator, setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
 import {
     IServerAppContext,
@@ -31,6 +31,9 @@ export interface IChildMockContextImmutable extends IBaseMockContextImmutable
 
 export interface IBaseMockContext extends IBaseMockContextImmutable, IAppContext
 {
+    getFactoryMutable(): IFactory;
+
+    getMediatorMutable(): IMediator;
 }
 
 export interface IBaseMockContextImmutable extends IServerAppContextImmutable
@@ -72,6 +75,16 @@ export class BaseMockContext extends ServerAppContext implements IServerAppConte
     {
         return this.factory;
     }
+
+    public getFactoryMutable(): IFactory
+    {
+        return this.factory;
+    }
+
+    public getMediatorMutable(): IMediator
+    {
+        return this.defaultUiMediator;
+    }
 }
 
 export class ChildMockContext extends BaseMockContext implements IChildMockContext
@@ -81,6 +94,8 @@ export class ChildMockContext extends BaseMockContext implements IChildMockConte
 
     protected override init(): void
     {
+        this._id = "child";
+
         super.init();
 
         this.model = this.getInstance(this.modelFactory, "IMockModel", "IMockModelImmutable");
@@ -104,6 +119,8 @@ export class MainMockContext extends BaseMockContext implements IMainMockContext
 
     protected override init(): void
     {
+        this._id = "main";
+
         super.init();
 
         this.childContext = this.getInstance(this.contextFactory, "IChildMockContext", "IChildMockContextImmutable");

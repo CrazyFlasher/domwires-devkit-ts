@@ -1,10 +1,10 @@
-import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable} from "domwires";
-import {setDefaultImplementation} from "domwires";
+import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable, setDefaultImplementation} from "domwires";
 import {inject, named, optional} from "inversify";
 import {DW_TYPES, FACTORIES_NAMES} from "../../src/com/domwires/devkit/common/dw_consts";
 
 export interface IMockModel extends IMockModelImmutable, IModel
 {
+    set v(value: number);
 }
 
 export interface IMockModelImmutable extends IModelImmutable
@@ -16,6 +16,8 @@ export interface IMockModelImmutable extends IModelImmutable
     getMediatorFactory(): IFactoryImmutable;
 
     getViewFactory(): IFactoryImmutable;
+
+    get v(): number;
 }
 
 export class MockModel extends AbstractModel implements IMockModel
@@ -31,6 +33,8 @@ export class MockModel extends AbstractModel implements IMockModel
 
     @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.VIEW) @optional()
     private viewFactory!: IFactoryImmutable;
+
+    private _v = 0;
 
     public getModelFactory(): IFactoryImmutable
     {
@@ -50,6 +54,16 @@ export class MockModel extends AbstractModel implements IMockModel
     public getViewFactory(): IFactoryImmutable
     {
         return this.viewFactory;
+    }
+
+    public set v(value: number)
+    {
+        this._v = value;
+    }
+
+    public get v(): number
+    {
+        return this._v;
     }
 }
 

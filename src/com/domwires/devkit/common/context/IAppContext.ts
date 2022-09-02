@@ -13,6 +13,8 @@ import {
     IHierarchyObject,
     IMediator,
     IMediatorContainer,
+    IMessage,
+    IMessageDispatcher,
     IModel,
     IModelContainer,
     instanceOf,
@@ -28,15 +30,19 @@ import {DwError} from "../DwError";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
-
+    get id(): string;
 }
 
 export interface IAppContext extends IAppContextImmutable, IContext
 {
     getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T;
+
+    dispatchMessageToContexts<DataType>(message: IMessage, data?: DataType): IContext;
 }
 
 export type AppContextConfig = ContextConfig & {
+    readonly forwardMessageFromMediatorsToContexts: boolean;
+    readonly forwardMessageFromModelsToContexts: boolean;
     readonly defaultCliUI?: boolean;
 };
 
@@ -46,7 +52,7 @@ export class AppContext extends AbstractContext implements IAppContext
     private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
 
     @inject(DW_TYPES.AppContextConfig) @optional()
-    private appContextConfig!:AppContextConfig;
+    private appContextConfig!: AppContextConfig;
 
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
     protected contextFactory!: IFactory;
@@ -60,6 +66,10 @@ export class AppContext extends AbstractContext implements IAppContext
     @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.VIEW) @optional()
     protected viewFactory!: IFactory;
 
+    protected defaultUiMediator!: IUIMediator;
+
+    protected _id!: string;
+
     protected override init()
     {
         super.init();
@@ -71,6 +81,8 @@ export class AppContext extends AbstractContext implements IAppContext
                 forwardMessageFromMediatorsToMediators: this.config.forwardMessageFromMediatorsToMediators,
                 forwardMessageFromModelsToMediators: this.config.forwardMessageFromModelsToMediators,
                 forwardMessageFromModelsToModels: this.config.forwardMessageFromModelsToModels,
+                forwardMessageFromModelsToContexts: true,
+                forwardMessageFromMediatorsToContexts: true,
                 defaultCliUI: false
             };
         }
@@ -86,6 +98,56 @@ export class AppContext extends AbstractContext implements IAppContext
         this.mapCommands();
     }
 
+    public override handleMessage<DataType>(message: IMessage, data?: DataType): IMessageDispatcher
+    {
+        super.handleMessage(message, data);
+
+        if (instanceOf(message.initialTarget, "IModel"))
+        {
+            if (this.appContextConfig.forwardMessageFromModelsToContexts)
+            {
+                this.dispatchMessageToContexts(message, data);
+            }
+        }
+        else if (instanceOf(message.initialTarget, "IMediator"))
+        {
+            if (this.appContextConfig.forwardMessageFromMediatorsToContexts)
+            {
+                this.dispatchMessageToContexts(message, data);
+            }
+        }
+
+        return this;
+    }
+
+    public dispatchMessageToContexts<DataType>(message: IMessage, data?: DataType): IContext
+    {
+        const filter = (child: IHierarchyObject) =>
+        {
+            return instanceOf(child, "IContext");
+        };
+
+        return super.dispatchMessageToModels(message, data, filter);
+    }
+
+    public override dispatchMessageToModels<DataType>(message: IMessage, data?: DataType, filter?: (child: IHierarchyObject) => boolean): IContext
+    {
+        if (!filter)
+        {
+            filter = (child: IHierarchyObject) =>
+            {
+                return !instanceOf(child, "IContext");
+            };
+        }
+
+        return super.dispatchMessageToModels(message, data, filter);
+    }
+
+    public get id(): string
+    {
+        return this._id;
+    }
+
     private createFactories()
     {
         this.contextFactory = new Factory(this.logger);
@@ -96,12 +158,20 @@ export class AppContext extends AbstractContext implements IAppContext
 
     public override add(child: IHierarchyObject, index?: number): boolean
     {
+        let success = false;
+
+        if (instanceOf(child, "IContext"))
+        {
+            success = !this.modelContainer.contains(child);
+            super.addModel(<IContext>child);
+
+            return success;
+        }
+
         if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
         {
             return super.add(child, index);
         }
-
-        let success = false;
 
         if (instanceOf(child, "IModel"))
         {
@@ -185,32 +255,30 @@ export class AppContext extends AbstractContext implements IAppContext
 
     private createMediators(): void
     {
-        if (this.appContextConfig.defaultCliUI)
-        {
-            const uiMediator: IUIMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
-            this.add(uiMediator);
-        }
+        this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
+        this.add(this.defaultUiMediator);
     }
 
     private mapTypes(): void
     {
+        this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediatorClass);
+
         if (this.appContextConfig.defaultCliUI)
         {
-            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediator);
-            this.viewFactory.mapToType<IInputView>("IInputView", this.defaultUIView);
+            this.viewFactory.mapToType<IInputView>("IInputView", this.defaultUIViewClass);
         }
     }
 
-    protected get defaultUIMediator():Class<IUIMediator>
+    protected get defaultUIMediatorClass(): Class<IUIMediator>
     {
         return UIMediator;
     }
 
-    protected get defaultUIView():Class<IInputView>
+    protected get defaultUIViewClass(): Class<IInputView>
     {
         throw new Error(DwError.OVERRIDE.name);
     }
-    
+
     private mapCommands(): void
     {
         this.map(UIMediatorMessageType.INPUT, ExecuteCliCommand).addGuards(IsCliCommandGuards);
@@ -227,6 +295,7 @@ export class AppContext extends AbstractContext implements IAppContext
 
         this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
 
+        this.factory.mapToValue("string", this._id, "commandMapperId");
         this.factory.mapToValue(DW_TYPES.ICommandMapper, this);
     }
 }
