@@ -189,21 +189,29 @@ export class AppContext extends AbstractContext implements IAppContext
 
     public override remove(child: IHierarchyObject, dispose?: boolean): boolean
     {
+        let success = false;
+
+        if (instanceOf(child, "IContext"))
+        {
+            success = this.modelContainer.contains(child);
+            super.removeModel(<IContext>child);
+
+            return success;
+        }
+
         if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
         {
             return super.remove(child, dispose);
         }
 
-        let success = false;
-
         if (instanceOf(child, "IModel"))
         {
-            success = !this.modelContainer.contains(child);
+            success = this.modelContainer.contains(child);
             super.removeModel(child);
         }
         else if (instanceOf(child, "IMediator"))
         {
-            success = !this.mediatorContainer.contains(child);
+            success = this.mediatorContainer.contains(child);
             super.removeMediator(child);
         }
 
