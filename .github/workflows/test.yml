@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node: [14.18.1]
+        node: [16.17.0]
         mongodb-version: ['4.4']
 
     runs-on: ubuntu-latest
