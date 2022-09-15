@@ -7,7 +7,7 @@ import {
     definableFromString,
     Factory,
     IFactory,
-    lazyInject,
+    lazyInject, lazyInjectNamed,
     Logger,
     LogLevel
 } from "domwires";
@@ -24,6 +24,8 @@ import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 export class TestObj
 {
     private _d = 0;
+    private _s!: string;
+    private _n!: number;
 
     public get d(): number
     {
@@ -33,6 +35,25 @@ export class TestObj
     public set d(value: number)
     {
         this._d = value;
+    }
+
+    public get n(): number
+    {
+        return this._n;
+    }
+
+    public set n(value: number)
+    {
+        this._n = value;
+    }
+    public get s(): string
+    {
+        return this._s;
+    }
+
+    public set s(value: string)
+    {
+        this._s = value;
     }
 }
 
@@ -44,6 +65,25 @@ class TestCommand extends AbstractCommand
     public override execute(): void
     {
         this.obj.d += 7;
+    }
+}
+
+class TestCommandWithParams extends AbstractCommand
+{
+    @lazyInject(TestObj)
+    private obj!: TestObj;
+
+    @lazyInjectNamed("string", "str")
+    private str!: string;
+
+    @lazyInjectNamed("number", "num")
+    private num!: number;
+
+    public override execute(): void
+    {
+        this.obj.d += 7;
+        this.obj.s = this.str;
+        this.obj.n = this.num;
     }
 }
 
@@ -126,6 +166,24 @@ describe('AppContextTest', function (this: Suite)
         c.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd"});
 
         expect(to.d).equals(7);
+    });
+
+    it('testCliCommandWithParams', () =>
+    {
+        definableFromString<TestCommandWithParams>(TestCommandWithParams, "test_cmd");
+
+        const f = new Factory(new Logger(LogLevel.INFO));
+        const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
+        f.mapToValue<TestObj>(TestObj, to);
+        f.mapToValue(DW_TYPES.IFactory, f);
+
+        const c = f.getInstance<AppContext>(AppContext);
+
+        c.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd:{str:\"test\", num:5}"});
+
+        expect(to.d).equals(7);
+        expect(to.s).equals("test");
+        expect(to.n).equals(5);
     });
 
     it('testCreateMainContextWithChildContext', () =>
