@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, IMessage, Logger} from "domwires";
+import {Factory, IFactory, IMessage, Logger, LogLevel} from "domwires";
 import {expect} from "chai";
 import {
     DataBaseServiceConfig, DataBaseServiceMessageType, FilterOperator,
@@ -24,7 +24,7 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     beforeEach((done: Done) =>
     {
-        factory = new Factory(new Logger());
+        factory = new Factory(new Logger(LogLevel.INFO));
         factory.mapToType<IDataBaseService>(DW_TYPES.IDataBaseService, MongoDataBaseService);
 
         const config: DataBaseServiceConfig = {uri: "mongodb://127.0.0.1:27017", dataBaseName: "test_data_base"};

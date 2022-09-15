@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, Logger} from "domwires";
+import {Factory, IFactory, Logger, LogLevel} from "domwires";
 import {io, Socket} from "socket.io-client";
 import {expect} from "chai";
 import {injectable, postConstruct} from "inversify";
@@ -27,7 +27,7 @@ describe('SocketServerServiceTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory(new Logger());
+        factory = new Factory(new Logger(LogLevel.INFO));
         factory.mapToType(DW_TYPES.ISocketServerService, SioSocketServerService);
 
         const socketConfig: SocketServerServiceConfig = {host: "127.0.0.1", port: 3000};

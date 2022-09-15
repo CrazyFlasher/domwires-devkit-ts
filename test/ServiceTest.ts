@@ -2,7 +2,7 @@ import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
 import {MockService1, MockService2, MockServiceConfig} from "./mock/MockServices";
-import {Factory, IFactory, Logger} from "domwires";
+import {Factory, IFactory, Logger, LogLevel} from "domwires";
 import {MOCK_TYPES} from "./mock/mock_types";
 import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 import {ServiceConfig, ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
@@ -13,7 +13,7 @@ describe('ServiceTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory(new Logger());
+        factory = new Factory(new Logger(LogLevel.INFO));
     });
 
     afterEach(() =>

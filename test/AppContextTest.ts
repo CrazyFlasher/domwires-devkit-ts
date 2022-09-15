@@ -1,7 +1,16 @@
 import "reflect-metadata";
 import {Suite} from "mocha";
 import {expect} from "chai";
-import {AbstractCommand, ContextConfig, definableFromString, Factory, IFactory, lazyInject, Logger} from "domwires";
+import {
+    AbstractCommand,
+    ContextConfig,
+    definableFromString,
+    Factory,
+    IFactory,
+    lazyInject,
+    Logger,
+    LogLevel
+} from "domwires";
 import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
@@ -56,7 +65,7 @@ describe('AppContextTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        mainContextFactory = new Factory(new Logger());
+        mainContextFactory = new Factory(new Logger(LogLevel.INFO));
         const config: AppContextConfig = {
             forwardMessageFromMediatorsToModels: false,
             forwardMessageFromMediatorsToMediators: true,

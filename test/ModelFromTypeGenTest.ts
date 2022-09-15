@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
 import {expect} from "chai";
-import {Factory, IFactory, Logger, setDefaultImplementation} from "domwires";
+import {Factory, IFactory, Logger, LogLevel, setDefaultImplementation} from "domwires";
 import {GameObject} from "./mock/typesForModels/GameObject";
 import {
     GameObjectComponent,
@@ -23,7 +23,7 @@ describe('ModelFromTypeDefTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory(new Logger());
+        factory = new Factory(new Logger(LogLevel.INFO));
     });
 
     afterEach(() =>
