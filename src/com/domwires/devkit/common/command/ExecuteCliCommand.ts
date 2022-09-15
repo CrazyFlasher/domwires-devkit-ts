@@ -29,11 +29,6 @@ export class ExecuteCliCommand extends AbstractCommand
     {
         super.execute();
 
-        if (!this.commandMapperId)
-        {
-            this.logger.warn("'commandMapperId' is not specified and injected. Command will be executed in root context");
-        }
-
         const splittedValue: string[] = this.value.split(":");
 
         let commandContextId;
