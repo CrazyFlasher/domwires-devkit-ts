@@ -263,16 +263,18 @@ export class AppContext extends AbstractContext implements IAppContext
 
     private createMediators(): void
     {
-        this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
-        this.add(this.defaultUiMediator);
+        if (this.appContextConfig.defaultCliUI)
+        {
+            this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
+            this.add(this.defaultUiMediator);
+        }
     }
 
     private mapTypes(): void
     {
-        this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediatorClass);
-
         if (this.appContextConfig.defaultCliUI)
         {
+            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediatorClass);
             this.viewFactory.mapToType<IInputView>("IInputView", this.defaultUIViewClass);
         }
     }
@@ -303,7 +305,11 @@ export class AppContext extends AbstractContext implements IAppContext
 
         this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
 
-        this.factory.mapToValue("string", this._id, "commandMapperId");
+        if (this._id)
+        {
+            this.factory.mapToValue("string", this._id, "commandMapperId");
+        }
+
         this.factory.mapToValue(DW_TYPES.ICommandMapper, this);
     }
 }

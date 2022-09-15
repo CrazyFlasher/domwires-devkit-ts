@@ -15,7 +15,7 @@ import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
 import "./mock/MockContexts";
-import {AppContextConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {AppContext, AppContextConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {injectable} from "inversify";
 import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
@@ -110,6 +110,22 @@ describe('AppContextTest', function (this: Suite)
         mainContext.getMediatorMutable().dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:child:test_cmd_for_child"});
 
         expect(model.v).equals(5);
+    });
+
+    it('testCliCommandInUnnamedContext', () =>
+    {
+        definableFromString<TestCommand>(TestCommand, "test_cmd");
+
+        const f = new Factory(new Logger(LogLevel.INFO));
+        const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
+        f.mapToValue<TestObj>(TestObj, to);
+        f.mapToValue(DW_TYPES.IFactory, f);
+
+        const c = f.getInstance<AppContext>(AppContext);
+
+        c.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd"});
+
+        expect(to.d).equals(7);
     });
 
     it('testCreateMainContextWithChildContext', () =>
