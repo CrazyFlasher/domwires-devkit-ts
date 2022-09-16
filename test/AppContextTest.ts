@@ -4,10 +4,10 @@ import {expect} from "chai";
 import {
     AbstractCommand,
     ContextConfig,
-    definableFromString,
     Factory,
     IFactory,
-    lazyInject, lazyInjectNamed,
+    lazyInject,
+    lazyInjectNamed,
     Logger,
     LogLevel
 } from "domwires";
@@ -15,10 +15,17 @@ import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
 import "./mock/MockContexts";
-import {AppContext, AppContextConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {
+    AppContext,
+    AppContextConfig,
+    AppContextConfigBuilder
+} from "../src/com/domwires/devkit/common/context/IAppContext";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {injectable} from "inversify";
 import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
+import {printMappedToAliasCommandsToConsole, registerCommandAlias} from "../src/com/domwires/devkit/common/Global";
+
+const logger = new Logger(LogLevel.INFO);
 
 @injectable()
 export class TestObj
@@ -105,16 +112,13 @@ describe('AppContextTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        mainContextFactory = new Factory(new Logger(LogLevel.INFO));
-        const config: AppContextConfig = {
-            forwardMessageFromMediatorsToModels: false,
-            forwardMessageFromMediatorsToMediators: true,
-            forwardMessageFromModelsToMediators: true,
-            forwardMessageFromModelsToModels: false,
-            forwardMessageFromMediatorsToContexts: true,
-            forwardMessageFromModelsToContexts: true,
-            defaultCliUI: true
-        };
+        mainContextFactory = new Factory(logger);
+
+        const cb:AppContextConfigBuilder = new AppContextConfigBuilder();
+        cb.defaultCliUI = true;
+
+        const config = cb.build();
+
         mainContextFactory.mapToValue<ContextConfig>("ContextConfig", config);
         mainContextFactory.mapToValue<AppContextConfig>("AppContextConfig", config);
         mainContextFactory.mapToValue(DW_TYPES.IFactory, mainContextFactory);
@@ -129,7 +133,7 @@ describe('AppContextTest', function (this: Suite)
 
     it('testCliCommand', () =>
     {
-        definableFromString<TestCommand>(TestCommand, "test_cmd");
+        registerCommandAlias(TestCommand, "test_cmd");
 
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         mainContextFactory.mapToValue<TestObj>(TestObj, to);
@@ -138,7 +142,7 @@ describe('AppContextTest', function (this: Suite)
 
         expect(to.d).equals(7);
 
-        definableFromString<TestCommandForChildContext>(TestCommandForChildContext, "test_cmd_for_child");
+        registerCommandAlias(TestCommandForChildContext, "test_cmd_for_child");
 
         const childContext: IChildMockContext = mainContext.getChildContext();
         const model: IMockModel = childContext.getModel();
@@ -154,7 +158,7 @@ describe('AppContextTest', function (this: Suite)
 
     it('testCliCommandInUnnamedContext', () =>
     {
-        definableFromString<TestCommand>(TestCommand, "test_cmd");
+        registerCommandAlias(TestCommand, "test_cmd");
 
         const f = new Factory(new Logger(LogLevel.INFO));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
@@ -170,7 +174,7 @@ describe('AppContextTest', function (this: Suite)
 
     it('testCliCommandWithParams', () =>
     {
-        definableFromString<TestCommandWithParams>(TestCommandWithParams, "test_cmd");
+        registerCommandAlias(TestCommandWithParams, "test_cmd");
 
         const f = new Factory(new Logger(LogLevel.INFO));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
@@ -230,5 +234,14 @@ describe('AppContextTest', function (this: Suite)
 
         expect(childContext.parent).not.equals(mainContext);
         expect(model.parent).not.equals(childContext);
+    });
+
+    it('testPrintCommands', () =>
+    {
+        registerCommandAlias(TestCommand, "test_cmd", "very cool and useful command");
+        registerCommandAlias(TestCommandForChildContext, "test_cmd_child");
+        registerCommandAlias(TestCommandWithParams, "test_cmd_params", "command that accept params");
+
+        printMappedToAliasCommandsToConsole();
     });
 });

@@ -3,7 +3,8 @@
 import {AbstractMediator, Enum, IFactoryImmutable, IMediator, IMessage} from "domwires";
 import {inject, named, postConstruct} from "inversify";
 import {IInputView, InputViewMessageType} from "../view/IInputView";
-import {DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
+import {CONSTS, DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
+import {printMappedToAliasCommandsToConsole} from "../Global";
 
 export interface IUIMediator extends IMediator
 {
@@ -20,15 +21,23 @@ export class UIMediator extends AbstractMediator
     @postConstruct()
     private init(): void
     {
-        this.inputView = this.viewFactory.getInstance<IInputView>("IInputView");
+        this.inputView = this.viewFactory.getInstance<IInputView>(DW_TYPES.IInputView);
         this.inputView.addMessageListener(InputViewMessageType.INPUT, this.handleInput.bind(this));
     }
 
-    private handleInput(m?: IMessage, data?: { value: string }): void
+    private handleInput(message?: IMessage, data?: { value: string }): void
     {
         if (data)
         {
-            this.dispatchMessage(UIMediatorMessageType.INPUT, data);
+            if (data.value.replace(/\s/g, '') === CONSTS.CLI_HELP)
+            {
+                printMappedToAliasCommandsToConsole();
+            }
+            else
+            {
+                data.value = CONSTS.CLI_COMMAND + data.value;
+                this.dispatchMessage(UIMediatorMessageType.INPUT, data);
+            }
         }
     }
 

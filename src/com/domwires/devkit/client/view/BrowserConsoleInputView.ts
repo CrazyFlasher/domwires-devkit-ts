@@ -1,7 +1,7 @@
 import {postConstruct} from "inversify";
-import {NoUIInputView} from "../../common/view/IInputView";
+import {AbstractInputView} from "../../common/view/IInputView";
 
-export class BrowserConsoleInputView extends NoUIInputView
+export class BrowserConsoleInputView extends AbstractInputView
 {
     @postConstruct()
     private init(): void

@@ -1,8 +1,11 @@
 export const CONSTS = {
-    CLI_COMMAND: "/cmd:"
+    CLI_COMMAND: "/cmd:",
+    CLI_HELP: "/help"
 };
 
 export const DW_TYPES = {
+    IInputView: "IInputView",
+    IUIMediator: "IUIMediator",
     ILogger: "ILogger",
     ContextConfig: "ContextConfig",
     AppContextConfig: "AppContextConfig",

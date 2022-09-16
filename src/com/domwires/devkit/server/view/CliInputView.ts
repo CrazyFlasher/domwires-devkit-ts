@@ -1,9 +1,9 @@
 import {postConstruct} from "inversify";
-import {NoUIInputView} from "../../common/view/IInputView";
+import {AbstractInputView} from "../../common/view/IInputView";
 import {clearTimeout} from "timers";
 import {Interface} from "readline";
 
-export class CliInputView extends NoUIInputView
+export class CliInputView extends AbstractInputView
 {
     private cli = require("readline");
 
@@ -45,7 +45,7 @@ export class CliInputView extends NoUIInputView
 
     private listenPrompt(): void
     {
-        this.readLine.question("\x1b[1mEnter command to execute:\x1b[0m ", (text: string) =>
+        this.readLine.question("\x1b[1mEnter command alias to execute or \"/help\":\x1b[0m ", (text: string) =>
         {
             this.dispatchInput(text);
 

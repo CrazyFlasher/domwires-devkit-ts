@@ -4,7 +4,7 @@
 import {
     AbstractContext,
     Class,
-    ContextConfig,
+    ContextConfig, ContextConfigBuilder,
     Factory,
     IContext,
     IContextImmutable,
@@ -46,6 +46,28 @@ export type AppContextConfig = ContextConfig & {
     readonly defaultCliUI?: boolean;
 };
 
+export class AppContextConfigBuilder extends ContextConfigBuilder
+{
+    public forwardMessageFromMediatorsToContexts = true;
+    public forwardMessageFromModelsToContexts = false;
+    public defaultCliUI = false;
+
+    public override build(): AppContextConfig
+    {
+        const contextConfig = super.build();
+
+        return {
+            forwardMessageFromMediatorsToMediators: contextConfig.forwardMessageFromMediatorsToMediators,
+            forwardMessageFromMediatorsToModels: contextConfig.forwardMessageFromMediatorsToModels,
+            forwardMessageFromModelsToModels: contextConfig.forwardMessageFromModelsToModels,
+            forwardMessageFromModelsToMediators: contextConfig.forwardMessageFromModelsToMediators,
+            forwardMessageFromMediatorsToContexts: this.forwardMessageFromMediatorsToContexts,
+            forwardMessageFromModelsToContexts: this.forwardMessageFromModelsToContexts,
+            defaultCliUI: this.defaultCliUI
+        };
+    }
+}
+
 export class AppContext extends AbstractContext implements IAppContext
 {
     private static readonly ADD_ERROR: string = "Use 'add' method instead";
@@ -76,15 +98,7 @@ export class AppContext extends AbstractContext implements IAppContext
 
         if (!this.appContextConfig)
         {
-            this.appContextConfig = {
-                forwardMessageFromMediatorsToModels: this.config.forwardMessageFromMediatorsToModels,
-                forwardMessageFromMediatorsToMediators: this.config.forwardMessageFromMediatorsToMediators,
-                forwardMessageFromModelsToMediators: this.config.forwardMessageFromModelsToMediators,
-                forwardMessageFromModelsToModels: this.config.forwardMessageFromModelsToModels,
-                forwardMessageFromModelsToContexts: true,
-                forwardMessageFromMediatorsToContexts: true,
-                defaultCliUI: false
-            };
+            this.appContextConfig = new AppContextConfigBuilder().build();
         }
 
         if (!this.contextFactory)

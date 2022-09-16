@@ -1,15 +1,7 @@
-import {
-    AbstractCommand,
-    Class,
-    getClassFromString,
-    ICommand,
-    ICommandMapper,
-    ILogger,
-    lazyInject,
-    lazyInjectNamed
-} from "domwires";
+import {AbstractCommand, ICommandMapper, ILogger, lazyInject, lazyInjectNamed} from "domwires";
 import {DW_TYPES} from "../dw_consts";
 import {inject, named, optional} from "inversify";
+import {getCommandClassByAlias} from "../Global";
 
 export class ExecuteCliCommand extends AbstractCommand
 {
@@ -58,12 +50,15 @@ export class ExecuteCliCommand extends AbstractCommand
 
         if (commandContextId === this.commandMapperId)
         {
-            this.logger.info("ExecuteCliCommand in '" + this.commandMapper.constructor.name + "': ", commandAlias);
+            this.logger.info("ExecuteCliCommand in '" + this.commandMapper.constructor.name + "':", commandAlias);
 
             try
             {
-                const cmd: Class<ICommand> = getClassFromString(commandAlias);
-                this.commandMapper.executeCommand(cmd, params);
+                const cmd = getCommandClassByAlias(commandAlias);
+                if (cmd)
+                {
+                    this.commandMapper.executeCommand(cmd, params);
+                }
             } catch (e)
             {
                 this.logger.error(e);
