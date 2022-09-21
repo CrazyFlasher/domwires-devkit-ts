@@ -25,7 +25,7 @@ export class ExpressHttpServerService extends AbstractNetServerService<HttpReque
         this.router = express.Router();
         this.server = this.app.listen(this.netServerServiceConfig.port, this.netServerServiceConfig.host, this.openSuccess.bind(this));
 
-        this.app.use(cors({origin: true}));
+        this.app.use(cors({origin: "*"}));
         this.app.use(bodyParser.urlencoded({extended: false}));
         this.app.use(bodyParser.json());
         this.app.use("/", this.router);

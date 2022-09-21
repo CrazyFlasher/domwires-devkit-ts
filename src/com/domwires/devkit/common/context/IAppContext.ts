@@ -107,8 +107,9 @@ export class AppContext extends AbstractContext implements IAppContext
         }
 
         this.mapTypes();
+        this.mapFactories();
+        this.createInstances();
         this.mapValues();
-        this.createMediators();
         this.mapCommands();
     }
 
@@ -162,7 +163,7 @@ export class AppContext extends AbstractContext implements IAppContext
         return this._id;
     }
 
-    private createFactories()
+    protected createFactories()
     {
         this.contextFactory = new Factory(this.logger);
         this.modelFactory = new Factory(this.logger);
@@ -275,21 +276,21 @@ export class AppContext extends AbstractContext implements IAppContext
         return instance;
     }
 
-    private createMediators(): void
+    protected createInstances(): void
     {
         if (this.appContextConfig.defaultCliUI)
         {
-            this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>("IUIMediator");
+            this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>(DW_TYPES.IUIMediator);
             this.add(this.defaultUiMediator);
         }
     }
 
-    private mapTypes(): void
+    protected mapTypes(): void
     {
         if (this.appContextConfig.defaultCliUI)
         {
-            this.mediatorFactory.mapToType<IUIMediator>("IUIMediator", this.defaultUIMediatorClass);
-            this.viewFactory.mapToType<IInputView>("IInputView", this.defaultUIViewClass);
+            this.mediatorFactory.mapToType<IUIMediator>(DW_TYPES.IUIMediator, this.defaultUIMediatorClass);
+            this.viewFactory.mapToType<IInputView>(DW_TYPES.IInputView, this.defaultUIViewClass);
         }
     }
 
@@ -303,12 +304,12 @@ export class AppContext extends AbstractContext implements IAppContext
         throw new Error(DwError.OVERRIDE.name);
     }
 
-    private mapCommands(): void
+    protected mapCommands(): void
     {
         this.map(UIMediatorMessageType.INPUT, ExecuteCliCommand).addGuards(IsCliCommandGuards);
     }
 
-    private mapValues(): void
+    private mapFactories(): void
     {
         this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
         this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
@@ -318,7 +319,10 @@ export class AppContext extends AbstractContext implements IAppContext
         this.modelFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
 
         this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
+    }
 
+    protected mapValues(): void
+    {
         if (this._id)
         {
             this.factory.mapToValue("string", this._id, "commandMapperId");
