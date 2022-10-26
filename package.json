@@ -48,7 +48,7 @@
     "index_gen_common": "ts-node scripts/IndexGenerator.ts --in=/src/com/domwires/devkit/common --out=/src/index.common.ts",
     "index_gen_server": "ts-node scripts/IndexGenerator.ts --in=/src/com/domwires/devkit/server --out=/src/index.server.ts",
     "index_gen_client": "ts-node scripts/IndexGenerator.ts --in=/src/com/domwires/devkit/client --out=/src/index.client.ts",
-    "test": "mocha -r ts-node/register test/*.ts --exit --timeout=2000",
+    "test": "mocha -r ts-node/register test/*.ts --exit --timeout=5000",
     "eslint-setup": "npm install eslint --save-dev",
     "eslint-run": "eslint . --ext .ts",
     "clean": "rimraf dist/",
