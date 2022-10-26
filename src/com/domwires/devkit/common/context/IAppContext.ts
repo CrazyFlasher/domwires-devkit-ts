@@ -4,8 +4,12 @@
 import {
     AbstractContext,
     Class,
-    ContextConfig, ContextConfigBuilder,
+    ContextConfig,
+    ContextConfigBuilder,
+    Enum,
     Factory,
+    FactoryConfig,
+    ICommand,
     IContext,
     IContextImmutable,
     IFactory,
@@ -13,20 +17,26 @@ import {
     IHierarchyObject,
     IMediator,
     IMediatorContainer,
+    IMediatorImmutable,
     IMessage,
     IMessageDispatcher,
     IModel,
     IModelContainer,
-    instanceOf,
+    IModelImmutable,
+    instanceOf, MappingConfig,
+    MappingConfigList,
+    MessageType,
     Type
 } from "domwires";
 import {inject, named, optional} from "inversify";
-import {DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
 import {IUIMediator, UIMediator, UIMediatorMessageType} from "../mediator/IUIMediator";
 import {IInputView} from "../view/IInputView";
 import {ExecuteCliCommand} from "../command/ExecuteCliCommand";
 import {IsCliCommandGuards} from "../command/guards/IsCliCommandGuards";
 import {DwError} from "../DwError";
+import {IService, IServiceImmutable} from "../service/IService";
+import {Types} from "../Types";
+import {FactoryNames} from "../FactoryNames";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
@@ -35,10 +45,40 @@ export interface IAppContextImmutable extends IContextImmutable
 
 export interface IAppContext extends IAppContextImmutable, IContext
 {
-    getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T;
+    getContext<T extends IContext>(type: Type<T>, name?: string): T;
 
-    dispatchMessageToContexts<DataType>(message: IMessage, data?: DataType): IContext;
+    getContext<T extends IContext>(type: Type<T>, immutableType: Type<IContextImmutable>, name?: string): T;
+
+    getModel<T extends IModel>(type: Type<T>, name?: string): T;
+
+    getModel<T extends IModel>(type: Type<T>, immutableType: Type<IModelImmutable>, name?: string): T;
+
+    getService<T extends IService>(type: Type<T>, name?: string): T;
+
+    getService<T extends IService>(type: Type<T>, immutableType: Type<IServiceImmutable>, name?: string): T;
+
+    getMediator<T extends IMediator>(type: Type<T>, name?: string): T;
+
+    getMediator<T extends IMediator>(type: Type<T>, immutableType: Type<IMediatorImmutable>, name?: string): T;
+
+    mapContextToType(type: Type<IContext>, to: Class<IContext>, name?: string): IAppContext;
+
+    mapModelToType(type: Type<IModel>, to: Class<IModel>, name?: string): IAppContext;
+
+    mapServiceToType(type: Type<IService>, to: Class<IService>, name?: string): IAppContext;
+
+    mapMediatorToType(type: Type<IMediator>, to: Class<IMediator>, name?: string): IAppContext;
+
+    dispatchMessageToContexts<TData>(message: IMessage, data?: TData): IContext;
 }
+
+export type FactoriesConfig = {
+    readonly contextFactory?: FactoryConfig;
+    readonly modelFactory?: FactoryConfig;
+    readonly serviceFactory?: FactoryConfig;
+    readonly mediatorFactory?: FactoryConfig;
+    readonly viewFactory?: FactoryConfig;
+};
 
 export type AppContextConfig = ContextConfig & {
     readonly forwardMessageFromMediatorsToContexts: boolean;
@@ -49,7 +89,7 @@ export type AppContextConfig = ContextConfig & {
 export class AppContextConfigBuilder extends ContextConfigBuilder
 {
     public forwardMessageFromMediatorsToContexts = true;
-    public forwardMessageFromModelsToContexts = false;
+    public forwardMessageFromModelsToContexts = true;
     public defaultCliUI = false;
 
     public override build(): AppContextConfig
@@ -68,25 +108,36 @@ export class AppContextConfigBuilder extends ContextConfigBuilder
     }
 }
 
+export class AppContextMessageType extends MessageType
+{
+    public static readonly READY: AppContextMessageType = new AppContextMessageType();
+}
+
 export class AppContext extends AbstractContext implements IAppContext
 {
     private static readonly ADD_ERROR: string = "Use 'add' method instead";
     private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
 
-    @inject(DW_TYPES.AppContextConfig) @optional()
+    @inject(Types.FactoriesConfig) @optional()
+    private factoriesConfig!: FactoriesConfig;
+
+    @inject(Types.ContextConfig) @optional()
     private appContextConfig!: AppContextConfig;
 
-    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.CONTEXT) @optional()
-    protected contextFactory!: IFactory;
+    @inject(Types.IFactory) @named(FactoryNames.CONTEXT) @optional()
+    private _contextFactory!: IFactory;
 
-    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MODEL) @optional()
-    protected modelFactory!: IFactory;
+    @inject(Types.IFactory) @named(FactoryNames.MODEL) @optional()
+    private _modelFactory!: IFactory;
 
-    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.MEDIATOR) @optional()
-    protected mediatorFactory!: IFactory;
+    @inject(Types.IFactory) @named(FactoryNames.SERVICE) @optional()
+    private _serviceFactory!: IFactory;
 
-    @inject(DW_TYPES.IFactory) @named(FACTORIES_NAMES.VIEW) @optional()
-    protected viewFactory!: IFactory;
+    @inject(Types.IFactory) @named(FactoryNames.MEDIATOR) @optional()
+    private _mediatorFactory!: IFactory;
+
+    @inject(Types.IFactory) @named(FactoryNames.VIEW) @optional()
+    private _viewFactory!: IFactory;
 
     protected defaultUiMediator!: IUIMediator;
 
@@ -101,19 +152,21 @@ export class AppContext extends AbstractContext implements IAppContext
             this.appContextConfig = new AppContextConfigBuilder().build();
         }
 
-        if (!this.contextFactory)
-        {
-            this.createFactories();
-        }
+        this.createFactories();
 
-        this.mapTypes();
-        this.mapFactories();
-        this.createInstances();
-        this.mapValues();
-        this.mapCommands();
+        this._mapTypes();
+        this._mapFactories();
+        this._createInstances();
+        this._mapValues();
+        this._mapCommands();
     }
 
-    public override handleMessage<DataType>(message: IMessage, data?: DataType): IMessageDispatcher
+    protected ready(): void
+    {
+        this.dispatchMessage(AppContextMessageType.READY);
+    }
+
+    public override handleMessage<TData>(message: IMessage, data?: TData): IMessageDispatcher
     {
         super.handleMessage(message, data);
 
@@ -135,7 +188,7 @@ export class AppContext extends AbstractContext implements IAppContext
         return this;
     }
 
-    public dispatchMessageToContexts<DataType>(message: IMessage, data?: DataType): IContext
+    public dispatchMessageToContexts<TData>(message: IMessage, data?: TData): IContext
     {
         const filter = (child: IHierarchyObject) =>
         {
@@ -145,7 +198,7 @@ export class AppContext extends AbstractContext implements IAppContext
         return super.dispatchMessageToModels(message, data, filter);
     }
 
-    public override dispatchMessageToModels<DataType>(message: IMessage, data?: DataType, filter?: (child: IHierarchyObject) => boolean): IContext
+    public override dispatchMessageToModels<TData>(message: IMessage, data?: TData, filter?: (child: IHierarchyObject) => boolean): IContext
     {
         if (!filter)
         {
@@ -163,12 +216,36 @@ export class AppContext extends AbstractContext implements IAppContext
         return this._id;
     }
 
-    protected createFactories()
+    protected createFactories(): {
+        contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
+        mediatorFactory: IFactory; viewFactory: IFactory;
+    }
     {
-        this.contextFactory = new Factory(this.logger);
-        this.modelFactory = new Factory(this.logger);
-        this.mediatorFactory = new Factory(this.logger);
-        this.viewFactory = new Factory(this.logger);
+        if (!this._contextFactory)
+        {
+            this._contextFactory = new Factory(this.logger);
+            this._modelFactory = new Factory(this.logger);
+            this._serviceFactory = new Factory(this.logger);
+            this._mediatorFactory = new Factory(this.logger);
+            this._viewFactory = new Factory(this.logger);
+
+            if (this.factoriesConfig)
+            {
+                if (this.factoriesConfig.contextFactory) this._contextFactory.appendMappingConfig(this.factoriesConfig.contextFactory);
+                if (this.factoriesConfig.modelFactory) this._modelFactory.appendMappingConfig(this.factoriesConfig.modelFactory);
+                if (this.factoriesConfig.serviceFactory) this._serviceFactory.appendMappingConfig(this.factoriesConfig.serviceFactory);
+                if (this.factoriesConfig.mediatorFactory) this._mediatorFactory.appendMappingConfig(this.factoriesConfig.mediatorFactory);
+                if (this.factoriesConfig.viewFactory) this._viewFactory.appendMappingConfig(this.factoriesConfig.viewFactory);
+            }
+        }
+
+        return {
+            contextFactory: this._contextFactory,
+            modelFactory: this._modelFactory,
+            serviceFactory: this._serviceFactory,
+            mediatorFactory: this._mediatorFactory,
+            viewFactory: this._viewFactory
+        };
     }
 
     public override add(child: IHierarchyObject, index?: number): boolean
@@ -253,44 +330,97 @@ export class AppContext extends AbstractContext implements IAppContext
         throw new Error(AppContext.REMOVE_ERROR);
     }
 
-    public getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType: Type, name?: string): T
+    public getContext<T extends IContext>(type: Type<T>, immutableType?: Type<IContextImmutable>, name?: string): T
+    {
+        return this.getInstance(this._contextFactory, type, immutableType, name);
+    }
+
+    public getService<T extends IService>(type: Type<T>, immutableType?: Type<IServiceImmutable>, name?: string): T
+    {
+        return this.getInstance<T>(this._serviceFactory, type, immutableType, name);
+    }
+
+    public getModel<T extends IModel>(type: Type<T>, immutableType?: Type<IModelImmutable>, name?: string): T
+    {
+        return this.getInstance(this._modelFactory, type, immutableType, name);
+    }
+
+    public getMediator<T extends IMediator>(type: Type<T>, immutableType?: Type<IMediatorImmutable>, name?: string): T
+    {
+        return this.getInstance(this._mediatorFactory, type, immutableType, name);
+    }
+
+    private getInstance<T>(factory: IFactoryImmutable, type: Type<T>, immutableType?: Type, name?: string): T
     {
         const instance: T = factory.getInstance(type, name);
 
         if (instanceOf(instance, "IContext"))
         {
-            this.contextFactory.mapToValue(immutableType, instance, name);
+            if (immutableType) this._contextFactory.mapToValue(immutableType, instance, name);
+        }
+        else if (instanceOf(instance, "IService"))
+        {
+            this._contextFactory.mapToValue(type, instance, name);
+            this.factory.mapToValue(type, instance, name);
         }
         else if (instanceOf(instance, "IModel"))
         {
-            this.contextFactory.mapToValue(type, instance, name);
-            this.mediatorFactory.mapToValue(immutableType, instance, name);
-            this.modelFactory.mapToValue(immutableType, instance, name);
+            this._contextFactory.mapToValue(type, instance, name);
+            if (immutableType) this._mediatorFactory.mapToValue(immutableType, instance, name);
+            if (immutableType) this._serviceFactory.mapToValue(immutableType, instance, name);
             this.factory.mapToValue(type, instance, name);
         }
         else if (instanceOf(instance, "IMediator"))
         {
-            this.contextFactory.mapToValue(type, instance, name);
+            this._contextFactory.mapToValue(type, instance, name);
         }
 
         return instance;
     }
 
-    protected createInstances(): void
+    public mapContextToType(type: Type<IContext>, to: Class<IContext>, name?: string): IAppContext
+    {
+        this._contextFactory.mapToType(type, to, name);
+
+        return this;
+    }
+
+    public mapMediatorToType(type: Type<IMediator>, to: Class<IMediator>, name?: string): IAppContext
+    {
+        this._mediatorFactory.mapToType(type, to, name);
+
+        return this;
+    }
+
+    public mapModelToType(type: Type<IModel>, to: Class<IModel>, name?: string): IAppContext
+    {
+        this._modelFactory.mapToType(type, to, name);
+
+        return this;
+    }
+
+    public mapServiceToType(type: Type<IService>, to: Class<IService>, name?: string): IAppContext
+    {
+        this._serviceFactory.mapToType(type, to, name);
+
+        return this;
+    }
+
+    private _createInstances(): void
     {
         if (this.appContextConfig.defaultCliUI)
         {
-            this.defaultUiMediator = this.mediatorFactory.getInstance<IUIMediator>(DW_TYPES.IUIMediator);
+            this.defaultUiMediator = this._mediatorFactory.getInstance<IUIMediator>(Types.IUIMediator);
             this.add(this.defaultUiMediator);
         }
     }
 
-    protected mapTypes(): void
+    private _mapTypes(): void
     {
         if (this.appContextConfig.defaultCliUI)
         {
-            this.mediatorFactory.mapToType<IUIMediator>(DW_TYPES.IUIMediator, this.defaultUIMediatorClass);
-            this.viewFactory.mapToType<IInputView>(DW_TYPES.IInputView, this.defaultUIViewClass);
+            this._mediatorFactory.mapToType<IUIMediator>(Types.IUIMediator, this.defaultUIMediatorClass);
+            this._viewFactory.mapToType<IInputView>(Types.IInputView, this.defaultUIViewClass);
         }
     }
 
@@ -304,30 +434,41 @@ export class AppContext extends AbstractContext implements IAppContext
         throw new Error(DwError.OVERRIDE.name);
     }
 
-    protected mapCommands(): void
+    private _mapCommands(): void
     {
         this.map(UIMediatorMessageType.INPUT, ExecuteCliCommand).addGuards(IsCliCommandGuards);
     }
 
-    private mapFactories(): void
+    public override map<T>(messageType: Enum, commandClass: Class<ICommand>, data?: T, stopOnExecute?: boolean, once?: boolean): MappingConfig<T>;
+    public override map<T>(messageType: Enum, commandClassList: Class<ICommand>[], data?: T, stopOnExecute?: boolean, once?: boolean): MappingConfigList<T>;
+    public override map<T>(messageTypeList: Enum[], commandClass: Class<ICommand>, data?: T, stopOnExecute?: boolean, once?: boolean): MappingConfigList<T>;
+    public override map<T>(messageTypeList: Enum[], commandClassList: Class<ICommand>[], data?: T, stopOnExecute?: boolean, once?: boolean): MappingConfigList<T>;
+    public override map<T>(messageType: Enum | Enum[], commandClass: Class<ICommand> | Class<ICommand>[], data?: T, stopOnExecute?: boolean, once?: boolean): MappingConfig<T> | MappingConfigList<T>;
+    public override map<T>(messageType: Enum | Enum[], commandClass: Class<ICommand> | Class<ICommand>[], data?: T, stopOnExecute = true, once = false): MappingConfig<T> | MappingConfigList<T>
     {
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.contextFactory, FACTORIES_NAMES.CONTEXT);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.modelFactory, FACTORIES_NAMES.MODEL);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.mediatorFactory, FACTORIES_NAMES.MEDIATOR);
-        this.contextFactory.mapToValue(DW_TYPES.IFactory, this.viewFactory, FACTORIES_NAMES.VIEW);
-
-        this.modelFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.modelFactory, FACTORIES_NAMES.MODEL);
-
-        this.mediatorFactory.mapToValue(DW_TYPES.IFactoryImmutable, this.viewFactory, FACTORIES_NAMES.VIEW);
+        return super.map(messageType, commandClass, data, stopOnExecute, once);
     }
 
-    protected mapValues(): void
+    private _mapFactories(): void
+    {
+        this._contextFactory.mapToValue(Types.IFactory, this._contextFactory, FactoryNames.CONTEXT);
+        this._contextFactory.mapToValue(Types.IFactory, this._modelFactory, FactoryNames.MODEL);
+        this._contextFactory.mapToValue(Types.IFactory, this._serviceFactory, FactoryNames.SERVICE);
+        this._contextFactory.mapToValue(Types.IFactory, this._mediatorFactory, FactoryNames.MEDIATOR);
+        this._contextFactory.mapToValue(Types.IFactory, this._viewFactory, FactoryNames.VIEW);
+
+        this._modelFactory.mapToValue(Types.IFactoryImmutable, this._modelFactory, FactoryNames.MODEL);
+
+        this._mediatorFactory.mapToValue(Types.IFactoryImmutable, this._viewFactory, FactoryNames.VIEW);
+    }
+
+    private _mapValues(): void
     {
         if (this._id)
         {
             this.factory.mapToValue("string", this._id, "commandMapperId");
         }
 
-        this.factory.mapToValue(DW_TYPES.ICommandMapper, this);
+        this.factory.mapToValue(Types.ICommandMapper, this);
     }
 }

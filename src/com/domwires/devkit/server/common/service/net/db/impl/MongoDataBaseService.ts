@@ -204,7 +204,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
 
             if (result.length === 0)
             {
-                this.warn("Nothing found:", collectionName, JSON.stringify(filter));
+                this.warn("Nothing found:", collectionName, filter);
 
                 this.dispatch(DataBaseServiceMessageType.FIND_FAIL, query);
             }
@@ -216,7 +216,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
             }
         } catch (e)
         {
-            this.warn("Cannot find:", collectionName, JSON.stringify(filter), e);
+            this.warn("Cannot find:", collectionName, filter, e);
 
             this.dispatch(DataBaseServiceMessageType.FIND_FAIL, query);
         }
@@ -284,7 +284,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_SUCCESS);
         } catch (e)
         {
-            this.warn("Cannot update:", collectionName, JSON.stringify(filter), updateFilter, e);
+            this.warn("Cannot update:", collectionName, filter, updateFilter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.UPDATE_FAIL);
         }
@@ -315,7 +315,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_SUCCESS);
         } catch (e)
         {
-            this.warn("Cannot delete:", collectionName, JSON.stringify(filter), e);
+            this.warn("Cannot delete:", collectionName, filter, e);
 
             this.dispatchMessage(DataBaseServiceMessageType.DELETE_FAIL);
         }

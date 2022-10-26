@@ -9,7 +9,9 @@
  * --verbose - extended logs (optional)
  **/
 
-class ModelFromTypeGen
+import {AbstractScript} from "./AbstractScript";
+
+class ModelFromTypeGen extends AbstractScript
 {
     private modelTemplate!: string;
     private iModelTemplate!: string;
@@ -32,12 +34,6 @@ class ModelFromTypeGen
     private typeDefFileName!: string;
     private hasErrors = false;
 
-    private readonly workingDirectory: string;
-
-    private fs = require('fs');
-    private minimist = require('minimist');
-    private os = require('os');
-
     private suffix!: string;
     private typeDefImports!: string;
     private readonly relatedImportPath!: string;
@@ -45,32 +41,28 @@ class ModelFromTypeGen
 
     public constructor()
     {
-        const args = this.minimist(process.argv.slice(2));
-
-        this.workingDirectory = process.cwd();
-
-        if (!args["in"])
+        super();
+        
+        if (!this.args["in"])
         {
-            console.info("Path to input directory is not specified!");
-            console.info("Define it as flag --in=path_to_dir...");
-            process.exit(1);
+            this.logger.error("Path to input directory is not specified! Define it as flag --in=path_to_dir...");
+            this.exit(1);
         }
-        if (!args["templatesPath"])
+        if (!this.args["templatesPath"])
         {
-            console.info("Path to templates directory is not specified!");
-            console.info("Define it as flag --templatesPath=path_to_templates...");
-            process.exit(1);
+            this.logger.error("Path to templates directory is not specified! Define it as flag --templatesPath=path_to_templates...");
+            this.exit(1);
         }
-        if (args["relatedImportPath"])
+        if (this.args["relatedImportPath"])
         {
-            this.relatedImportPath = args["relatedImportPath"];
-            console.info("Replace import path from type file to: " + this.relatedImportPath);
+            this.relatedImportPath = this.args["relatedImportPath"];
+            this.logger.warn("Replace import path from type file to: " + this.relatedImportPath);
         }
 
-        this.templatesPath = this.workingDirectory + args["templatesPath"];
-        this.input = this.workingDirectory + args["in"];
-        this.overwrite = args["overwrite"];
-        this.verbose = args["verbose"];
+        this.templatesPath = this.workingDirectory + this.args["templatesPath"];
+        this.input = this.workingDirectory + this.args["in"];
+        this.overwrite = this.args["overwrite"];
+        this.verbose = this.args["verbose"];
 
         this.loadTemplate();
         this.convertDir(this.input);
@@ -98,34 +90,13 @@ class ModelFromTypeGen
 
     private traceTemplate(name: string, content: string): void
     {
-        console.info(this.sep() + "-------------- " + name + "--------------");
-        console.info(this.sep() + content);
+        this.logger.info(this.sep() + "-------------- " + name + "--------------");
+        this.logger.info(this.sep() + content);
     }
 
     private convertDir(path: string): void
     {
-        if (this.fs.existsSync(path) && this.fs.lstatSync(path).isDirectory())
-        {
-            const dir = this.fs.opendirSync(path);
-            let dirent;
-            while ((dirent = dir.readSync()) !== null)
-            {
-                const fileName = dirent.name;
-                const p: string = path + "/" + fileName;
-                if (this.fs.lstatSync(p).isDirectory())
-                {
-                    this.convertDir(p);
-                }
-                else
-                {
-                    if (fileName.substr(fileName.length - 3) == ".ts")
-                    {
-                        this.convertFile(p, fileName);
-                    }
-                }
-            }
-            dir.closeSync();
-        }
+        this.getFilePathList(path).map(value => this.convertFile(value.path, value.name));
     }
 
     private convertFile(path: string, fileName: string): void
@@ -145,11 +116,11 @@ class ModelFromTypeGen
 
             this.output = path.split(fileName)[0];
 
-            console.info("Generate model from type: " + fileName);
+            this.logger.info("Generate model from type: " + fileName);
 
             if (this.verbose)
             {
-                console.info(this.sep() + this.typedefFile);
+                this.logger.info(this.sep() + this.typedefFile);
             }
 
             this.enumValueList = [];
@@ -170,8 +141,6 @@ class ModelFromTypeGen
             this.suffix = suffixArr[1].slice(0, suffixArr[1].indexOf("*/"));
             this.importBaseFrom = "../I" + this.suffix;
             this.typedefFile = this.typedefFile.split("/*@Suffix=" + this.suffix + "*/").join("");
-
-            console.info("SUFFIX: " + this.suffix);
         }
     }
 
@@ -189,7 +158,7 @@ class ModelFromTypeGen
 
         if (this.hasErrors)
         {
-            process.exit(1);
+            this.exit(1);
         }
 
         const dirName: string = this.output + this.getNewPackageName(this.typeDefFileName);
@@ -231,12 +200,12 @@ class ModelFromTypeGen
 
                     if (this.verbose)
                     {
-                        console.info("Existing enum values: " + content);
+                        this.logger.info("Existing enum values: " + content);
                     }
                 }
                 else
                 {
-                    console.info("'" + outputFile + "' already exists. Use --overwrite to overwrite existing files...");
+                    this.logger.info("'" + outputFile + "' already exists. Use --overwrite to overwrite existing files...");
                 }
             }
         }
@@ -254,8 +223,8 @@ class ModelFromTypeGen
 
             if (this.verbose)
             {
-                console.info("Output file: " + outputFile);
-                console.info(this.sep() + result.data);
+                this.logger.info("Output file: " + outputFile);
+                this.logger.info(this.sep() + result.data);
             }
         }
     }
@@ -287,12 +256,12 @@ class ModelFromTypeGen
 
         if (ampersandSplit.length > 2)
         {
-            console.info("Error: only single inheritance in supported: " + this.typeDefFileName);
+            this.logger.info("Error: only single inheritance in supported: " + this.typeDefFileName);
             this.hasErrors = true;
         }
         if (typeDefSplit.length != 2)
         {
-            console.info("Error: type is missing in: " + this.typeDefFileName);
+            this.logger.info("Error: type is missing in: " + this.typeDefFileName);
             this.hasErrors = true;
         }
 
@@ -310,7 +279,7 @@ class ModelFromTypeGen
                 baseModelName = baseTypeDefWithPackage + this.suffix;
                 baseData = baseTypeDefWithPackage.charAt(0).toLowerCase() + baseTypeDefWithPackage.substring(1, baseTypeDefWithPackage.length);
 
-                console.info("Base model: " + baseModelName);
+                this.logger.info("Base model: " + baseModelName);
             }
         }
         else
@@ -414,7 +383,7 @@ class ModelFromTypeGen
             {
                 if (param.split("readonly ").length != 2)
                 {
-                    console.info("Error: use 'readonly' to keep immutability: " + param);
+                    this.logger.info("Error: use 'readonly' to keep immutability: " + param);
                     this.hasErrors = true;
                 }
             }
@@ -429,7 +398,7 @@ class ModelFromTypeGen
 
                 if (paramTypeSplit.length != 2)
                 {
-                    console.info("Error: cannot parse type from param: " + param);
+                    this.logger.info("Error: cannot parse type from param: " + param);
                     this.hasErrors = true;
                 }
 

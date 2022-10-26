@@ -89,7 +89,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
             this.dispatchMessage(NetClientServiceMessageType.HTTP_RESPONSE, this._responseData);
         } catch (e)
         {
-            this.info("Http request error:", action, requestType, JSON.stringify(data), e);
+            this.info("Http request error:", action, requestType, data, e);
 
             this.dispatchMessage(NetClientServiceMessageType.HTTP_ERROR);
         }
