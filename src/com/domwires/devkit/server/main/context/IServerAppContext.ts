@@ -123,9 +123,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
     {
         const netEnabled: boolean = this.modelFactory.getInstance(Types.boolean, ConfigIds.netEnabled);
         const netHost: string = this.modelFactory.getInstance(Types.string, ConfigIds.netHost);
-        const netPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.netPort);
+        const httpPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.httpPort);
 
-        const httpConfig: NetServerServiceConfig = {enabled: netEnabled, host: netHost, port: netPort};
+        const httpConfig: NetServerServiceConfig = {enabled: netEnabled, host: netHost, port: httpPort};
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, httpConfig);
         this.serviceFactory.mapToValue(Types.NetServerServiceConfig, httpConfig);
@@ -140,10 +140,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         const socketConfig: SocketServerServiceConfig = {
             enabled: this.http.enabled,
             host: this.http.host,
-            port: this.http.port,
+            port: this.modelFactory.getInstance(Types.number, ConfigIds.socketPort),
             http: this.http.nodeHttpServer
         };
-
         this.serviceFactory.mapToValue(Types.ServiceConfig, socketConfig);
         this.serviceFactory.mapToValue(Types.NetServerServiceConfig, socketConfig);
         this.serviceFactory.mapToValue(Types.SocketServerServiceConfig, socketConfig);
