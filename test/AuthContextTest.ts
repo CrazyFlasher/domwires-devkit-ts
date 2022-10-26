@@ -78,7 +78,7 @@ describe('AuthContextTest', function (this: Suite)
             const socketConfig: SocketServerServiceConfig = {
                 enabled: http.enabled,
                 host: http.host,
-                port: http.port,
+                port: 3002,
                 http: http.nodeHttpServer
             };
 
@@ -162,7 +162,7 @@ describe('AuthContextTest', function (this: Suite)
         expect(db.isOpened).equals(true);
         expect(http.port).equals(3001);
         expect(http.host).equals("127.0.0.1");
-        expect(socket.port).equals(http.port);
+        expect(socket.port).equals(3002);
         expect(socket.host).equals(http.host);
     });
 
