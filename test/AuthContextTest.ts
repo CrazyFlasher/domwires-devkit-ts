@@ -66,7 +66,7 @@ describe('AuthContextTest', function (this: Suite)
         f.mapToType<ISocketServerService>(Types.ISocketServerService, SioSocketServerService);
         f.mapToType<IDataBaseService>(Types.IDataBaseService, MongoDataBaseService);
 
-        const httpConfig: NetServerServiceConfig = {enabled: true, host: "127.0.0.1", port: 3123};
+        const httpConfig: NetServerServiceConfig = {enabled: true, host: "127.0.0.1", port: 3750};
 
         f.mapToValue(Types.ServiceConfig, httpConfig);
 
@@ -160,7 +160,7 @@ describe('AuthContextTest', function (this: Suite)
         expect(http.isOpened).equals(true);
         expect(socket.isOpened).equals(true);
         expect(db.isOpened).equals(true);
-        expect(http.port).equals(3123);
+        expect(http.port).equals(3750);
         expect(http.host).equals("127.0.0.1");
         expect(socket.port).equals(http.port);
         expect(socket.host).equals(http.host);
@@ -298,7 +298,7 @@ describe('AuthContextTest', function (this: Suite)
 
     function createClient(onConnect: () => void, onData: (data: any) => void): void
     {
-        client = io("ws://127.0.0.1:3123");
+        client = io("ws://127.0.0.1:3750");
 
         client.on("connect", () =>
         {
