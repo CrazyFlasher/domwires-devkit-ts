@@ -39,7 +39,7 @@ describe('HttpServiceTest', function (this: Suite)
         factory.mapToType<IHttpServerService>(Types.IHttpServerService, ExpressHttpServerService);
         // factory.mapToType(DW_TYPES.IHttpServerService, implementationClass);
 
-        const httpConfig: NetServerServiceConfig = {host: "127.0.0.1", port: 3000};
+        const httpConfig: NetServerServiceConfig = {host: "127.0.0.1", port: 3123};
 
         factory.mapToValue(Types.ServiceConfig, httpConfig);
 
@@ -113,7 +113,7 @@ describe('HttpServiceTest', function (this: Suite)
 
             expect(http.isListening(TestAction.TEST)).false;
 
-            clientRequest("http://127.0.0.1:3000/test", (data: string, code?: number) =>
+            clientRequest("http://127.0.0.1:3123/test", (data: string, code?: number) =>
             {
                 expect(code).equals(404);
 
@@ -130,7 +130,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             http.startListen([TestAction.TEST]);
 
-            clientRequest("http://127.0.0.1:3000/test", (data: string, code?: number) =>
+            clientRequest("http://127.0.0.1:3123/test", (data: string, code?: number) =>
             {
                 expect(data).equals("PIZDEC!");
                 expect(code).equals(200);
@@ -153,7 +153,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             http.startListen([TestAction.TEST]);
 
-            clientRequest("http://127.0.0.1:3000/tes", (data: string, code?: number) =>
+            clientRequest("http://127.0.0.1:3123/tes", (data: string, code?: number) =>
             {
                 expect(code).equals(404);
 
@@ -175,7 +175,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             http.startListen([TestAction.TEST]);
 
-            clientRequest("http://127.0.0.1:3000/test?id=olo");
+            clientRequest("http://127.0.0.1:3123/test?id=olo");
         });
 
         http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>

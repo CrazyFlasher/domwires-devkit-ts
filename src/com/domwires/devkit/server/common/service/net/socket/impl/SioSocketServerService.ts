@@ -100,6 +100,14 @@ export class SioSocketServerService extends AbstractNetServerService implements 
 
     public override close(): INetServerService
     {
+        try
+        {
+            throw new Error("STACK");
+        } catch (e)
+        {
+            this.logger.fatal(e);
+        }
+
         if (this._isOpened)
         {
             this.server.close(err =>

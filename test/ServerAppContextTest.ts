@@ -21,7 +21,7 @@ describe('ServerAppContextTest', function (this: Suite)
         modelFactory: new Map([
             [ConfigIds.netEnabled, {value: true}],
             [ConfigIds.netHost, {value: "127.0.0.1"}],
-            [ConfigIds.netPort, {value: 3000}],
+            [ConfigIds.netPort, {value: 3123}],
             [ConfigIds.dbName, {value: "devkit_db"}],
             [ConfigIds.dbHost, {value: "127.0.0.1"}],
             [ConfigIds.dbPort, {value: 27017}]
