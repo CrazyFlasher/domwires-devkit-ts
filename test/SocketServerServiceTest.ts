@@ -1,17 +1,24 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, Logger, LogLevel} from "domwires";
+import {Enum, Factory, IFactory, Logger, LogLevel} from "domwires";
 import {io, Socket} from "socket.io-client";
 import {expect} from "chai";
-import {injectable, postConstruct} from "inversify";
-import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 import {
-    ISocketServerService, SocketRequestResponseType,
-    SocketServerServiceConfig, SocketServerServiceMessageType
-} from "../src/com/domwires/devkit/server/service/net/socket/ISocketServerService";
-import {SioSocketServerService} from "../src/com/domwires/devkit/server/service/net/socket/impl/SioSocketServerService";
+    ISocketServerService,
+    SocketServerServiceConfig,
+    SocketServerServiceMessageType
+} from "../src/com/domwires/devkit/server/common/service/net/socket/ISocketServerService";
+import {
+    SioSocketServerService
+} from "../src/com/domwires/devkit/server/common/service/net/socket/impl/SioSocketServerService";
 import {ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
-import {NetServerServiceMessageType} from "../src/com/domwires/devkit/server/service/net/INetServerService";
+import {NetServerServiceMessageType} from "../src/com/domwires/devkit/server/common/service/net/INetServerService";
+import {Types} from "../src/com/domwires/devkit/common/Types";
+
+class TestAction extends Enum
+{
+    public static readonly TEST:TestAction = new TestAction("test");
+}
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
 {
@@ -23,22 +30,19 @@ import {NetServerServiceMessageType} from "../src/com/domwires/devkit/server/ser
 describe('SocketServerServiceTest', function (this: Suite)
 {
     let factory: IFactory;
-    let server: ISocketServerService<ClientData>;
+    let server: ISocketServerService;
 
     beforeEach(() =>
     {
         factory = new Factory(new Logger(LogLevel.INFO));
-        factory.mapToType(DW_TYPES.ISocketServerService, SioSocketServerService);
+        factory.mapToType<SioSocketServerService>(Types.ISocketServerService, SioSocketServerService);
 
-        const socketConfig: SocketServerServiceConfig = {host: "127.0.0.1", port: 3000};
+        const socketConfig: SocketServerServiceConfig = {host: "127.0.0.1", port: 3010};
 
-        factory.mapToValue(DW_TYPES.SocketServerServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.NetServerServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.ServiceConfig, socketConfig);
-        factory.mapToValue(DW_TYPES.Class, ClientData, "clientDataClass");
-        factory.mapToValue(DW_TYPES.IFactoryImmutable, factory);
+        factory.mapToValue(Types.ServiceConfig, socketConfig);
+        factory.mapToValue(Types.IFactoryImmutable, factory);
 
-        server = factory.getInstance(DW_TYPES.ISocketServerService);
+        server = factory.getInstance(Types.ISocketServerService);
     });
 
     afterEach((done: Done) =>
@@ -79,15 +83,12 @@ describe('SocketServerServiceTest', function (this: Suite)
 
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            client = io("ws://127.0.0.1:3000");
+            client = io("ws://127.0.0.1:3010");
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
         {
-            const c = server.getClientDataById(server.connectedClientId);
-
             expect(server.connectionsCount).equals(1);
-            expect(c && c.created).true;
 
             client.disconnect();
         });
@@ -106,7 +107,7 @@ describe('SocketServerServiceTest', function (this: Suite)
     {
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            io("ws://127.0.0.1:3000");
+            io("ws://127.0.0.1:3010");
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
@@ -132,28 +133,28 @@ describe('SocketServerServiceTest', function (this: Suite)
 
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            server.startListen({id: "test", type: SocketRequestResponseType.TCP});
+            server.startListen([TestAction.TEST]);
 
-            client = io("ws://127.0.0.1:3000");
+            client = io("ws://127.0.0.1:3010");
             client.on("data", json =>
             {
-                expect(json.id).equals("test");
+                expect(json.action).equals("test");
                 expect(json.data).equals("otvet");
 
                 client.disconnect();
 
                 done();
             });
-            client.emit("data", {id: "test", data: "lalala!"});
+            client.emit("data", {action: "test", data: "lalala!"});
         });
 
         server.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
         {
-            expect(server.requestData.id).equals("test");
-            expect(server.requestData.data).equals("lalala!");
+            expect(server.getRequestData().action).equals("test");
+            expect(server.getRequestData().data).equals("lalala!");
 
             server.sendResponse(server.requestFromClientId, {
-                id: "test", type: SocketRequestResponseType.TCP,
+                action: "test",
                 data: "otvet"
             });
         });
@@ -163,20 +164,3 @@ describe('SocketServerServiceTest', function (this: Suite)
 });
 
 // }
-
-@injectable()
-class ClientData
-{
-    private _created!: boolean;
-
-    public get created(): boolean
-    {
-        return this._created;
-    }
-
-    @postConstruct()
-    private postConstruct()
-    {
-        this._created = true;
-    }
-}

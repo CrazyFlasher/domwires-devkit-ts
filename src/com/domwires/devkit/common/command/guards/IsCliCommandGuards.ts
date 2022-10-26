@@ -1,5 +1,4 @@
 import {AbstractGuards, lazyInjectNamed} from "domwires";
-import {CONSTS} from "../../dw_consts";
 
 export class IsCliCommandGuards extends AbstractGuards
 {
@@ -10,7 +9,7 @@ export class IsCliCommandGuards extends AbstractGuards
     {
         if (this.value.length > 5 && this.value.charAt(5) != " ")
         {
-            return this.value.substring(0, 5) === CONSTS.CLI_COMMAND;
+            return this.value.substring(0, 5) === "/cmd:";
         }
 
         return false;

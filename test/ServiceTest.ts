@@ -4,8 +4,8 @@ import {expect} from "chai";
 import {MockService1, MockService2, MockServiceConfig} from "./mock/MockServices";
 import {Factory, IFactory, Logger, LogLevel} from "domwires";
 import {MOCK_TYPES} from "./mock/mock_types";
-import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 import {ServiceConfig, ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
+import {Types} from "../src/com/domwires/devkit/common/Types";
 
 describe('ServiceTest', function (this: Suite)
 {
@@ -28,7 +28,7 @@ describe('ServiceTest', function (this: Suite)
 
     it('testEnabledTrueByDefault', () =>
     {
-        factory.mapToValue(DW_TYPES.ServiceConfig, {});
+        factory.mapToValue(Types.ServiceConfig, {});
 
         const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
@@ -38,7 +38,7 @@ describe('ServiceTest', function (this: Suite)
     it('testEnabledInitializedFalse', () =>
     {
         const config: ServiceConfig = {enabled: false};
-        factory.mapToValue(DW_TYPES.ServiceConfig, config);
+        factory.mapToValue(Types.ServiceConfig, config);
 
         const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
@@ -54,7 +54,7 @@ describe('ServiceTest', function (this: Suite)
     it('testEnabledInitializedTrue', () =>
     {
         const config: ServiceConfig = {enabled: true};
-        factory.mapToValue(DW_TYPES.ServiceConfig, config);
+        factory.mapToValue(Types.ServiceConfig, config);
 
         const service: MockService1 = factory.getInstance<MockService1>(MockService1);
 
@@ -70,7 +70,7 @@ describe('ServiceTest', function (this: Suite)
     it('testWithSpecificConfig', () =>
     {
         const config: MockServiceConfig = {enabled: true, id: "mockServ"};
-        factory.mapToValue(DW_TYPES.ServiceConfig, config);
+        factory.mapToValue(Types.ServiceConfig, config);
         factory.mapToValue(MOCK_TYPES.MockServiceConfig, config);
 
         const service: MockService2 = factory.getInstance<MockService2>(MockService2);

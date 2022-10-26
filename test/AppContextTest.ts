@@ -15,15 +15,11 @@ import {IMockModel} from "./mock/MockModels";
 import {IChildMockContext, IMainMockContext} from "./mock/MockContexts";
 import "./mock/MockModels";
 import "./mock/MockContexts";
-import {
-    AppContext,
-    AppContextConfig,
-    AppContextConfigBuilder
-} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {AppContext, AppContextConfigBuilder} from "../src/com/domwires/devkit/common/context/IAppContext";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {injectable} from "inversify";
-import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 import {printMappedToAliasCommandsToConsole, registerCommandAlias} from "../src/com/domwires/devkit/common/Global";
+import {Types} from "../src/com/domwires/devkit/common/Types";
 
 const logger = new Logger(LogLevel.INFO);
 
@@ -119,9 +115,8 @@ describe('AppContextTest', function (this: Suite)
 
         const config = cb.build();
 
-        mainContextFactory.mapToValue<ContextConfig>("ContextConfig", config);
-        mainContextFactory.mapToValue<AppContextConfig>("AppContextConfig", config);
-        mainContextFactory.mapToValue(DW_TYPES.IFactory, mainContextFactory);
+        mainContextFactory.mapToValue<ContextConfig>(Types.ContextConfig, config);
+        mainContextFactory.mapToValue(Types.IFactory, mainContextFactory);
 
         mainContext = mainContextFactory.getInstance("IMainMockContext");
     });
@@ -138,20 +133,20 @@ describe('AppContextTest', function (this: Suite)
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         mainContextFactory.mapToValue<TestObj>(TestObj, to);
 
-        mainContext.getMediatorMutable().dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:main:test_cmd"});
+        mainContext.getMediatorMutable()?.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:main:test_cmd"});
 
         expect(to.d).equals(7);
 
         registerCommandAlias(TestCommandForChildContext, "test_cmd_for_child");
 
         const childContext: IChildMockContext = mainContext.getChildContext();
-        const model: IMockModel = childContext.getModel();
+        const model: IMockModel = childContext.getMockModel();
         mainContext.add(childContext);
         childContext.add(model);
 
         childContext.getFactoryMutable().mapToValue<IMockModel>("IMockModel", model);
 
-        mainContext.getMediatorMutable().dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:child:test_cmd_for_child"});
+        mainContext.getMediatorMutable()?.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:child:test_cmd_for_child"});
 
         expect(model.v).equals(5);
     });
@@ -163,7 +158,7 @@ describe('AppContextTest', function (this: Suite)
         const f = new Factory(new Logger(LogLevel.INFO));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         f.mapToValue<TestObj>(TestObj, to);
-        f.mapToValue(DW_TYPES.IFactory, f);
+        f.mapToValue(Types.IFactory, f);
 
         const c = f.getInstance<AppContext>(AppContext);
 
@@ -179,11 +174,11 @@ describe('AppContextTest', function (this: Suite)
         const f = new Factory(new Logger(LogLevel.INFO));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         f.mapToValue<TestObj>(TestObj, to);
-        f.mapToValue(DW_TYPES.IFactory, f);
+        f.mapToValue(Types.IFactory, f);
 
         const c = f.getInstance<AppContext>(AppContext);
 
-        c.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd:{str:\"test\", num:5}"});
+        c.dispatchMessage(UIMediatorMessageType.INPUT, {value: "/cmd:test_cmd:{\"str\":\"test\", \"num\":5}"});
 
         expect(to.d).equals(7);
         expect(to.s).equals("test");
@@ -193,7 +188,7 @@ describe('AppContextTest', function (this: Suite)
     it('testCreateMainContextWithChildContext', () =>
     {
         const childContext: IChildMockContext = mainContext.getChildContext();
-        const model: IMockModel = childContext.getModel();
+        const model: IMockModel = childContext.getMockModel();
 
         // instantiated
         expect(mainContext.getContextFactory()).exist;
@@ -218,7 +213,7 @@ describe('AppContextTest', function (this: Suite)
         expect(mainContext.getMediatorFactory()).equals(childContext.getMediatorFactory());
         expect(mainContext.getViewFactory()).equals(childContext.getViewFactory());
         expect(mainContext.getModelFactory()).equals(model.getModelFactory());
-        expect(childContext.getModel()).equals(childContext.getModel2());
+        expect(childContext.getMockModel()).not.equals(childContext.getMockModel2());
 
         expect(childContext.parent).not.equals(mainContext);
         expect(model.parent).not.equals(childContext);

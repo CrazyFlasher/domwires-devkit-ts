@@ -1,4 +1,4 @@
-export class ${model_name}MessageType extends Enum
+export class ${model_name}MessageType extends MessageType
 {
     ${content}
 }

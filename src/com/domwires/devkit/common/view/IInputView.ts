@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {Enum, IMessageDispatcher, MessageDispatcher} from "domwires";
+import {IMessageDispatcher, MessageDispatcher, MessageType} from "domwires";
 
 export interface IInputView extends IMessageDispatcher
 {
 
 }
 
-export class InputViewMessageType extends Enum<string>
+export class InputViewMessageType extends MessageType<string>
 {
     public static readonly INPUT: InputViewMessageType = new InputViewMessageType();
 }

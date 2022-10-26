@@ -1,17 +1,17 @@
 import {AbstractCommand, ICommandMapper, ILogger, lazyInject, lazyInjectNamed} from "domwires";
-import {DW_TYPES} from "../dw_consts";
 import {inject, named, optional} from "inversify";
 import {getCommandClassByAlias} from "../Global";
+import {Types} from "../Types";
 
 export class ExecuteCliCommand extends AbstractCommand
 {
-    @lazyInject(DW_TYPES.ICommandMapper)
+    @lazyInject(Types.ICommandMapper)
     private commandMapper!: ICommandMapper;
 
     @inject("string") @named("commandMapperId") @optional()
     private commandMapperId!: string;
 
-    @lazyInject(DW_TYPES.ILogger)
+    @lazyInject(Types.ILogger)
     private logger!: ILogger;
 
     @lazyInjectNamed("string", "value")
@@ -31,7 +31,7 @@ export class ExecuteCliCommand extends AbstractCommand
         }
 
         const commandAlias = splittedValue[commandContextId ? 2 : 1];
-        let paramsJsonString = this.value.substring(this.value.indexOf("{") + 1, this.value.indexOf("}")).
+        let paramsJsonString = this.value.substring(this.value.indexOf("{") + 1, this.value.lastIndexOf("}")).
             replace(/\s/g, '');
 
         let params;
@@ -40,7 +40,7 @@ export class ExecuteCliCommand extends AbstractCommand
         {
             if (paramsJsonString)
             {
-                paramsJsonString = this.formatParamsString(paramsJsonString);
+                paramsJsonString = "{" + paramsJsonString + "}";
                 params = JSON.parse(paramsJsonString);
             }
         } catch (e)
@@ -50,7 +50,8 @@ export class ExecuteCliCommand extends AbstractCommand
 
         if (commandContextId === this.commandMapperId)
         {
-            this.logger.info("ExecuteCliCommand in '" + this.commandMapper.constructor.name + "':", commandAlias);
+            this.logger.warn("\nCLI command in '" + this.commandMapper.constructor.name + "':\nCommand name: " +
+                commandAlias + (params ? "\nCommand data: " + JSON.stringify(params) : ""));
 
             try
             {
@@ -64,17 +65,5 @@ export class ExecuteCliCommand extends AbstractCommand
                 this.logger.error(e);
             }
         }
-    }
-
-    private formatParamsString(jsonString: string): string
-    {
-        const list = jsonString.split(",");
-        const listWithQuotes: string[] = [];
-        list.map(keyValue => {
-            const split = keyValue.split(":");
-            listWithQuotes.push('"' + split[0] + '":' + split[1]);
-        });
-
-        return "{" + listWithQuotes.toString() + "}";
     }
 }

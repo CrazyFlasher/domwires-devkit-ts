@@ -1,26 +1,30 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import "reflect-metadata";
 import {AbstractModel, IFactoryImmutable} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
 import {inject, optional, postConstruct} from "inversify";
-import { DW_TYPES } from "../dw_consts";
 import { DwError } from "../DwError";
+import {Types} from "../Types";
 
 export abstract class AbstractService extends AbstractModel implements IService
 {
-    @inject(DW_TYPES.ServiceConfig)
+    @inject(Types.ServiceConfig)
     protected config!: ServiceConfig;
 
-    @inject(DW_TYPES.IFactoryImmutable) @optional()
+    @inject(Types.IFactoryImmutable) @optional()
     protected factory!: IFactoryImmutable;
 
     private _initialized = false;
     private _enabled!: boolean;
 
     @postConstruct()
-    private postConstruct(): void
+    protected postConstruct(): void
     {
         this._enabled = this.config.enabled === undefined || this.config.enabled;
     }
+
+    public isIService(): void {}
 
     public init(): IService
     {

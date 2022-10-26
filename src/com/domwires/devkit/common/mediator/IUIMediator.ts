@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {AbstractMediator, Enum, IFactoryImmutable, IMediator, IMessage} from "domwires";
+import {AbstractMediator, IFactoryImmutable, IMediator, IMessage, MessageType} from "domwires";
 import {inject, named, postConstruct} from "inversify";
 import {IInputView, InputViewMessageType} from "../view/IInputView";
-import {CONSTS, DW_TYPES, FACTORIES_NAMES} from "../dw_consts";
 import {printMappedToAliasCommandsToConsole} from "../Global";
+import {Types} from "../Types";
+import {FactoryNames} from "../FactoryNames";
 
 export interface IUIMediator extends IMediator
 {
@@ -13,7 +14,7 @@ export interface IUIMediator extends IMediator
 
 export class UIMediator extends AbstractMediator
 {
-    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.VIEW)
+    @inject(Types.IFactoryImmutable) @named(FactoryNames.VIEW)
     protected viewFactory!: IFactoryImmutable;
 
     private inputView!: IInputView;
@@ -21,7 +22,7 @@ export class UIMediator extends AbstractMediator
     @postConstruct()
     private init(): void
     {
-        this.inputView = this.viewFactory.getInstance<IInputView>(DW_TYPES.IInputView);
+        this.inputView = this.viewFactory.getInstance<IInputView>(Types.IInputView);
         this.inputView.addMessageListener(InputViewMessageType.INPUT, this.handleInput.bind(this));
     }
 
@@ -29,13 +30,13 @@ export class UIMediator extends AbstractMediator
     {
         if (data)
         {
-            if (data.value.replace(/\s/g, '') === CONSTS.CLI_HELP)
+            if (data.value.replace(/\s/g, '') === "/help")
             {
                 printMappedToAliasCommandsToConsole();
             }
             else
             {
-                data.value = CONSTS.CLI_COMMAND + data.value;
+                data.value = "/cmd:" + data.value;
                 this.dispatchMessage(UIMediatorMessageType.INPUT, data);
             }
         }
@@ -49,7 +50,7 @@ export class UIMediator extends AbstractMediator
     }
 }
 
-export class UIMediatorMessageType extends Enum<string>
+export class UIMediatorMessageType extends MessageType<string>
 {
     public static readonly INPUT: UIMediatorMessageType = new UIMediatorMessageType();
 }

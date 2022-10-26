@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
-import {IFactory, IFactoryImmutable, IMediator, setDefaultImplementation} from "domwires";
+import {AppContext, IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
+import {Class, IFactory, IFactoryImmutable, IMediator, setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
 import {
     IServerAppContext,
-    IServerAppContextImmutable,
-    ServerAppContext
-} from "../../src/com/domwires/devkit/server/context/IServerAppContext";
+    IServerAppContextImmutable
+} from "../../src/com/domwires/devkit/server/main/context/IServerAppContext";
+import {IInputView} from "../../src/com/domwires/devkit/common/view/IInputView";
+import {CliInputView} from "../../src/com/domwires/devkit/server/main/view/CliInputView";
+import {DwError} from "../../src/com/domwires/devkit/common/DwError";
 
 export interface IMainMockContext extends IMainMockContextImmutable, IBaseMockContext
 {
@@ -20,9 +22,9 @@ export interface IMainMockContextImmutable extends IBaseMockContextImmutable
 
 export interface IChildMockContext extends IChildMockContextImmutable, IBaseMockContext
 {
-    getModel(): IMockModel;
+    getMockModel(): IMockModel;
 
-    getModel2(): IMockModel;
+    getMockModel2(): IMockModel;
 }
 
 export interface IChildMockContextImmutable extends IBaseMockContextImmutable
@@ -49,26 +51,49 @@ export interface IBaseMockContextImmutable extends IServerAppContextImmutable
     getFactory(): IFactoryImmutable;
 }
 
-export class BaseMockContext extends ServerAppContext implements IServerAppContext
+export class BaseMockContext extends AppContext implements IServerAppContext
 {
+    private factories!: {
+        contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
+        mediatorFactory: IFactory; viewFactory: IFactory;
+    };
+
+    public createChildContexts(): IServerAppContext
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    protected override createFactories(): { contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
+        mediatorFactory: IFactory; viewFactory: IFactory; }
+    {
+        this.factories = super.createFactories();
+
+        return this.factories;
+    }
+
+    protected override get defaultUIViewClass(): Class<IInputView>
+    {
+        return CliInputView;
+    }
+
     public getModelFactory(): IFactoryImmutable
     {
-        return this.modelFactory;
+        return this.factories.modelFactory;
     }
 
     public getContextFactory(): IFactoryImmutable
     {
-        return this.contextFactory;
+        return this.factories.contextFactory;
     }
 
     public getMediatorFactory(): IFactoryImmutable
     {
-        return this.mediatorFactory;
+        return this.factories.mediatorFactory;
     }
 
     public getViewFactory(): IFactoryImmutable
     {
-        return this.viewFactory;
+        return this.factories.viewFactory;
     }
 
     public getFactory(): IFactoryImmutable
@@ -98,16 +123,16 @@ export class ChildMockContext extends BaseMockContext implements IChildMockConte
 
         super.init();
 
-        this.model = this.getInstance(this.modelFactory, "IMockModel", "IMockModelImmutable");
-        this.model2 = this.getInstance(this.contextFactory, "IMockModel", "IMockModelImmutable");
+        this.model = this.getModel("IMockModel", "IMockModelImmutable");
+        this.model2 = this.getModel("IMockModel", "IMockModelImmutable");
     }
 
-    public getModel(): IMockModel
+    public getMockModel(): IMockModel
     {
         return this.model;
     }
 
-    public getModel2(): IMockModel
+    public getMockModel2(): IMockModel
     {
         return this.model2;
     }
@@ -123,7 +148,7 @@ export class MainMockContext extends BaseMockContext implements IMainMockContext
 
         super.init();
 
-        this.childContext = this.getInstance(this.contextFactory, "IChildMockContext", "IChildMockContextImmutable");
+        this.childContext = this.getContext("IChildMockContext", "IChildMockContextImmutable");
     }
 
     public getChildContext(): IChildMockContext

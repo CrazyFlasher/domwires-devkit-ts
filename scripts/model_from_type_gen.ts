@@ -341,7 +341,7 @@ class ModelFromTypeGen
 
         if (type === ObjectType.Enum)
         {
-            imports = "import {Enum} from \"domwires\";";
+            imports = "import {MessageType} from \"domwires\";";
         }
 
         if (isBase)
@@ -378,7 +378,7 @@ class ModelFromTypeGen
                 imports =
                     "import {IModelGenImmutable, IModelGen, ModelGen} from \"./IModelGen\";" + this.sep() +
                     "import {postConstruct} from \"inversify\";" + this.sep() +
-                    "import {Enum} from \"domwires\";";
+                    "import {MessageType} from \"domwires\";";
             }
         }
 

@@ -1,7 +1,6 @@
 // TODO: remove Global
 
 import {Class, definableFromString, ICommand, Logger, LogLevel} from "domwires";
-import {CONSTS} from "./dw_consts";
 
 const commandAliasToClassMap: Map<string, Class<ICommand>> = new Map<string, Class<ICommand>>();
 const commandAliasToDescriptionMap: Map<string, string> = new Map<string, string>();
@@ -10,7 +9,7 @@ const logger = new Logger(LogLevel.INFO);
 
 export function registerCommandAlias(commandClass: Class<ICommand>, alias: string, description?: string): void
 {
-    if (alias === CONSTS.CLI_HELP)
+    if (alias === "/help")
     {
         logger.warn("Cannot register command alias: \"/help\" is reserved");
     } else

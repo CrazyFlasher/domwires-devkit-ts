@@ -1,34 +1,43 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Factory, IFactory, Logger} from "domwires";
-import {injectable, postConstruct} from "inversify";
+import {Enum, Factory, IFactory, Logger} from "domwires";
 import {expect} from "chai";
-import {DW_TYPES} from "../src/com/domwires/devkit/common/dw_consts";
 import {
     ClientServiceRequestType,
     INetClientService,
-    NetClientServiceConfig, NetClientServiceMessageType
-} from "../src/com/domwires/devkit/client/service/net/INetClientService";
+    NetClientServiceConfig,
+    NetClientServiceMessageType,
+    ResponseData
+} from "../src/com/domwires/devkit/client/common/service/net/INetClientService";
 import {
-    HttpRequestResponseType,
+    HttpMethod,
     IHttpServerService
-} from "../src/com/domwires/devkit/server/service/net/http/IHttpServerService";
+} from "../src/com/domwires/devkit/server/common/service/net/http/IHttpServerService";
 import {
     ISocketServerService,
-    SocketRequestResponseType, SocketServerServiceConfig
-} from "../src/com/domwires/devkit/server/service/net/socket/ISocketServerService";
+    SocketServerServiceConfig
+} from "../src/com/domwires/devkit/server/common/service/net/socket/ISocketServerService";
 import {
     AxiosSioNetClientService
-} from "../src/com/domwires/devkit/client/service/net/impl/AxiosSioNetClientService";
+} from "../src/com/domwires/devkit/client/common/service/net/impl/AxiosSioNetClientService";
 import {
     ExpressHttpServerService
-} from "../src/com/domwires/devkit/server/service/net/http/impl/ExpressHttpServerService";
-import {SioSocketServerService} from "../src/com/domwires/devkit/server/service/net/socket/impl/SioSocketServerService";
+} from "../src/com/domwires/devkit/server/common/service/net/http/impl/ExpressHttpServerService";
+import {
+    SioSocketServerService
+} from "../src/com/domwires/devkit/server/common/service/net/socket/impl/SioSocketServerService";
 import {
     NetServerServiceConfig,
-    NetServerServiceMessageType
-} from "../src/com/domwires/devkit/server/service/net/INetServerService";
+    NetServerServiceMessageType,
+    RequestData
+} from "../src/com/domwires/devkit/server/common/service/net/INetServerService";
 import {ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
+import {Types} from "../src/com/domwires/devkit/common/Types";
+
+class TestAction extends Enum
+{
+    public static readonly TEST:TestAction = new TestAction("test");
+}
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
 {
@@ -44,39 +53,34 @@ describe('NetClientServiceTest', function (this: Suite)
     let factory: IFactory;
     let client: INetClientService;
     let http: IHttpServerService;
-    let socket: ISocketServerService<ClientData>;
+    let socket: ISocketServerService;
 
     beforeEach((done: Done) =>
     {
         factory = new Factory(logger);
 
-        factory.mapToType<INetClientService>(DW_TYPES.INetClientService, AxiosSioNetClientService);
-        factory.mapToType<IHttpServerService>(DW_TYPES.IHttpServerService, ExpressHttpServerService);
-        factory.mapToType<ISocketServerService<ClientData>>(DW_TYPES.ISocketServerService, SioSocketServerService);
+        factory.mapToType<INetClientService>(Types.INetClientService, AxiosSioNetClientService);
+        factory.mapToType<IHttpServerService>(Types.IHttpServerService, ExpressHttpServerService);
+        factory.mapToType<ISocketServerService>(Types.ISocketServerService, SioSocketServerService);
 
         const clientConfig: NetClientServiceConfig = {
-            httpBaseUrl: "http://127.0.0.1:3000",
-            socketUri: "ws://127.0.0.1:3001"
+            httpBaseUrl: "http://127.0.0.1:3015",
+            socketUri: "ws://127.0.0.1:3010"
         };
 
-        factory.mapToValue(DW_TYPES.NetClientServiceConfig, clientConfig);
-        factory.mapToValue(DW_TYPES.ServiceConfig, clientConfig);
+        factory.mapToValue(Types.ServiceConfig, clientConfig);
 
-        client = factory.getInstance(DW_TYPES.INetClientService);
+        client = factory.getInstance(Types.INetClientService);
 
-        const httpConfig: NetServerServiceConfig = {host: "127.0.0.1", port: 3000};
+        const httpConfig: NetServerServiceConfig = {host: "127.0.0.1", port: 3015};
 
-        factory.mapToValue(DW_TYPES.NetServerServiceConfig, httpConfig);
-        factory.mapToValue(DW_TYPES.ServiceConfig, httpConfig);
+        factory.mapToValue(Types.ServiceConfig, httpConfig);
 
-        http = factory.getInstance(DW_TYPES.IHttpServerService);
+        http = factory.getInstance(Types.IHttpServerService);
 
         const httpOpenSuccess = () =>
         {
-            http.removeMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, httpOpenSuccess);
-
-            http.startListen({id: "test", type: HttpRequestResponseType.GET});
-            http.startListen({id: "test", type: HttpRequestResponseType.POST});
+            http.startListen(([TestAction.TEST]));
 
             const sentHttpResponse = (success: boolean) =>
             {
@@ -87,17 +91,16 @@ describe('NetClientServiceTest', function (this: Suite)
             {
                 const data: string = success ? "hi" : "Invalid request data!";
                 socket.sendResponse(socket.requestFromClientId, {
-                    id: socket.requestData.id,
-                    type: SocketRequestResponseType.TCP,
+                    action: socket.getRequestData().action,
                     data
                 });
             };
 
             http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
             {
-                logger.info("Got request from client:", http.requestData.id);
+                logger.info("Got request from client:", http.getRequestData().action);
 
-                if (http.requestData.type === HttpRequestResponseType.GET)
+                if (http.getRequestData().method === HttpMethod.GET)
                 {
                     if (http.getRequestQueryParam("say") === "hello")
                     {
@@ -108,9 +111,10 @@ describe('NetClientServiceTest', function (this: Suite)
                         sentHttpResponse(false);
                     }
                 }
-                else if (http.requestData.type === HttpRequestResponseType.POST)
+                else if (http.getRequestData().method === HttpMethod.POST)
                 {
-                    if (http.requestData.data.say === "hello")
+                    const data = http.getRequestData<TalkAction>().data;
+                    if (data && data.say === "hello")
                     {
                         sentHttpResponse(true);
                     }
@@ -121,37 +125,34 @@ describe('NetClientServiceTest', function (this: Suite)
                 }
             });
 
-            const socketConfig: SocketServerServiceConfig = {host: httpConfig.host, port: 3001, http: http.nodeHttpServer};
+            const socketConfig: SocketServerServiceConfig = {host: httpConfig.host, port: 3010, http: http.nodeHttpServer};
 
-            factory.mapToValue(DW_TYPES.SocketServerServiceConfig, socketConfig);
-            factory.mapToValue(DW_TYPES.NetServerServiceConfig, socketConfig);
-            factory.mapToValue(DW_TYPES.ServiceConfig, socketConfig);
-            factory.mapToValue(DW_TYPES.Class, ClientData, "clientDataClass");
-            factory.mapToValue(DW_TYPES.IFactoryImmutable, socketConfig);
-            factory.mapToValue(DW_TYPES.IFactoryImmutable, factory);
+            factory.mapToValue(Types.SocketServerServiceConfig, socketConfig);
+            factory.mapToValue(Types.NetServerServiceConfig, socketConfig);
+            factory.mapToValue(Types.ServiceConfig, socketConfig);
+            factory.mapToValue(Types.IFactoryImmutable, socketConfig);
+            factory.mapToValue(Types.IFactoryImmutable, factory);
 
-            socket = factory.getInstance(DW_TYPES.ISocketServerService);
+            socket = factory.getInstance(Types.ISocketServerService);
 
             socket.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
             {
-                logger.info("Got request from client:", socket.requestData.id);
+                logger.info("Got request from client:", socket.getRequestData().action);
 
-                if (socket.requestData.type === SocketRequestResponseType.TCP)
+                const data = socket.getRequestData<TalkAction>().data;
+                if (data && data.say === "hello")
                 {
-                    if (socket.requestData.data.say === "hello")
-                    {
-                        sendTcpResponse(true);
-                    }
-                    else
-                    {
-                        sendTcpResponse(false);
-                    }
+                    sendTcpResponse(true);
+                }
+                else
+                {
+                    sendTcpResponse(false);
                 }
             });
 
             socket.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
             {
-                socket.startListen({id: "test", type: SocketRequestResponseType.TCP});
+                socket.startListen(([TestAction.TEST]));
 
                 client.addMessageListener(NetClientServiceMessageType.CONNECTED, () =>
                 {
@@ -168,7 +169,7 @@ describe('NetClientServiceTest', function (this: Suite)
             socket.init();
         };
 
-        http.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, httpOpenSuccess);
+        http.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, httpOpenSuccess, true);
 
         http.init();
     });
@@ -188,7 +189,6 @@ describe('NetClientServiceTest', function (this: Suite)
 
         const httpCloseSuccess = () =>
         {
-            http.removeMessageListener(NetServerServiceMessageType.CLOSE_SUCCESS, httpCloseSuccess);
             socket.addMessageListener(NetServerServiceMessageType.CLOSE_SUCCESS, complete);
 
             socket.close();
@@ -196,7 +196,7 @@ describe('NetClientServiceTest', function (this: Suite)
 
         client.addMessageListener(NetClientServiceMessageType.DISCONNECTED, http.close.bind(http));
 
-        http.addMessageListener(NetServerServiceMessageType.CLOSE_SUCCESS, httpCloseSuccess);
+        http.addMessageListener(NetServerServiceMessageType.CLOSE_SUCCESS, httpCloseSuccess, true);
 
         if (client.isConnected)
         {
@@ -210,69 +210,55 @@ describe('NetClientServiceTest', function (this: Suite)
 
     it('testGet', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
+        client.addMessageListener<RequestData>(NetClientServiceMessageType.HTTP_RESPONSE,
+            (message, data) =>
         {
-            expect(client.responseData.id).equals("test");
-            expect(client.responseData.type).equals(ClientServiceRequestType.GET);
-            expect(client.responseData.data).equals("hi");
+            expect(client.getResponseData().action).equals("test");
+            expect(client.getResponseData().requestType).equals(ClientServiceRequestType.GET);
+            expect(client.getResponseData().data).equals("hi");
             expect(data && data.data).equals("hi");
 
             done();
         });
 
-        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.GET, data: {say: "hello"}});
+        client.send<TalkAction>("test", {say: "hello"}, ClientServiceRequestType.GET);
     });
 
     it('testPost', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.HTTP_RESPONSE, (message, data) =>
+        client.addMessageListener<ResponseData<TalkAction>>(NetClientServiceMessageType.HTTP_RESPONSE,
+            (message, data) =>
         {
-            expect(client.responseData.id).equals("test");
-            expect(client.responseData.type).equals(ClientServiceRequestType.POST);
-            expect(client.responseData.data).equals("hi");
+            expect(client.getResponseData().action).equals("test");
+            expect(client.getResponseData().requestType).equals(ClientServiceRequestType.POST);
+            expect(client.getResponseData().data).equals("hi");
             expect(data && data.data).equals("hi");
 
             done();
         });
 
-        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.POST, data: {say: "hello"}});
+        client.send<TalkAction>("test", {say: "hello"}, ClientServiceRequestType.POST);
     });
 
     it('testTcp', (done: Done) =>
     {
-        client.addMessageListener(NetClientServiceMessageType.TCP_RESPONSE, (message, data) =>
+        client.addMessageListener<ResponseData<TalkAction>>(NetClientServiceMessageType.TCP_RESPONSE,
+            (message, data) =>
         {
-            expect(client.responseData.id).equals("test");
-            expect(client.responseData.type).equals(ClientServiceRequestType.TCP);
-            expect(client.responseData.data).equals("hi");
+            expect(client.getResponseData().action).equals("test");
+            expect(client.getResponseData().requestType).equals(ClientServiceRequestType.TCP);
+            expect(client.getResponseData().data).equals("hi");
             expect(data && data.data).equals("hi");
 
             done();
         });
 
-        client.send<TalkAction>({id: "test", type: ClientServiceRequestType.TCP, data: {say: "hello"}});
+        client.send<TalkAction>("test", {say: "hello"}, ClientServiceRequestType.TCP);
     });
 
 });
 
 // }
-
-@injectable()
-class ClientData
-{
-    private _created!: boolean;
-
-    public get created(): boolean
-    {
-        return this._created;
-    }
-
-    @postConstruct()
-    private postConstruct()
-    {
-        this._created = true;
-    }
-}
 
 type TalkAction = {
     say: string;

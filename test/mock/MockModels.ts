@@ -1,6 +1,7 @@
 import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable, setDefaultImplementation} from "domwires";
 import {inject, named, optional} from "inversify";
-import {DW_TYPES, FACTORIES_NAMES} from "../../src/com/domwires/devkit/common/dw_consts";
+import {Types} from "../../src/com/domwires/devkit/common/Types";
+import {FactoryNames} from "../../src/com/domwires/devkit/common/FactoryNames";
 
 export interface IMockModel extends IMockModelImmutable, IModel
 {
@@ -22,16 +23,16 @@ export interface IMockModelImmutable extends IModelImmutable
 
 export class MockModel extends AbstractModel implements IMockModel
 {
-    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MODEL)
+    @inject(Types.IFactoryImmutable) @named(FactoryNames.MODEL)
     private modelFactory!: IFactoryImmutable;
 
-    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.CONTEXT) @optional()
+    @inject(Types.IFactoryImmutable) @named(FactoryNames.CONTEXT) @optional()
     private contextFactory!: IFactoryImmutable;
 
-    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.MEDIATOR) @optional()
+    @inject(Types.IFactoryImmutable) @named(FactoryNames.MEDIATOR) @optional()
     private mediatorFactory!: IFactoryImmutable;
 
-    @inject(DW_TYPES.IFactoryImmutable) @named(FACTORIES_NAMES.VIEW) @optional()
+    @inject(Types.IFactoryImmutable) @named(FactoryNames.VIEW) @optional()
     private viewFactory!: IFactoryImmutable;
 
     private _v = 0;
