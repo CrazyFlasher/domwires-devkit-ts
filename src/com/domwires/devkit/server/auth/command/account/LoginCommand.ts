@@ -1,6 +1,5 @@
 import {Collection} from "../../../common/Collection";
 import {SocketAction} from "../../../../common/net/SocketAction";
-import {LoginDto} from "../../../../common/net/dto/Dto";
 import {AbstractAccountCommand} from "./AbstractAccountCommand";
 
 export class LoginCommand extends AbstractAccountCommand
@@ -15,10 +14,10 @@ export class LoginCommand extends AbstractAccountCommand
         {
             account.setPassword(this.dto.password);
 
-            this.db.find<LoginDto>({
+            this.db.find<{email: string}>({
                 id: SocketAction.LOGIN,
                 relatedToClientId: this.clientId
-            }, Collection.USERS.name, this.dto);
+            }, Collection.USERS.name, {email: this.dto.email});
         }
     }
 }

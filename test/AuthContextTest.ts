@@ -35,10 +35,10 @@ import {
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
 import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/context/IAppContext";
-import {LoginDto, RegisterDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
-import {Result} from "../src/com/domwires/devkit/common/net/Result";
+import {LoginDto, RegisterDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
+import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
 
 describe('AuthContextTest', function (this: Suite)
 {
@@ -173,7 +173,8 @@ describe('AuthContextTest', function (this: Suite)
             login(json =>
             {
                 expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.result).equals(Result.SUCCESS.name);
+                expect(json.data.success).true;
+                expect(json.data.reason).undefined;
 
                 done();
             });
@@ -187,10 +188,34 @@ describe('AuthContextTest', function (this: Suite)
             login(json =>
             {
                 expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.result).equals(Result.FAIL.name);
+                expect(json.data.success).false;
+                expect(json.data.reason).equals(ErrorReason.USER_NOT_FOUND.name);
 
                 done();
-            }, {email: "no@user.com"});
+            }, {email: "no@user.com", password: "123123"});
+        });
+    });
+
+    it('testLoginFailNoUserAndLoginSuccess', (done) =>
+    {
+        insert().then(() =>
+        {
+            login(json =>
+            {
+                expect(json.action).equals(SocketAction.LOGIN.name);
+                expect(json.data.success).false;
+                expect(json.data.reason).equals(ErrorReason.USER_NOT_FOUND.name);
+
+                login(json =>
+                {
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.success).true;
+                    expect(json.data.reason).undefined;
+
+                    done();
+                });
+
+            }, {email: "no@user.com", password: "123123"});
         });
     });
 
@@ -201,7 +226,8 @@ describe('AuthContextTest', function (this: Suite)
             login(json =>
             {
                 expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.result).equals(Result.FAIL.name);
+                expect(json.data.success).false;
+                expect(json.data.reason).equals(ErrorReason.USER_WRONG_PASSWORD.name);
 
                 done();
             }, {email: "anton@javelin.ee", password: "ololo"});
@@ -215,7 +241,8 @@ describe('AuthContextTest', function (this: Suite)
             login(json =>
             {
                 expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.result).equals(Result.SUCCESS.name);
+                expect(json.data.success).true;
+                expect(json.data.reason).undefined;
 
                 done();
             }, undefined, true);
@@ -227,7 +254,8 @@ describe('AuthContextTest', function (this: Suite)
         register(json =>
         {
             expect(json.action).equals(SocketAction.REGISTER.name);
-            expect(json.data.result).equals(Result.SUCCESS.name);
+            expect(json.data.success).true;
+            expect(json.data.reason).undefined;
 
             done();
         });
@@ -240,7 +268,8 @@ describe('AuthContextTest', function (this: Suite)
             register(json =>
             {
                 expect(json.action).equals(SocketAction.REGISTER.name);
-                expect(json.data.result).equals(Result.FAIL.name);
+                expect(json.data.success).false;
+                expect(json.data.reason).equals(ErrorReason.USER_EXISTS.name);
 
                 done();
             });
@@ -252,13 +281,14 @@ describe('AuthContextTest', function (this: Suite)
         register(json =>
         {
             expect(json.action).equals(SocketAction.REGISTER.name);
-            expect(json.data.result).equals(Result.SUCCESS.name);
+            expect(json.data.success).true;
+            expect(json.data.reason).undefined;
 
             done();
         }, true);
     });
 
-    function register(onComplete: (data: any) => void, byCmd = false): void
+    function register(onComplete: (data: {action: string; data: ResultDto}) => void, byCmd = false): void
     {
         createClient(() =>
         {
@@ -270,7 +300,7 @@ describe('AuthContextTest', function (this: Suite)
         });
     }
 
-    function login(onComplete: (data: any) => void, dto?: any, byCmd = false): void
+    function login(onComplete: (data: {action: string; data: ResultDto}) => void, dto?: LoginDto, byCmd = false): void
     {
         createClient(() =>
         {
@@ -298,12 +328,15 @@ describe('AuthContextTest', function (this: Suite)
 
     function createClient(onConnect: () => void, onData: (data: any) => void): void
     {
+        if (client) client.disconnect();
+
         client = io("ws://127.0.0.1:3001");
 
         client.on("connect", () =>
         {
             onConnect();
         });
+
         client.on("data", data =>
         {
             onData(data);

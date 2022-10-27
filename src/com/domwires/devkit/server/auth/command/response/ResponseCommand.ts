@@ -3,12 +3,14 @@ import {lazyInjectNamed} from "domwires";
 import {Types} from "../../../../common/Types";
 import {ResultDto} from "../../../../common/net/dto/Dto";
 import {SocketAction} from "../../../../common/net/SocketAction";
-import {Result} from "../../../../common/net/Result";
 
-export class SocketResponseCommand extends AbstractAuthContextCommand
+export class ResponseCommand extends AbstractAuthContextCommand
 {
     @lazyInjectNamed(Types.boolean, "success")
     private success!: boolean;
+
+    @lazyInjectNamed(Types.string, "reason")
+    private reason!: string;
 
     @lazyInjectNamed(Types.SocketAction, "action")
     private action!: SocketAction;
@@ -24,9 +26,18 @@ export class SocketResponseCommand extends AbstractAuthContextCommand
             throw new Error("'clientId' not defined");
         }
 
+        let reason: string | undefined;
+
+        try
+        {
+            reason = this.reason;
+        } catch (e)
+        {
+        }
+
         this.socket.sendResponse<ResultDto>(clientId, {
             action: this.getAction().name,
-            data: {result: (this.success ? Result.SUCCESS : Result.FAIL).name}
+            data: {success: this.success, reason}
         });
 
     }

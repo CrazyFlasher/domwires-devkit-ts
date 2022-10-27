@@ -30,6 +30,8 @@ import {RegisterResponseCommand} from "../command/response/RegisterResponseComma
 import {registerCommandAlias} from "../../../common/Global";
 import {IInputView} from "../../../common/view/IInputView";
 import {CliInputView} from "../../main/view/CliInputView";
+import {ErrorReason} from "../../../common/ErrorReason";
+import {ResultDto} from "../../../common/net/dto/Dto";
 
 export interface IAuthContextImmutable extends IAppContextImmutable
 {
@@ -91,20 +93,26 @@ export class AuthContext extends AppContext implements IAuthContext
         this.map(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand).addGuards(IsRegisterActionGuards);
         this.map(NetServerServiceMessageType.GOT_REQUEST, LoginCommand).addGuards(IsLoginActionGuards);
 
-        this.map(DataBaseServiceMessageType.INSERT_SUCCESS, RegisterResponseCommand, {success: true})
+        this.map<ResultDto>(DataBaseServiceMessageType.INSERT_SUCCESS, RegisterResponseCommand, {success: true})
             .addGuards(IsRegisterQueryGuards);
 
-        this.map(DataBaseServiceMessageType.INSERT_FAIL, RegisterResponseCommand, {success: false})
-            .addGuards(IsRegisterQueryGuards);
+        this.map<ResultDto>(DataBaseServiceMessageType.INSERT_FAIL, RegisterResponseCommand, {
+            success: false,
+            reason: ErrorReason.USER_EXISTS.name
+        }).addGuards(IsRegisterQueryGuards);
 
-        this.map(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {success: true})
+        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {success: true})
             .addGuards(IsLoginQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
 
-        this.map(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {success: false})
-            .addGuards(IsLoginQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
+        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {
+            success: false,
+            reason: ErrorReason.USER_WRONG_PASSWORD.name
+        }).addGuards(IsLoginQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
 
-        this.map(DataBaseServiceMessageType.FIND_FAIL, LoginResponseCommand, {success: false})
-            .addGuards(IsLoginQueryGuards);
+        this.map<ResultDto>(DataBaseServiceMessageType.FIND_FAIL, LoginResponseCommand, {
+            success: false,
+            reason: ErrorReason.USER_NOT_FOUND.name
+        }).addGuards(IsLoginQueryGuards);
 
         this.ready();
 

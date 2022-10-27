@@ -1,7 +1,7 @@
-import {SocketResponseCommand} from "./SocketResponseCommand";
 import {SocketAction} from "../../../../common/net/SocketAction";
+import {ResponseCommand} from "./ResponseCommand";
 
-export class LoginResponseCommand extends SocketResponseCommand
+export class LoginResponseCommand extends ResponseCommand
 {
     protected override getAction(): SocketAction
     {

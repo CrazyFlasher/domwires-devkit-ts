@@ -8,6 +8,6 @@ export type RegisterDto = LoginDto & {
 };
 
 export type ResultDto = {
-    readonly result: string;
+    readonly success: boolean;
     readonly reason?: string;
 };
