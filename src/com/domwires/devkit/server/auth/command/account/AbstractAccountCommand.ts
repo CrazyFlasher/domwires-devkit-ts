@@ -22,10 +22,21 @@ export abstract class AbstractAccountCommand extends AbstractAuthContextCommand
         try
         {
             this.dto = this._dto;
+        } catch (e)
+        {
+            const reqData = this.socket.getRequestData<LoginDto>();
+
+            if (reqData)
+            {
+                this.dto = this.socket.getRequestData<LoginDto>().data;
+            }
+        }
+
+        try
+        {
             this.clientId = this._clientId;
         } catch (e)
         {
-            this.dto = this.socket.getRequestData<LoginDto>().data;
             this.clientId = this.socket.requestFromClientId;
         }
     }

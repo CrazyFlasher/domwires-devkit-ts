@@ -19,20 +19,18 @@ import {MapContextCommandsCommand} from "../command/MapContextCommandsCommand";
 import {Class, setDefaultImplementation} from "domwires";
 import {IAccountModel} from "../../../common/model/IAccountModel";
 import {RegisterCommand} from "../command/account/RegisterCommand";
-import {IsRegisterActionGuards} from "../command/guards/socket/IsRegisterActionGuards";
-import {IsRegisterQueryGuards} from "../command/guards/query/IsRegisterQueryGuards";
 import {LoginCommand} from "../command/account/LoginCommand";
-import {IsLoginActionGuards} from "../command/guards/socket/IsLoginActionGuards";
-import {IsLoginQueryGuards} from "../command/guards/query/IsLoginQueryGuards";
 import {IsLoginPasswordMatchesGuards} from "../command/guards/query/IsLoginPasswordMatchesGuards";
-import {LoginResponseCommand} from "../command/response/LoginResponseCommand";
-import {RegisterResponseCommand} from "../command/response/RegisterResponseCommand";
 import {registerCommandAlias} from "../../../common/Global";
 import {IInputView} from "../../../common/view/IInputView";
 import {CliInputView} from "../../main/view/CliInputView";
 import {ErrorReason} from "../../../common/ErrorReason";
 import {ResultDto} from "../../../common/net/dto/Dto";
 import {UpdateAccountSnapshotCommand} from "../command/account/UpdateAccountSnapshotCommand";
+import {IsSuitableActionGuards} from "../command/guards/socket/IsSuitableActionGuards";
+import {IsSuitableQueryGuards} from "../command/guards/query/IsSuitableQueryGuards";
+import {LogoutCommand} from "../command/account/LogoutCommand";
+import {ResponseCommand} from "../command/response/ResponseCommand";
 
 export interface IAuthContextImmutable extends IAppContextImmutable
 {
@@ -70,7 +68,8 @@ export class AuthContext extends AppContext implements IAuthContext
         this.socket.startListen([
             SocketAction.REGISTER,
             SocketAction.LOGIN,
-            SocketAction.GUEST_LOGIN
+            SocketAction.GUEST_LOGIN,
+            SocketAction.LOGOUT
         ]);
 
         this.map(DataBaseServiceMessageType.CREATE_COLLECTION_LIST_COMPLETE, MapContextCommandsCommand);
@@ -85,36 +84,74 @@ export class AuthContext extends AppContext implements IAuthContext
 
     public mapCommands(): IAppContext
     {
-        registerCommandAlias(RegisterCommand, "register", "register user");
+        registerCommandAlias(RegisterCommand, "register", "register user", [
+            {name: "clientId", type: Types.string},
+            {name: "dto", requiredValue: {email: Types.string, password: Types.string, nick: Types.string}}
+        ]);
+
         registerCommandAlias(LoginCommand, "login", "login user");
+        registerCommandAlias(LogoutCommand, "logout", "logout user");
+
+        registerCommandAlias([UpdateAccountSnapshotCommand, ResponseCommand],
+            "guest_login", "login as guest user", [
+                {name: "clientId", type: Types.string},
+                {name: "actionName", requiredValue: SocketAction.GUEST_LOGIN.name},
+                {name: "success", requiredValue: true},
+                {name: "isGuest", requiredValue: true}
+            ]);
 
         this.map(SocketServerServiceMessageType.CLIENT_CONNECTED, AddAccountToMapCommand);
         this.map(SocketServerServiceMessageType.CLIENT_DISCONNECTED, RemoveAccountFromMapCommand);
 
-        this.map(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand).addGuards(IsRegisterActionGuards);
-        this.map(NetServerServiceMessageType.GOT_REQUEST, LoginCommand).addGuards(IsLoginActionGuards);
+        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand, {action: SocketAction.LOGIN})
+            .addGuards(IsSuitableActionGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.INSERT_SUCCESS, RegisterResponseCommand, {success: true})
-            .addGuards(IsRegisterQueryGuards);
+        this.map<ResultDto & { action: SocketAction; isGuest: boolean }>(NetServerServiceMessageType.GOT_REQUEST,
+            [UpdateAccountSnapshotCommand, ResponseCommand], {
+                action: SocketAction.GUEST_LOGIN,
+                isGuest: true,
+                success: true
+            }).addGuards(IsSuitableActionGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.INSERT_FAIL, RegisterResponseCommand, {
+        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand, {action: SocketAction.REGISTER})
+            .addGuards(IsSuitableActionGuards);
+
+        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand, {action: SocketAction.LOGOUT})
+            .addGuards(IsSuitableActionGuards);
+
+        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.INSERT_SUCCESS, ResponseCommand, {
+            queryId: SocketAction.REGISTER.name,
+            action: SocketAction.REGISTER,
+            success: true
+        }).addGuards(IsSuitableQueryGuards);
+
+        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.INSERT_FAIL, ResponseCommand, {
+            queryId: SocketAction.REGISTER.name,
+            action: SocketAction.REGISTER,
             success: false,
             reason: ErrorReason.USER_EXISTS.name
-        }).addGuards(IsRegisterQueryGuards);
+        }).addGuards(IsSuitableQueryGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS,
-            [UpdateAccountSnapshotCommand, LoginResponseCommand], {success: true})
-            .addGuards(IsLoginQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
+        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_SUCCESS,
+            [UpdateAccountSnapshotCommand, ResponseCommand], {
+                queryId: SocketAction.LOGIN.name,
+                action: SocketAction.LOGIN,
+                success: true
+            }).addGuards(IsSuitableQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {
+        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_SUCCESS, ResponseCommand, {
+            queryId: SocketAction.LOGIN.name,
+            action: SocketAction.LOGIN,
             success: false,
             reason: ErrorReason.USER_WRONG_PASSWORD.name
-        }).addGuards(IsLoginQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
+        }).addGuards(IsSuitableQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.FIND_FAIL, LoginResponseCommand, {
+        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_FAIL, ResponseCommand, {
+            queryId: SocketAction.LOGIN.name,
+            action: SocketAction.LOGIN,
             success: false,
             reason: ErrorReason.USER_NOT_FOUND.name
-        }).addGuards(IsLoginQueryGuards);
+        }).addGuards(IsSuitableQueryGuards);
 
         this.ready();
 

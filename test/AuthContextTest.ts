@@ -35,10 +35,11 @@ import {
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
 import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/context/IAppContext";
-import {LoginDto, AccountDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
+import {AccountDto, LoginDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
 import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
+import {printMappedToAliasCommandsToConsole} from "../src/com/domwires/devkit/common/Global";
 
 describe('AuthContextTest', function (this: Suite)
 {
@@ -49,6 +50,7 @@ describe('AuthContextTest', function (this: Suite)
     let context: IAuthContext;
 
     let client: Socket;
+    let clientId: string;
 
     let accountModelMap: Map<string, IAccountModel>;
 
@@ -180,6 +182,8 @@ describe('AuthContextTest', function (this: Suite)
                 expect(json.data.success).true;
                 expect(json.data.reason).undefined;
                 expect(accountModelMap.get(client.id)?.nick).equals("Anton");
+                expect(accountModelMap.get(client.id)?.isLoggedIn).true;
+                expect(accountModelMap.get(client.id)?.isGuest).false;
 
                 done();
             });
@@ -293,7 +297,53 @@ describe('AuthContextTest', function (this: Suite)
         }, true);
     });
 
-    function register(onComplete: (data: {action: string; data: ResultDto}) => void, byCmd = false): void
+    it('testLogout', (done) =>
+    {
+        logout();
+
+        client.on("disconnect", () =>
+        {
+            expect(accountModelMap.has(clientId)).false;
+
+            done();
+        });
+    });
+
+    it('testLogoutViaCmd', (done) =>
+    {
+        logout(true);
+
+        client.on("disconnect", () =>
+        {
+            expect(accountModelMap.has(clientId)).false;
+
+            done();
+        });
+    });
+
+    it('testGuestLogin', (done) =>
+    {
+        guestLogin(() =>
+        {
+            expect(accountModelMap.get(clientId)?.isGuest).true;
+            expect(accountModelMap.get(clientId)?.isLoggedIn).true;
+
+            done();
+        });
+    });
+
+    it('testGuestLoginViaCmd', (done) =>
+    {
+        guestLogin(() =>
+        {
+            expect(accountModelMap.get(clientId)?.isGuest).true;
+            expect(accountModelMap.get(clientId)?.isLoggedIn).true;
+
+            done();
+        }, true);
+    });
+
+    function register(onComplete: (data: { action: string; data: ResultDto }) => void, byCmd = false): void
     {
         createClient(() =>
         {
@@ -305,7 +355,7 @@ describe('AuthContextTest', function (this: Suite)
         });
     }
 
-    function login(onComplete: (data: {action: string; data: ResultDto}) => void, dto?: LoginDto, byCmd = false): void
+    function login(onComplete: (data: { action: string; data: ResultDto }) => void, dto?: LoginDto, byCmd = false): void
     {
         createClient(() =>
         {
@@ -318,20 +368,61 @@ describe('AuthContextTest', function (this: Suite)
         });
     }
 
-    function cmd(name: string, data: any): void
+    function guestLogin(onComplete: (data: { action: string; data: ResultDto }) => void, byCmd = false): void
     {
-        const dto = {dto: data, clientId: client.id};
+        createClient(() =>
+        {
+            !byCmd ? send(SocketAction.GUEST_LOGIN) : cmd("guest_login", {
+                isGuest: true,
+                actionName: SocketAction.GUEST_LOGIN.name,
+                success: true
+            }, false);
+        }, json =>
+        {
+            onComplete(json);
+        });
+    }
+
+    function logout(byCmd = false): void
+    {
+        createClient(() =>
+        {
+            !byCmd ? send(SocketAction.LOGOUT) : cmd("logout");
+        });
+    }
+
+    function cmd(name: string, data?: any, wrapInDto = true): void
+    {
+        printMappedToAliasCommandsToConsole();
+
+        let dto;
+        if (wrapInDto)
+        {
+            dto = data ? {dto: data, clientId: client.id} : {clientId: client.id};
+        }
+        else
+        {
+            if (data)
+            {
+                data.clientId = client.id;
+                dto = data;
+            }
+            else
+            {
+                dto = {clientId: client.id};
+            }
+        }
         context.tryToExecuteCommand(UIMediatorMessageType.INPUT,
             {value: "/cmd:auth:" + name + ":" + JSON.stringify(dto)}
         );
     }
 
-    function send(action: Enum, data: any): void
+    function send(action: Enum, data?: any): void
     {
         client.emit("data", {action: action.name, data: data});
     }
 
-    function createClient(onConnect: () => void, onData: (data: any) => void): void
+    function createClient(onConnect: () => void, onData?: (data: any) => void): void
     {
         if (client) client.disconnect();
 
@@ -339,13 +430,17 @@ describe('AuthContextTest', function (this: Suite)
 
         client.on("connect", () =>
         {
+            clientId = client.id;
             onConnect();
         });
 
-        client.on("data", data =>
+        if (onData)
         {
-            onData(data);
-        });
+            client.on("data", data =>
+            {
+                onData(data);
+            });
+        }
     }
 
     async function insert()

@@ -11,6 +11,10 @@ export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountD
     get password(): string;
 
     get nick(): string;
+
+    get isLoggedIn(): boolean;
+
+    get isGuest(): boolean;
 }
 
 export interface IAccountModel extends ISnapshotModel<AccountDto>, IAccountModelImmutable
@@ -20,6 +24,10 @@ export interface IAccountModel extends ISnapshotModel<AccountDto>, IAccountModel
     setEmail(value: string): IAccountModel;
 
     setPassword(value: string): IAccountModel;
+
+    setIsLoggedIn(value: boolean): IAccountModel;
+
+    setIsGuest(value: boolean): IAccountModel;
 }
 
 export class AccountModel extends SnapshotModel<AccountDto> implements IAccountModel
@@ -32,6 +40,9 @@ export class AccountModel extends SnapshotModel<AccountDto> implements IAccountM
 
     @snapshotValue()
     private _password!: string;
+
+    private _isLoggedIn!: boolean;
+    private _isGuest!: boolean;
 
     public get email(): string
     {
@@ -46,6 +57,16 @@ export class AccountModel extends SnapshotModel<AccountDto> implements IAccountM
     public get nick(): string
     {
         return this._nick;
+    }
+
+    public get isGuest(): boolean
+    {
+        return this._isGuest;
+    }
+
+    public get isLoggedIn(): boolean
+    {
+        return this._isLoggedIn;
     }
 
     public setEmail(value: string): IAccountModel
@@ -65,6 +86,20 @@ export class AccountModel extends SnapshotModel<AccountDto> implements IAccountM
     public setPassword(value: string): IAccountModel
     {
         this._password = value;
+
+        return this;
+    }
+
+    public setIsGuest(value: boolean): IAccountModel
+    {
+        this._isGuest = value;
+
+        return this;
+    }
+
+    public setIsLoggedIn(value: boolean): IAccountModel
+    {
+        this._isLoggedIn = value;
 
         return this;
     }

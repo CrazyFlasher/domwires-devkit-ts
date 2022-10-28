@@ -1,4 +1,6 @@
-import {AbstractCommand, ICommandMapper, ILogger, lazyInject, lazyInjectNamed} from "domwires";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import {AbstractCommand, Class, ICommand, ICommandMapper, ILogger, lazyInject, lazyInjectNamed} from "domwires";
 import {inject, named, optional} from "inversify";
 import {getCommandClassByAlias} from "../Global";
 import {Types} from "../Types";
@@ -34,7 +36,7 @@ export class ExecuteCliCommand extends AbstractCommand
         let paramsJsonString = this.value.substring(this.value.indexOf("{") + 1, this.value.lastIndexOf("}")).
             replace(/\s/g, '');
 
-        let params;
+        let params: any;
 
         try
         {
@@ -58,12 +60,23 @@ export class ExecuteCliCommand extends AbstractCommand
                 const cmd = getCommandClassByAlias(commandAlias);
                 if (cmd)
                 {
-                    this.commandMapper.executeCommand(cmd, params);
+                    if (cmd instanceof Array)
+                    {
+                        cmd.map(value => this.exec(value, params));
+                    } else
+                    {
+                        this.exec(cmd, params);
+                    }
                 }
             } catch (e)
             {
                 this.logger.error(e);
             }
         }
+    }
+
+    private exec(cmd: Class<ICommand>, params?: any): void
+    {
+        this.commandMapper.executeCommand(cmd, params);
     }
 }

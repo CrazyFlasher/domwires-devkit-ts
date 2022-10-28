@@ -235,7 +235,10 @@ describe('AppContextTest', function (this: Suite)
     {
         registerCommandAlias(TestCommand, "test_cmd", "very cool and useful command");
         registerCommandAlias(TestCommandForChildContext, "test_cmd_child");
-        registerCommandAlias(TestCommandWithParams, "test_cmd_params", "command that accept params");
+        registerCommandAlias(TestCommandWithParams, "test_cmd_params", "command that accept params", [
+            {type: Types.string, name: "str"},
+            {type: Types.number, name: "num"}
+        ]);
 
         printMappedToAliasCommandsToConsole();
     });

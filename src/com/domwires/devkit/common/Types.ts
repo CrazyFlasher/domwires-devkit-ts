@@ -50,6 +50,7 @@ export class Types
     public static readonly number = "number";
     public static readonly boolean = "boolean";
     public static readonly any = "any";
+    public static readonly object = "object";
 
     public static readonly SocketAction = "SocketAction";
 }

@@ -1,10 +1,10 @@
-import {AbstractAuthContextCommand} from "../AbstractAuthContextCommand";
 import {lazyInjectNamed} from "domwires";
 import {Types} from "../../../../common/Types";
 import {ResultDto} from "../../../../common/net/dto/Dto";
 import {SocketAction} from "../../../../common/net/SocketAction";
+import {AbstractAccountCommand} from "../account/AbstractAccountCommand";
 
-export class ResponseCommand extends AbstractAuthContextCommand
+export class ResponseCommand extends AbstractAccountCommand
 {
     @lazyInjectNamed(Types.boolean, "success")
     private success!: boolean;
@@ -15,9 +15,25 @@ export class ResponseCommand extends AbstractAuthContextCommand
     @lazyInjectNamed(Types.SocketAction, "action")
     private action!: SocketAction;
 
+    @lazyInjectNamed(Types.string, "actionName")
+    private actionName!: string;
+
+    @lazyInjectNamed(Types.string, "queryId")
+    private queryId!: string;
+
     public override execute(): void
     {
         super.execute();
+
+        let queryId: string | undefined;
+
+        try
+        {
+            queryId = this.queryId;
+        } catch (e)
+        {
+
+        }
 
         let reason: string | undefined;
 
@@ -28,15 +44,20 @@ export class ResponseCommand extends AbstractAuthContextCommand
         {
         }
 
-        this.socket.sendResponse<ResultDto>(this.queryRelatedToClientId, {
-            action: this.getAction().name,
+        let actionName: string;
+
+        try
+        {
+            actionName = this.action.name;
+        } catch (e)
+        {
+            actionName = this.actionName;
+        }
+
+        this.socket.sendResponse<ResultDto>(
+            queryId != undefined ? this.queryRelatedToClientId : this.clientId, {
+            action: actionName,
             data: {success: this.success, reason}
         });
-
-    }
-
-    protected getAction(): SocketAction
-    {
-        return this.action;
     }
 }
