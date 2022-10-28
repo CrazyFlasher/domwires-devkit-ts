@@ -1,6 +1,6 @@
 {
   "name": "domwires-devkit",
-  "version": "0.9.84",
+  "version": "0.9.86",
   "description": "Devkit based on DomWires Framework",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "node": ">=16.17.0"
   },
   "scripts": {
-    "build": "npm run model_gen && npm run index_gen && npm run test && npm run eslint-run && npm run clean && tsc",
+    "build": "npm run model_gen && npm run eslint-run && npm run test && npm run index_gen && npm run clean && tsc",
     "model_gen": "ts-node scripts/ModelFromTypeGen.ts --in=/test/mock/typesForModels --templatesPath=/res --overwrite --relatedImportPath=../",
     "index_gen": "npm run index_gen_common && npm run index_gen_server && npm run index_gen_client",
     "index_gen_common": "ts-node scripts/IndexGenerator.ts --in=/src/com/domwires/devkit/common --out=/src/index.common.ts",

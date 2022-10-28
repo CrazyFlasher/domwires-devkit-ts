@@ -19,13 +19,6 @@ export class ResponseCommand extends AbstractAuthContextCommand
     {
         super.execute();
 
-        const clientId = this.db.query && this.db.query.relatedToClientId;
-
-        if (!clientId)
-        {
-            throw new Error("'clientId' not defined");
-        }
-
         let reason: string | undefined;
 
         try
@@ -35,7 +28,7 @@ export class ResponseCommand extends AbstractAuthContextCommand
         {
         }
 
-        this.socket.sendResponse<ResultDto>(clientId, {
+        this.socket.sendResponse<ResultDto>(this.queryRelatedToClientId, {
             action: this.getAction().name,
             data: {success: this.success, reason}
         });

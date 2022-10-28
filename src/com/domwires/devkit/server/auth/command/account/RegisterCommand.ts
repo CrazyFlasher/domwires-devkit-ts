@@ -1,6 +1,6 @@
 import {Collection} from "../../../common/Collection";
 import {SocketAction} from "../../../../common/net/SocketAction";
-import {RegisterDto} from "../../../../common/net/dto/Dto";
+import {AccountDto} from "../../../../common/net/dto/Dto";
 import {AbstractAccountCommand} from "./AbstractAccountCommand";
 
 export class RegisterCommand extends AbstractAccountCommand
@@ -11,10 +11,10 @@ export class RegisterCommand extends AbstractAccountCommand
 
         if (this.dto)
         {
-            this.db.insert<RegisterDto>({
+            this.db.insert<AccountDto>({
                 id: SocketAction.REGISTER,
                 relatedToClientId: this.clientId
-            }, Collection.USERS.name, [this.dto as RegisterDto]);
+            }, Collection.USERS.name, [this.dto as AccountDto]);
         }
     }
 }

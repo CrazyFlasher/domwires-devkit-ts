@@ -1,14 +1,10 @@
-import {IModel, setDefaultImplementation} from "domwires";
-import {AbstractSnapshotModel, ISnapshotModel, ISnapshotModelImmutable} from "./ISnapshotModel";
+import {setDefaultImplementation} from "domwires";
+import {SnapshotModel, ISnapshotModel, ISnapshotModelImmutable} from "./ISnapshotModel";
 import {Types} from "../Types";
+import {AccountDto} from "../net/dto/Dto";
+import {snapshotValue} from "../Decorators";
 
-export type AccountModelSnapshot = {
-    readonly nick: string;
-    readonly email: string;
-    readonly password: string;
-};
-
-export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountModelSnapshot>
+export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountDto>
 {
     get email(): string;
 
@@ -17,7 +13,7 @@ export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountM
     get nick(): string;
 }
 
-export interface IAccountModel extends IAccountModelImmutable, IModel
+export interface IAccountModel extends ISnapshotModel<AccountDto>, IAccountModelImmutable
 {
     setNick(value: string): IAccountModel;
 
@@ -26,29 +22,16 @@ export interface IAccountModel extends IAccountModelImmutable, IModel
     setPassword(value: string): IAccountModel;
 }
 
-export class AccountModel extends AbstractSnapshotModel<AccountModelSnapshot> implements IAccountModel
+export class AccountModel extends SnapshotModel<AccountDto> implements IAccountModel
 {
+    @snapshotValue()
     private _nick!: string;
+
+    @snapshotValue()
     private _email!: string;
+
+    @snapshotValue()
     private _password!: string;
-
-    public override setSnapshot(value: AccountModelSnapshot): ISnapshotModel<AccountModelSnapshot>
-    {
-        this._nick = value.nick;
-        this._email = value.email;
-        this._password = value.password;
-
-        return this;
-    }
-
-    public override get snapshot(): AccountModelSnapshot
-    {
-        return {
-            nick: this._nick,
-            email: this._email,
-            password: this._password
-        };
-    }
 
     public get email(): string
     {

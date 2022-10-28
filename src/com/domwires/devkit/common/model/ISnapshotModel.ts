@@ -1,27 +1,60 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {AbstractModel, IModel, IModelImmutable} from "domwires";
-import {DwError} from "../DwError";
 
-export interface ISnapshotModelImmutable<SnapshotType> extends IModelImmutable
+export interface ISnapshotModelImmutable<TSnapshot> extends IModelImmutable
 {
-    get snapshot(): SnapshotType;
+    get snapshot(): TSnapshot;
 }
 
-export interface ISnapshotModel<SnapshotType> extends ISnapshotModelImmutable<SnapshotType>, IModel
+export interface ISnapshotModel<TSnapshot> extends ISnapshotModelImmutable<TSnapshot>, IModel
 {
-    setSnapshot(value: SnapshotType): ISnapshotModel<SnapshotType>;
+    setSnapshot(value: TSnapshot): ISnapshotModel<TSnapshot>;
 }
 
-export abstract class AbstractSnapshotModel<SnapshotType> extends AbstractModel implements ISnapshotModel<SnapshotType>
+export class SnapshotModel<TSnapshot> extends AbstractModel implements ISnapshotModel<TSnapshot>
 {
-    public get snapshot(): SnapshotType
+    public get snapshot(): TSnapshot
     {
-        throw new Error(DwError.OVERRIDE.name);
+        const result = {};
+
+        for (const propName of Object.keys(this))
+        {
+            if (this.isSnapshotValue(propName))
+            {
+                Reflect.set(result, this.removeDash(propName), Reflect.get(this as any, propName));
+            }
+        }
+
+        return result as TSnapshot;
     }
 
-    public setSnapshot(value: SnapshotType): ISnapshotModel<SnapshotType>
+    public setSnapshot(value: TSnapshot): ISnapshotModel<TSnapshot>
     {
-        throw new Error(DwError.OVERRIDE.name);
+        for (const propName of Object.keys(value))
+        {
+            if (this.isSnapshotValue("_" + propName))
+            {
+                Reflect.set(this as any, "_" + propName, Reflect.get(value as any, propName));
+            }
+        }
+
+        return this;
+    }
+
+    private removeDash(propName: string): string
+    {
+        if (propName.charAt(0) === "_")
+        {
+            return propName.substring(1, propName.length);
+        }
+
+        return propName;
+    }
+
+    private isSnapshotValue(propName: string): boolean
+    {
+        return Reflect.getMetadata("snapshotValue", this, propName) === "snapshotValue";
     }
 }

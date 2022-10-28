@@ -35,7 +35,7 @@ import {
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
 import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/context/IAppContext";
-import {LoginDto, RegisterDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
+import {LoginDto, AccountDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
 import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
@@ -50,8 +50,12 @@ describe('AuthContextTest', function (this: Suite)
 
     let client: Socket;
 
+    let accountModelMap: Map<string, IAccountModel>;
+
     beforeEach((done) =>
     {
+        accountModelMap = new Map<string, IAccountModel>();
+
         const f = new Factory(new Logger(LogLevel.INFO));
         f.mapToValue(Types.IFactory, f);
 
@@ -89,7 +93,7 @@ describe('AuthContextTest', function (this: Suite)
 
             socket.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
             {
-                f.mapToValue("Map<string, IAccountModel>", new Map<string, IAccountModel>());
+                f.mapToValue("Map<string, IAccountModel>", accountModelMap);
 
                 const dbConfig: DataBaseServiceConfig = {
                     host: "127.0.0.1",
@@ -175,6 +179,7 @@ describe('AuthContextTest', function (this: Suite)
                 expect(json.action).equals(SocketAction.LOGIN.name);
                 expect(json.data.success).true;
                 expect(json.data.reason).undefined;
+                expect(accountModelMap.get(client.id)?.nick).equals("Anton");
 
                 done();
             });
@@ -292,7 +297,7 @@ describe('AuthContextTest', function (this: Suite)
     {
         createClient(() =>
         {
-            const regDto: RegisterDto = {email: "anton@javelin.ee", password: "123qwe", nick: "Anton"};
+            const regDto: AccountDto = {email: "anton@javelin.ee", password: "123qwe", nick: "Anton"};
             !byCmd ? send(SocketAction.REGISTER, regDto) : cmd("register", regDto);
         }, json =>
         {
@@ -345,8 +350,8 @@ describe('AuthContextTest', function (this: Suite)
 
     async function insert()
     {
-        await db.insert<RegisterDto>({}, Collection.USERS.name, [
-            {email: "anton@javelin.ee", password: "123qwe", nick: "Anton"}
+        await db.insert({}, Collection.USERS.name, [
+            {email: "anton@javelin.ee", password: "123qwe", nick: "Anton", gender: "male"}
         ]);
     }
 

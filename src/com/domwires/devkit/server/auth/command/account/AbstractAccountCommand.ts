@@ -12,6 +12,7 @@ export abstract class AbstractAccountCommand extends AbstractAuthContextCommand
     private _clientId!: string;
 
     protected dto!: LoginDto | undefined;
+
     protected clientId!: string;
 
     public override execute(): void

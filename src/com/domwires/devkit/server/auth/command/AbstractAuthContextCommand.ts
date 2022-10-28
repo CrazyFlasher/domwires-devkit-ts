@@ -18,4 +18,14 @@ export abstract class AbstractAuthContextCommand extends AbstractCommand
 
     @inject(Types.IFactory)
     protected factory!: IFactoryImmutable;
+
+    protected get queryRelatedToClientId(): string
+    {
+        if (!this.db.query || !this.db.query.relatedToClientId)
+        {
+            throw new Error("'relatedToClientId' not defined");
+        }
+
+        return this.db.query.relatedToClientId;
+    }
 }

@@ -3,7 +3,7 @@ export type LoginDto = {
     readonly password: string;
 };
 
-export type RegisterDto = LoginDto & {
+export type AccountDto = LoginDto & {
     readonly nick: string;
 };
 

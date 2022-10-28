@@ -32,6 +32,7 @@ import {IInputView} from "../../../common/view/IInputView";
 import {CliInputView} from "../../main/view/CliInputView";
 import {ErrorReason} from "../../../common/ErrorReason";
 import {ResultDto} from "../../../common/net/dto/Dto";
+import {UpdateAccountSnapshotCommand} from "../command/account/UpdateAccountSnapshotCommand";
 
 export interface IAuthContextImmutable extends IAppContextImmutable
 {
@@ -101,7 +102,8 @@ export class AuthContext extends AppContext implements IAuthContext
             reason: ErrorReason.USER_EXISTS.name
         }).addGuards(IsRegisterQueryGuards);
 
-        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {success: true})
+        this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS,
+            [UpdateAccountSnapshotCommand, LoginResponseCommand], {success: true})
             .addGuards(IsLoginQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
 
         this.map<ResultDto>(DataBaseServiceMessageType.FIND_SUCCESS, LoginResponseCommand, {
