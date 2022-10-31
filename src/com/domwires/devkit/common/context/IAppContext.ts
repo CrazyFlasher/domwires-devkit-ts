@@ -156,7 +156,7 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected ready(): void
     {
-        this.dispatchMessage(AppContextMessageType.READY, {target: this});
+        this.dispatchMessage(AppContextMessageType.READY);
     }
 
     public override dispose(): void
@@ -166,7 +166,7 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected disposeComplete(): void
     {
-        this.dispatchMessage(AppContextMessageType.DISPOSED, {target: this});
+        this.dispatchMessage(AppContextMessageType.DISPOSED);
 
         super.dispose();
     }

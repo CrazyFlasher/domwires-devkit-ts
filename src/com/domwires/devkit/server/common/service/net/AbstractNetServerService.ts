@@ -58,7 +58,7 @@ export abstract class AbstractNetServerService extends AbstractService implement
 
         this._isOpened = true;
 
-        this.dispatchMessage(NetServerServiceMessageType.OPEN_SUCCESS, {target: this});
+        this.dispatchMessage(NetServerServiceMessageType.OPEN_SUCCESS);
     }
 
     protected openFail(err: Error | unknown): void
@@ -66,7 +66,7 @@ export abstract class AbstractNetServerService extends AbstractService implement
         this.warn("Failed to start server: " + this.serverName);
         this.warn(err);
 
-        this.dispatchMessage(NetServerServiceMessageType.OPEN_FAIL, {target: this});
+        this.dispatchMessage(NetServerServiceMessageType.OPEN_FAIL);
     }
 
     protected closeSuccess(): void
@@ -75,7 +75,7 @@ export abstract class AbstractNetServerService extends AbstractService implement
 
         this._isOpened = false;
 
-        this.dispatchMessage(NetServerServiceMessageType.CLOSE_SUCCESS, {target: this});
+        this.dispatchMessage(NetServerServiceMessageType.CLOSE_SUCCESS);
     }
 
     protected closeFail(err: Error): void
@@ -83,7 +83,7 @@ export abstract class AbstractNetServerService extends AbstractService implement
         this.warn("Failed to close server: " + this.serverName);
         this.error(err);
 
-        this.dispatchMessage(NetServerServiceMessageType.CLOSE_FAIL, {target: this});
+        this.dispatchMessage(NetServerServiceMessageType.CLOSE_FAIL);
     }
 
     protected get serverName(): string
