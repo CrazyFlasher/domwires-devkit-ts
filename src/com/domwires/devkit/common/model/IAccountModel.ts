@@ -1,5 +1,5 @@
 import {setDefaultImplementation} from "domwires";
-import {SnapshotModel, ISnapshotModel, ISnapshotModelImmutable} from "./ISnapshotModel";
+import {ISnapshotModel, ISnapshotModelImmutable, SnapshotModel} from "./ISnapshotModel";
 import {Types} from "../Types";
 import {AccountDto} from "../net/dto/Dto";
 import {snapshotValue} from "../Decorators";

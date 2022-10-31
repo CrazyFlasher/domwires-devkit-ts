@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {AbstractMediator, IFactoryImmutable, IMediator, IMessage, MessageType} from "domwires";
+import {AbstractHierarchyObject, IFactoryImmutable, IHierarchyObject, IMessage, MessageType} from "domwires";
 import {inject, named, postConstruct} from "inversify";
 import {IInputView, InputViewMessageType} from "../view/IInputView";
 import {printMappedToAliasCommandsToConsole} from "../Global";
 import {Types} from "../Types";
 import {FactoryNames} from "../FactoryNames";
 
-export interface IUIMediator extends IMediator
+export interface IUIMediator extends IHierarchyObject
 {
 
 }
 
-export class UIMediator extends AbstractMediator
+export class UIMediator extends AbstractHierarchyObject
 {
     @inject(Types.IFactoryImmutable) @named(FactoryNames.VIEW)
     protected viewFactory!: IFactoryImmutable;

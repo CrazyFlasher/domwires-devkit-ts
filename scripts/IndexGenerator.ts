@@ -8,8 +8,8 @@ import {AbstractScript} from "./AbstractScript";
 
 class IndexGenerator extends AbstractScript
 {
-    private input: string;
-    private output: string;
+    private readonly input: string;
+    private readonly output: string;
 
     public constructor()
     {

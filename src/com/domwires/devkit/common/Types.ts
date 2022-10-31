@@ -2,6 +2,9 @@ export class Types
 {
     public static readonly FactoriesConfig = "FactoriesConfig";
 
+    public static readonly IAppContext = "IAppContext";
+    public static readonly IAppContextImmutable = "IAppContextImmutable";
+
     public static readonly IAuthContext = "IAuthContext";
     public static readonly IAuthContextImmutable = "IAuthContextImmutable";
 
@@ -10,6 +13,9 @@ export class Types
 
     public static readonly IAccountModel = "IAccountModel";
     public static readonly IAccountModelImmutable = "IAccountModelImmutable";
+
+    public static readonly IAccountModelContainer = "IAccountModelContainer";
+    public static readonly IAccountModelContainerImmutable = "IAccountModelContainerImmutable";
 
     public static readonly IInputView = "IInputView";
     public static readonly IUIMediator = "IUIMediator";

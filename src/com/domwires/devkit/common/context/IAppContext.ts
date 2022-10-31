@@ -15,15 +15,10 @@ import {
     IFactory,
     IFactoryImmutable,
     IHierarchyObject,
-    IMediator,
-    IMediatorContainer,
-    IMediatorImmutable,
+    IHierarchyObjectImmutable,
     IMessage,
-    IMessageDispatcher,
-    IModel,
-    IModelContainer,
-    IModelImmutable,
-    instanceOf, MappingConfig,
+    instanceOf,
+    MappingConfig,
     MappingConfigList,
     MessageType,
     Type
@@ -40,34 +35,34 @@ import {FactoryNames} from "../FactoryNames";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
-    get id(): string;
+
 }
 
 export interface IAppContext extends IAppContextImmutable, IContext
 {
-    getContext<T extends IContext>(type: Type<T>, name?: string): T;
+    getContextInstance<T extends IContext>(type: Type<T>, name?: string): T;
 
-    getContext<T extends IContext>(type: Type<T>, immutableType: Type<IContextImmutable>, name?: string): T;
+    getContextInstance<T extends IContext>(type: Type<T>, immutableType: Type<IContextImmutable>, name?: string): T;
 
-    getModel<T extends IModel>(type: Type<T>, name?: string): T;
+    getModelInstance<T extends IHierarchyObject>(type: Type<T>, name?: string): T;
 
-    getModel<T extends IModel>(type: Type<T>, immutableType: Type<IModelImmutable>, name?: string): T;
+    getModelInstance<T extends IHierarchyObject>(type: Type<T>, immutableType: Type<IHierarchyObjectImmutable>, name?: string): T;
 
-    getService<T extends IService>(type: Type<T>, name?: string): T;
+    getServiceInstance<T extends IService>(type: Type<T>, name?: string): T;
 
-    getService<T extends IService>(type: Type<T>, immutableType: Type<IServiceImmutable>, name?: string): T;
+    getServiceInstance<T extends IService>(type: Type<T>, immutableType: Type<IServiceImmutable>, name?: string): T;
 
-    getMediator<T extends IMediator>(type: Type<T>, name?: string): T;
+    getMediatorInstance<T extends IHierarchyObject>(type: Type<T>, name?: string): T;
 
-    getMediator<T extends IMediator>(type: Type<T>, immutableType: Type<IMediatorImmutable>, name?: string): T;
+    getMediatorInstance<T extends IHierarchyObject>(type: Type<T>, immutableType: Type<IHierarchyObjectImmutable>, name?: string): T;
 
     mapContextToType(type: Type<IContext>, to: Class<IContext>, name?: string): IAppContext;
 
-    mapModelToType(type: Type<IModel>, to: Class<IModel>, name?: string): IAppContext;
+    mapModelToType(type: Type<IHierarchyObject>, to: Class<IHierarchyObject>, name?: string): IAppContext;
 
     mapServiceToType(type: Type<IService>, to: Class<IService>, name?: string): IAppContext;
 
-    mapMediatorToType(type: Type<IMediator>, to: Class<IMediator>, name?: string): IAppContext;
+    mapMediatorToType(type: Type<IHierarchyObject>, to: Class<IHierarchyObject>, name?: string): IAppContext;
 
     dispatchMessageToContexts<TData>(message: IMessage, data?: TData): IContext;
 }
@@ -111,12 +106,12 @@ export class AppContextConfigBuilder extends ContextConfigBuilder
 export class AppContextMessageType extends MessageType
 {
     public static readonly READY: AppContextMessageType = new AppContextMessageType();
+    public static readonly DISPOSED: AppContextMessageType = new AppContextMessageType();
 }
 
 export class AppContext extends AbstractContext implements IAppContext
 {
-    private static readonly ADD_ERROR: string = "Use 'add' method instead";
-    private static readonly REMOVE_ERROR: string = "Use 'remove' method instead";
+    private static serviceIdentifier = Types.IAppContext;
 
     @inject(Types.FactoriesConfig) @optional()
     private factoriesConfig!: FactoriesConfig;
@@ -141,8 +136,6 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected defaultUiMediator!: IUIMediator;
 
-    protected _id!: string;
-
     protected override init()
     {
         super.init();
@@ -163,29 +156,39 @@ export class AppContext extends AbstractContext implements IAppContext
 
     protected ready(): void
     {
-        this.dispatchMessage(AppContextMessageType.READY);
+        this.dispatchMessage(AppContextMessageType.READY, {target: this});
     }
 
-    public override handleMessage<TData>(message: IMessage, data?: TData): IMessageDispatcher
+    public override dispose(): void
     {
-        super.handleMessage(message, data);
+        this.disposeComplete();
+    }
 
-        if (instanceOf(message.initialTarget, "IModel"))
-        {
-            if (this.appContextConfig.forwardMessageFromModelsToContexts)
-            {
-                this.dispatchMessageToContexts(message, data);
-            }
-        }
-        else if (instanceOf(message.initialTarget, "IMediator"))
-        {
-            if (this.appContextConfig.forwardMessageFromMediatorsToContexts)
-            {
-                this.dispatchMessageToContexts(message, data);
-            }
-        }
+    protected disposeComplete(): void
+    {
+        this.dispatchMessage(AppContextMessageType.DISPOSED, {target: this});
 
-        return this;
+        super.dispose();
+    }
+
+    protected override forwardMessageFromModel<DataType>(message: IMessage, data?: DataType): void
+    {
+        super.forwardMessageFromModel(message, data);
+
+        if (this.appContextConfig.forwardMessageFromModelsToContexts)
+        {
+            this.dispatchMessageToContexts(message, data);
+        }
+    }
+
+    protected override forwardMessageFromMediator<DataType>(message: IMessage, data?: DataType): void
+    {
+        super.forwardMessageFromMediator(message, data);
+
+        if (this.appContextConfig.forwardMessageFromMediatorsToContexts)
+        {
+            this.dispatchMessageToContexts(message, data);
+        }
     }
 
     public dispatchMessageToContexts<TData>(message: IMessage, data?: TData): IContext
@@ -209,11 +212,6 @@ export class AppContext extends AbstractContext implements IAppContext
         }
 
         return super.dispatchMessageToModels(message, data, filter);
-    }
-
-    public get id(): string
-    {
-        return this._id;
     }
 
     protected createFactories(): {
@@ -248,104 +246,22 @@ export class AppContext extends AbstractContext implements IAppContext
         };
     }
 
-    public override add(child: IHierarchyObject, index?: number): boolean
-    {
-        let success = false;
-
-        if (instanceOf(child, "IContext"))
-        {
-            success = !this.modelContainer.contains(child);
-            super.addModel(<IContext>child);
-
-            return success;
-        }
-
-        if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
-        {
-            return super.add(child, index);
-        }
-
-        if (instanceOf(child, "IModel"))
-        {
-            success = !this.modelContainer.contains(child);
-            super.addModel(child);
-        }
-        else if (instanceOf(child, "IMediator"))
-        {
-            success = !this.mediatorContainer.contains(child);
-            super.addMediator(child);
-        }
-
-        return success;
-    }
-
-    public override remove(child: IHierarchyObject, dispose?: boolean): boolean
-    {
-        let success = false;
-
-        if (instanceOf(child, "IContext"))
-        {
-            success = this.modelContainer.contains(child);
-            super.removeModel(<IContext>child);
-
-            return success;
-        }
-
-        if (instanceOf(child, "IModelContainer") || instanceOf(child, "IMediatorContainer"))
-        {
-            return super.remove(child, dispose);
-        }
-
-        if (instanceOf(child, "IModel"))
-        {
-            success = this.modelContainer.contains(child);
-            super.removeModel(child);
-        }
-        else if (instanceOf(child, "IMediator"))
-        {
-            success = this.mediatorContainer.contains(child);
-            super.removeMediator(child);
-        }
-
-        return success;
-    }
-
-    public override addModel(model: IModel): IModelContainer
-    {
-        throw new Error(AppContext.ADD_ERROR);
-    }
-
-    public override addMediator(mediator: IMediator): IMediatorContainer
-    {
-        throw new Error(AppContext.ADD_ERROR);
-    }
-
-    public override removeModel(model: IModel, dispose?: boolean): IModelContainer
-    {
-        throw new Error(AppContext.REMOVE_ERROR);
-    }
-
-    public override removeMediator(mediator: IMediator, dispose?: boolean): IMediatorContainer
-    {
-        throw new Error(AppContext.REMOVE_ERROR);
-    }
-
-    public getContext<T extends IContext>(type: Type<T>, immutableType?: Type<IContextImmutable>, name?: string): T
+    public getContextInstance<T extends IContext>(type: Type<T>, immutableType?: Type<IContextImmutable>, name?: string): T
     {
         return this.getInstance(this._contextFactory, type, immutableType, name);
     }
 
-    public getService<T extends IService>(type: Type<T>, immutableType?: Type<IServiceImmutable>, name?: string): T
+    public getServiceInstance<T extends IService>(type: Type<T>, immutableType?: Type<IServiceImmutable>, name?: string): T
     {
         return this.getInstance<T>(this._serviceFactory, type, immutableType, name);
     }
 
-    public getModel<T extends IModel>(type: Type<T>, immutableType?: Type<IModelImmutable>, name?: string): T
+    public getModelInstance<T extends IHierarchyObject>(type: Type<T>, immutableType?: Type<IHierarchyObjectImmutable>, name?: string): T
     {
         return this.getInstance(this._modelFactory, type, immutableType, name);
     }
 
-    public getMediator<T extends IMediator>(type: Type<T>, immutableType?: Type<IMediatorImmutable>, name?: string): T
+    public getMediatorInstance<T extends IHierarchyObject>(type: Type<T>, immutableType?: Type<IHierarchyObjectImmutable>, name?: string): T
     {
         return this.getInstance(this._mediatorFactory, type, immutableType, name);
     }
@@ -357,22 +273,26 @@ export class AppContext extends AbstractContext implements IAppContext
         if (instanceOf(instance, "IContext"))
         {
             if (immutableType) this._contextFactory.mapToValue(immutableType, instance, name);
+            this.factory.mapToValue(type, instance, name);
         }
         else if (instanceOf(instance, "IService"))
         {
             this._contextFactory.mapToValue(type, instance, name);
             this.factory.mapToValue(type, instance, name);
         }
-        else if (instanceOf(instance, "IModel"))
+        else if (instanceOf(instance, "IHierarchyObject"))
         {
-            this._contextFactory.mapToValue(type, instance, name);
-            if (immutableType) this._mediatorFactory.mapToValue(immutableType, instance, name);
-            if (immutableType) this._serviceFactory.mapToValue(immutableType, instance, name);
-            this.factory.mapToValue(type, instance, name);
-        }
-        else if (instanceOf(instance, "IMediator"))
-        {
-            this._contextFactory.mapToValue(type, instance, name);
+            if (factory === this._modelFactory)
+            {
+                this._contextFactory.mapToValue(type, instance, name);
+                if (immutableType) this._mediatorFactory.mapToValue(immutableType, instance, name);
+                if (immutableType) this._serviceFactory.mapToValue(immutableType, instance, name);
+                this.factory.mapToValue(type, instance, name);
+            }
+            else if (factory === this._mediatorFactory)
+            {
+                this._contextFactory.mapToValue(type, instance, name);
+            }
         }
 
         return instance;
@@ -385,14 +305,14 @@ export class AppContext extends AbstractContext implements IAppContext
         return this;
     }
 
-    public mapMediatorToType(type: Type<IMediator>, to: Class<IMediator>, name?: string): IAppContext
+    public mapMediatorToType(type: Type<IHierarchyObject>, to: Class<IHierarchyObject>, name?: string): IAppContext
     {
         this._mediatorFactory.mapToType(type, to, name);
 
         return this;
     }
 
-    public mapModelToType(type: Type<IModel>, to: Class<IModel>, name?: string): IAppContext
+    public mapModelToType(type: Type<IHierarchyObject>, to: Class<IHierarchyObject>, name?: string): IAppContext
     {
         this._modelFactory.mapToType(type, to, name);
 
@@ -411,7 +331,7 @@ export class AppContext extends AbstractContext implements IAppContext
         if (this.appContextConfig.defaultCliUI)
         {
             this.defaultUiMediator = this._mediatorFactory.getInstance<IUIMediator>(Types.IUIMediator);
-            this.add(this.defaultUiMediator);
+            this.addMediator(this.defaultUiMediator);
         }
     }
 
@@ -464,9 +384,9 @@ export class AppContext extends AbstractContext implements IAppContext
 
     private _mapValues(): void
     {
-        if (this._id)
+        if (this.id)
         {
-            this.factory.mapToValue("string", this._id, "commandMapperId");
+            this.factory.mapToValue(Types.string, this.id, "commandMapperId");
         }
 
         this.factory.mapToValue(Types.ICommandMapper, this);

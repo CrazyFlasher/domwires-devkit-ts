@@ -132,7 +132,7 @@ class ModelFromTypeGen extends AbstractScript
 
     private findSuffix(): void
     {
-        this.suffix = "Model";
+        this.suffix = "HierarchyObject";
         this.importBaseFrom = "domwires";
 
         const suffixArr: string[] = this.typedefFile.split("/*@Suffix=");
@@ -294,7 +294,7 @@ class ModelFromTypeGen extends AbstractScript
         let modelBaseInterface = "I" + this.suffix;
         const data: string = modelPrefix.charAt(0).toLowerCase() + modelPrefix.substring(1, modelPrefix.length) + "Data";
         let imports = "";
-        let _override = this.suffix == "Model" ? "" : "override ";
+        let _override = this.suffix == "HierarchyObject" ? "" : "override ";
         let _super = "";
 
         if (baseModelName || !isBase)

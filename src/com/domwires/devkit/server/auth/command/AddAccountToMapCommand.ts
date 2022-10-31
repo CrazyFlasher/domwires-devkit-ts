@@ -7,6 +7,6 @@ export class AddAccountToMapCommand extends AbstractAuthContextCommand
     {
         super.execute();
 
-        this.accountModelMap.set(this.socket.connectedClientId, this.factory.getInstance(Types.IAccountModel));
+        this.accounts.add(this.factory.getInstance(Types.IAccountModel), this.socket.connectedClientId);
     }
 }

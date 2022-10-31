@@ -8,7 +8,7 @@ export class LoginCommand extends AbstractAccountCommand
     {
         super.execute();
 
-        const account = this.accountModelMap.get(this.clientId);
+        const account = this.accounts.get(this.clientId);
 
         if (this.dto && account)
         {

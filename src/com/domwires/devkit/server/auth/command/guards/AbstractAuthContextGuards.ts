@@ -4,6 +4,7 @@ import {ISocketServerService} from "../../../common/service/net/socket/ISocketSe
 import {Types} from "../../../../common/Types";
 import {IDataBaseService} from "../../../common/service/net/db/IDataBaseService";
 import {IAccountModel} from "../../../../common/model/IAccountModel";
+import {IAccountModelContainer} from "../../../../common/model/IAccountModelContainer";
 
 export abstract class AbstractAuthContextGuards extends AbstractGuards
 {
@@ -13,8 +14,8 @@ export abstract class AbstractAuthContextGuards extends AbstractGuards
     @inject(Types.IDataBaseService)
     protected db!: IDataBaseService;
 
-    @inject("Map<string, IAccountModel>")
-    protected accountModelMap!: Map<string, IAccountModel>;
+    @inject(Types.IAccountModelContainer)
+    protected accounts!: IAccountModelContainer;
 
     protected get queryClientId(): string | undefined
     {
@@ -28,6 +29,6 @@ export abstract class AbstractAuthContextGuards extends AbstractGuards
 
     protected getAccount(clientId: string | undefined): IAccountModel | undefined
     {
-        return clientId ? this.accountModelMap.get(clientId) : undefined;
+        return clientId ? this.accounts.get(clientId) : undefined;
     }
 }

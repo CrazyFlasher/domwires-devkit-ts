@@ -141,8 +141,8 @@ describe('AppContextTest', function (this: Suite)
 
         const childContext: IChildMockContext = mainContext.getChildContext();
         const model: IMockModel = childContext.getMockModel();
-        mainContext.add(childContext);
-        childContext.add(model);
+        mainContext.addModel(childContext);
+        childContext.addModel(model);
 
         childContext.getFactoryMutable().mapToValue<IMockModel>("IMockModel", model);
 
@@ -218,8 +218,8 @@ describe('AppContextTest', function (this: Suite)
         expect(childContext.parent).not.equals(mainContext);
         expect(model.parent).not.equals(childContext);
 
-        mainContext.add(childContext);
-        childContext.add(model);
+        mainContext.addModel(childContext);
+        childContext.addModel(model);
 
         expect(childContext.parent).equals(mainContext);
         expect(model.parent).equals(childContext);

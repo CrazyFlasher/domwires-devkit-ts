@@ -6,6 +6,6 @@ export class RemoveAccountFromMapCommand extends AbstractAuthContextCommand
     {
         super.execute();
 
-        this.accountModelMap.delete(this.socket.disconnectedClientId);
+        this.accounts.remove(this.socket.disconnectedClientId);
     }
 }

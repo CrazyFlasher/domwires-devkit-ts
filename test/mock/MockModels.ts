@@ -1,14 +1,20 @@
-import {AbstractModel, IFactoryImmutable, IModel, IModelImmutable, setDefaultImplementation} from "domwires";
+import {
+    AbstractHierarchyObject,
+    IFactoryImmutable,
+    IHierarchyObject,
+    IHierarchyObjectImmutable,
+    setDefaultImplementation
+} from "domwires";
 import {inject, named, optional} from "inversify";
 import {Types} from "../../src/com/domwires/devkit/common/Types";
 import {FactoryNames} from "../../src/com/domwires/devkit/common/FactoryNames";
 
-export interface IMockModel extends IMockModelImmutable, IModel
+export interface IMockModel extends IMockModelImmutable, IHierarchyObject
 {
     set v(value: number);
 }
 
-export interface IMockModelImmutable extends IModelImmutable
+export interface IMockModelImmutable extends IHierarchyObjectImmutable
 {
     getModelFactory(): IFactoryImmutable;
 
@@ -21,7 +27,7 @@ export interface IMockModelImmutable extends IModelImmutable
     get v(): number;
 }
 
-export class MockModel extends AbstractModel implements IMockModel
+export class MockModel extends AbstractHierarchyObject implements IHierarchyObject
 {
     @inject(Types.IFactoryImmutable) @named(FactoryNames.MODEL)
     private modelFactory!: IFactoryImmutable;

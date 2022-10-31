@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import {AppContext, IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
-import {Class, IFactory, IFactoryImmutable, IMediator, setDefaultImplementation} from "domwires";
+import {Class, IFactory, IFactoryImmutable, IHierarchyObject, setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
 import {
     IServerAppContext,
@@ -35,7 +35,7 @@ export interface IBaseMockContext extends IBaseMockContextImmutable, IAppContext
 {
     getFactoryMutable(): IFactory;
 
-    getMediatorMutable(): IMediator;
+    getMediatorMutable(): IHierarchyObject;
 }
 
 export interface IBaseMockContextImmutable extends IServerAppContextImmutable
@@ -57,6 +57,16 @@ export class BaseMockContext extends AppContext implements IServerAppContext
         contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
         mediatorFactory: IFactory; viewFactory: IFactory;
     };
+
+    public initComplete(): IServerAppContext
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public shutDownComplete(): IServerAppContext
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
 
     public createChildContexts(): IServerAppContext
     {
@@ -106,7 +116,7 @@ export class BaseMockContext extends AppContext implements IServerAppContext
         return this.factory;
     }
 
-    public getMediatorMutable(): IMediator
+    public getMediatorMutable(): IHierarchyObject
     {
         return this.defaultUiMediator;
     }
@@ -119,12 +129,12 @@ export class ChildMockContext extends BaseMockContext implements IChildMockConte
 
     protected override init(): void
     {
-        this._id = "child";
+        this.setId("child");
 
         super.init();
 
-        this.model = this.getModel("IMockModel", "IMockModelImmutable");
-        this.model2 = this.getModel("IMockModel", "IMockModelImmutable");
+        this.model = this.getModelInstance("IMockModel", "IMockModelImmutable");
+        this.model2 = this.getModelInstance("IMockModel", "IMockModelImmutable");
     }
 
     public getMockModel(): IMockModel
@@ -144,11 +154,11 @@ export class MainMockContext extends BaseMockContext implements IMainMockContext
 
     protected override init(): void
     {
-        this._id = "main";
+        this.setId("main");
 
         super.init();
 
-        this.childContext = this.getContext("IChildMockContext", "IChildMockContextImmutable");
+        this.childContext = this.getContextInstance("IChildMockContext", "IChildMockContextImmutable");
     }
 
     public getChildContext(): IChildMockContext

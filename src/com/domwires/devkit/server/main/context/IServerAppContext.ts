@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import "../../auth/context/IAuthContext";
+import "../../../common/model/IAccountModelContainer";
 
 import {
     AppContext,
@@ -9,11 +10,10 @@ import {
     IAppContextImmutable
 } from "../../../common/context/IAppContext";
 import {IInputView} from "../../../common/view/IInputView";
-import {Class, IFactory, MessageType, setDefaultImplementation} from "domwires";
+import {Class, IFactory, setDefaultImplementation} from "domwires";
 import {CliInputView} from "../view/CliInputView";
 import {IHttpServerService} from "../../common/service/net/http/IHttpServerService";
 import {ISocketServerService, SocketServerServiceConfig} from "../../common/service/net/socket/ISocketServerService";
-import {IAccountModel} from "../../../common/model/IAccountModel";
 import {ExpressHttpServerService} from "../../common/service/net/http/impl/ExpressHttpServerService";
 import {SioSocketServerService} from "../../common/service/net/socket/impl/SioSocketServerService";
 import {NetServerServiceConfig, NetServerServiceMessageType} from "../../common/service/net/INetServerService";
@@ -21,19 +21,17 @@ import {DataBaseServiceConfig, IDataBaseService} from "../../common/service/net/
 import {Types} from "../../../common/Types";
 import {ConfigIds} from "../../ConfigIds";
 import {MongoDataBaseService} from "../../common/service/net/db/impl/MongoDataBaseService";
-import {CloseServicesCommand} from "../command/CloseServicesCommand";
 import {TargetIsHttpServiceGuards} from "../command/guards/TargetIsHttpServiceGuards";
 import {OpenServiceCommand} from "../command/OpenServiceCommand";
 import {TargetIsSocketServiceGuards} from "../command/guards/TargetIsSocketServiceGuards";
 import {CreateChildContextsCommand} from "../command/CreateChildContextsCommand";
 import {IAuthContext} from "../../auth/context/IAuthContext";
 import {TargetIsDataBaseServiceGuards} from "../command/guards/TargetIsDataBaseServiceGuards";
-
-export class ServerAppContextMessageType extends MessageType
-{
-    public static readonly DISPOSED: ServerAppContextMessageType = new ServerAppContextMessageType();
-    public static readonly INITIALIZED: ServerAppContextMessageType = new ServerAppContextMessageType();
-}
+import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
+import {CloseServiceCommand} from "../command/CloseServiceCommand";
+import {ShutDownCompleteCommand} from "../command/ShutDownCompleteCommand";
+import {InitCompleteCommand} from "../command/InitCompleteCommand";
+import {TargetIsAuthContextGuards} from "../command/guards/TargetIsAuthContextGuards";
 
 export interface IServerAppContextImmutable extends IAppContextImmutable
 {
@@ -43,6 +41,10 @@ export interface IServerAppContextImmutable extends IAppContextImmutable
 export interface IServerAppContext extends IServerAppContextImmutable, IAppContext
 {
     createChildContexts(): IServerAppContext;
+
+    shutDownComplete(): IServerAppContext;
+
+    initComplete(): IServerAppContext;
 }
 
 export class ServerAppContext extends AppContext implements IServerAppContext
@@ -51,19 +53,21 @@ export class ServerAppContext extends AppContext implements IServerAppContext
     private modelFactory!: IFactory;
     private serviceFactory!: IFactory;
 
+    private authContext!: IAuthContext;
+
     private http!: IHttpServerService;
     private socket!: ISocketServerService;
     private db!: IDataBaseService;
 
-    private accountModelMap = new Map<string, IAccountModel>();
+    private accounts!: IAccountModelContainer;
 
     protected override init()
     {
         super.init();
 
-        this.factory.mapToValue(Types.IServerAppContext, this);
+        this.accounts = this.getModelInstance(Types.IAccountModelContainer);
 
-        this.contextFactory.mapToValue("Map<string, IAccountModel>", this.accountModelMap);
+        this.factory.mapToValue(Types.IServerAppContext, this);
 
         this.mapServiceToType(Types.IHttpServerService, ExpressHttpServerService);
         this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
@@ -77,6 +81,17 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.db}).addGuards(TargetIsSocketServiceGuards);
         this.map(NetServerServiceMessageType.OPEN_SUCCESS, CreateChildContextsCommand).addGuards(TargetIsDataBaseServiceGuards);
 
+        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
+            CloseServiceCommand, {service: this.socket}).addGuards(TargetIsDataBaseServiceGuards);
+
+        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
+            CloseServiceCommand, {service: this.http}).addGuards(TargetIsSocketServiceGuards);
+
+        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
+            ShutDownCompleteCommand).addGuards(TargetIsHttpServiceGuards);
+
+        this.map(AppContextMessageType.READY, InitCompleteCommand).addGuards(TargetIsAuthContextGuards);
+
         this.executeCommand(OpenServiceCommand, {service: this.http});
 
         // await this.executeCommand(OpenServiceCommand, {service: this.http});
@@ -86,18 +101,23 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         // this.executeCommand(CreateChildContextsCommand);
     }
 
-    public override async dispose()
+    public initComplete(): IServerAppContext
     {
-        await this.executeCommand(CloseServicesCommand);
+        this.ready();
 
-        this.disposeComplete();
+        return this;
     }
 
-    private disposeComplete(): void
+    public shutDownComplete(): IServerAppContext
     {
-        this.dispatchMessage(ServerAppContextMessageType.DISPOSED);
+        this.disposeComplete();
 
-        super.dispose();
+        return this;
+    }
+
+    public override async dispose()
+    {
+        this.executeCommand(CloseServiceCommand, {service: this.db});
     }
 
     protected override createFactories(): {
@@ -128,11 +148,10 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         const httpConfig: NetServerServiceConfig = {enabled: netEnabled, host: netHost, port: httpPort};
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, httpConfig);
-        this.serviceFactory.mapToValue(Types.NetServerServiceConfig, httpConfig);
 
-        this.http = this.getService(Types.IHttpServerService);
+        this.http = this.getServiceInstance(Types.IHttpServerService);
 
-        this.add(this.http);
+        this.addModel(this.http);
     }
 
     private createSocket(): void
@@ -143,13 +162,12 @@ export class ServerAppContext extends AppContext implements IServerAppContext
             port: this.modelFactory.getInstance(Types.number, ConfigIds.socketPort),
             http: this.http.nodeHttpServer
         };
+
         this.serviceFactory.mapToValue(Types.ServiceConfig, socketConfig);
-        this.serviceFactory.mapToValue(Types.NetServerServiceConfig, socketConfig);
-        this.serviceFactory.mapToValue(Types.SocketServerServiceConfig, socketConfig);
 
-        this.socket = this.getService(Types.ISocketServerService);
+        this.socket = this.getServiceInstance(Types.ISocketServerService);
 
-        this.add(this.socket);
+        this.addModel(this.socket);
     }
 
     private createDb(): void
@@ -161,24 +179,16 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         };
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, dbConfig);
-        this.serviceFactory.mapToValue(Types.NetServerServiceConfig, dbConfig);
-        this.serviceFactory.mapToValue(Types.DataBaseServiceConfig, dbConfig);
 
-        this.db = this.getService(Types.IDataBaseService);
+        this.db = this.getServiceInstance(Types.IDataBaseService);
 
-        this.add(this.db);
+        this.addModel(this.db);
     }
 
     public createChildContexts(): IServerAppContext
     {
-        const authContext = this.contextFactory.getInstance<IAuthContext>(Types.IAuthContext);
-
-        authContext.addMessageListener(AppContextMessageType.READY, () =>
-        {
-            this.dispatchMessage(ServerAppContextMessageType.INITIALIZED);
-        });
-
-        this.add(authContext);
+        this.authContext = this.getContextInstance(Types.IAuthContext);
+        this.addModel(this.authContext);
 
         return this;
     }

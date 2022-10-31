@@ -11,7 +11,7 @@ const commandAliasToParamsMap: Map<string, any> = new Map<string, any>();
 const logger = new Logger(LogLevel.INFO);
 
 export function registerCommandAlias(commandClass: Class<ICommand> | Class<ICommand>[], alias: string, description?: string,
-                                     params?: { name: string; type?: string; requiredValue?: string | boolean | number | object }[]): void
+                                     params?: { name: string; type?: string; requiredValue?: string | boolean | number | object; optional?: boolean }[]): void
 {
     if (alias === "/help")
     {
@@ -50,14 +50,14 @@ export function registerCommandAlias(commandClass: Class<ICommand> | Class<IComm
     }
 }
 
-function paramsToString(params: { name: string; type?: string; requiredValue?: string | boolean | number | object }[]): string
+function paramsToString(params: { name: string; type?: string; requiredValue?: string | boolean | number | object; optional?: boolean }[]): string
 {
     let result = "";
 
     let count = 0;
     for (const param of params)
     {
-        result += param.name + (param.type ? ":" + param.type : "") + (param.requiredValue ? "=" +
+        result += param.name + (param.optional ? "?" : "")  + (param.type ? ":" + param.type : "") + (param.requiredValue ? "=" +
             JSON.stringify(param.requiredValue).replace(/"/g, "") : "") + ";";
 
         count++;

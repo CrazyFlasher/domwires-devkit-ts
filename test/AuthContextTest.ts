@@ -4,6 +4,7 @@
 import "reflect-metadata";
 
 import "../src/com/domwires/devkit/server/auth/context/IAuthContext";
+import "../src/com/domwires/devkit/common/model/IAccountModelContainer";
 
 import {Suite} from "mocha";
 import {expect} from "chai";
@@ -15,7 +16,6 @@ import {
     ISocketServerService,
     SocketServerServiceConfig
 } from "../src/com/domwires/devkit/server/common/service/net/socket/ISocketServerService";
-import {IAccountModel} from "../src/com/domwires/devkit/common/model/IAccountModel";
 import {
     SioSocketServerService
 } from "../src/com/domwires/devkit/server/common/service/net/socket/impl/SioSocketServerService";
@@ -40,6 +40,7 @@ import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
 import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
 import {printMappedToAliasCommandsToConsole} from "../src/com/domwires/devkit/common/Global";
+import {IAccountModelContainer} from "../src/com/domwires/devkit/common/model/IAccountModelContainer";
 
 describe('AuthContextTest', function (this: Suite)
 {
@@ -52,14 +53,14 @@ describe('AuthContextTest', function (this: Suite)
     let client: Socket;
     let clientId: string;
 
-    let accountModelMap: Map<string, IAccountModel>;
+    let accounts: IAccountModelContainer;
 
     beforeEach((done) =>
     {
-        accountModelMap = new Map<string, IAccountModel>();
-
         const f = new Factory(new Logger(LogLevel.INFO));
         f.mapToValue(Types.IFactory, f);
+
+        accounts = f.getInstance(Types.IAccountModelContainer);
 
         const cb: AppContextConfigBuilder = new AppContextConfigBuilder();
         cb.defaultCliUI = true;
@@ -95,7 +96,7 @@ describe('AuthContextTest', function (this: Suite)
 
             socket.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
             {
-                f.mapToValue("Map<string, IAccountModel>", accountModelMap);
+                f.mapToValue(Types.IAccountModelContainer, accounts);
 
                 const dbConfig: DataBaseServiceConfig = {
                     host: "127.0.0.1",
@@ -118,9 +119,9 @@ describe('AuthContextTest', function (this: Suite)
                             done();
                         });
 
-                        context.add(http);
-                        context.add(socket);
-                        context.add(db);
+                        context.addModel(http);
+                        context.addModel(socket);
+                        context.addModel(db);
                     };
 
                     db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropCollectionComplete, true);
@@ -181,9 +182,9 @@ describe('AuthContextTest', function (this: Suite)
                 expect(json.action).equals(SocketAction.LOGIN.name);
                 expect(json.data.success).true;
                 expect(json.data.reason).undefined;
-                expect(accountModelMap.get(client.id)?.nick).equals("Anton");
-                expect(accountModelMap.get(client.id)?.isLoggedIn).true;
-                expect(accountModelMap.get(client.id)?.isGuest).false;
+                expect(accounts.getImmutable(client.id)?.nick).equals("Anton");
+                expect(accounts.getImmutable(client.id)?.isLoggedIn).true;
+                expect(accounts.getImmutable(client.id)?.isGuest).false;
 
                 done();
             });
@@ -303,7 +304,7 @@ describe('AuthContextTest', function (this: Suite)
 
         client.on("disconnect", () =>
         {
-            expect(accountModelMap.has(clientId)).false;
+            expect(accounts.getImmutable(clientId)).undefined;
 
             done();
         });
@@ -315,7 +316,7 @@ describe('AuthContextTest', function (this: Suite)
 
         client.on("disconnect", () =>
         {
-            expect(accountModelMap.has(clientId)).false;
+            expect(accounts.getImmutable(clientId)).undefined;
 
             done();
         });
@@ -325,8 +326,8 @@ describe('AuthContextTest', function (this: Suite)
     {
         guestLogin(() =>
         {
-            expect(accountModelMap.get(clientId)?.isGuest).true;
-            expect(accountModelMap.get(clientId)?.isLoggedIn).true;
+            expect(accounts.getImmutable(clientId)?.isGuest).true;
+            expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
 
             done();
         });
@@ -336,8 +337,8 @@ describe('AuthContextTest', function (this: Suite)
     {
         guestLogin(() =>
         {
-            expect(accountModelMap.get(clientId)?.isGuest).true;
-            expect(accountModelMap.get(clientId)?.isLoggedIn).true;
+            expect(accounts.getImmutable(clientId)?.isGuest).true;
+            expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
 
             done();
         }, true);

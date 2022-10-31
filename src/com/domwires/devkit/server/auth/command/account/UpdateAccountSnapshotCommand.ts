@@ -31,7 +31,7 @@ export class UpdateAccountSnapshotCommand extends AbstractAccountCommand
             isGuest = false;
         }
 
-        const account = this.accountModelMap.get(!isGuest ? this.queryRelatedToClientId : this.clientId);
+        const account = this.accounts.get(!isGuest ? this.queryRelatedToClientId : this.clientId);
 
         if (account)
         {

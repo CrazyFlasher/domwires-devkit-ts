@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import "reflect-metadata";
-import {AbstractModel, IFactoryImmutable} from "domwires";
+import {AbstractHierarchyObject, IFactoryImmutable} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
 import {inject, optional, postConstruct} from "inversify";
 import { DwError } from "../DwError";
 import {Types} from "../Types";
 
-export abstract class AbstractService extends AbstractModel implements IService
+export abstract class AbstractService extends AbstractHierarchyObject implements IService
 {
     @inject(Types.ServiceConfig)
     protected config!: ServiceConfig;

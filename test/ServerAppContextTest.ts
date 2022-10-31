@@ -5,11 +5,8 @@ import "../src/com/domwires/devkit/server/main/context/IServerAppContext";
 
 import {Done, Suite} from "mocha";
 import {Factory, Logger, LogLevel} from "domwires";
-import {
-    IServerAppContext,
-    ServerAppContextMessageType
-} from "../src/com/domwires/devkit/server/main/context/IServerAppContext";
-import {FactoriesConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {IServerAppContext,} from "../src/com/domwires/devkit/server/main/context/IServerAppContext";
+import {AppContextMessageType, FactoriesConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
 import {ConfigIds} from "../src/com/domwires/devkit/server/ConfigIds";
 import {Types} from "../src/com/domwires/devkit/common/Types";
 
@@ -36,7 +33,13 @@ describe('ServerAppContextTest', function (this: Suite)
 
     afterEach((done: Done) =>
     {
-        mainContext.addMessageListener(ServerAppContextMessageType.DISPOSED, () => done());
+        mainContext.addMessageListener(AppContextMessageType.DISPOSED, message =>
+        {
+            if (message && message.initialTarget == mainContext)
+            {
+                done();
+            }
+        });
         mainContext.dispose();
     });
 
@@ -46,6 +49,12 @@ describe('ServerAppContextTest', function (this: Suite)
         f.mapToValue(Types.IFactory, f);
         f.mapToValue(Types.FactoriesConfig, factoriesConfig);
         mainContext = f.getInstance<IServerAppContext>(Types.IServerAppContext);
-        mainContext.addMessageListener(ServerAppContextMessageType.INITIALIZED, () => done());
+        mainContext.addMessageListener(AppContextMessageType.READY, message =>
+        {
+            if (message && message.initialTarget == mainContext)
+            {
+                done();
+            }
+        });
     });
 });

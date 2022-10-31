@@ -2,18 +2,18 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import {postConstruct} from "inversify";
-import {AbstractModel, IModel, IModelImmutable} from "domwires";
+import {AbstractHierarchyObject, IHierarchyObject, IHierarchyObjectImmutable} from "domwires";
 
-export interface IComponentImmutable extends IModelImmutable
+export interface IComponentImmutable extends IHierarchyObjectImmutable
 {
 }
 
 
-export interface IComponent extends IModel, IComponentImmutable
+export interface IComponent extends IHierarchyObject, IComponentImmutable
 {
 }
 
-export abstract class AbstractComponent extends AbstractModel implements IModel
+export abstract class AbstractComponent extends AbstractHierarchyObject implements IHierarchyObject
 {
     @postConstruct()
     protected init(): void

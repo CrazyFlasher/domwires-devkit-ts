@@ -10,13 +10,13 @@ export class ExecuteCliCommand extends AbstractCommand
     @lazyInject(Types.ICommandMapper)
     private commandMapper!: ICommandMapper;
 
-    @inject("string") @named("commandMapperId") @optional()
+    @inject(Types.string) @named("commandMapperId") @optional()
     private commandMapperId!: string;
 
     @lazyInject(Types.ILogger)
     private logger!: ILogger;
 
-    @lazyInjectNamed("string", "value")
+    @lazyInjectNamed(Types.string, "value")
     private value!: string;
 
     public override execute(): void

@@ -17,7 +17,6 @@ import {DataBaseServiceMessageType, IDataBaseService} from "../../common/service
 import {InitUsersTableCommand} from "../command/InitUsersTableCommand";
 import {MapContextCommandsCommand} from "../command/MapContextCommandsCommand";
 import {Class, setDefaultImplementation} from "domwires";
-import {IAccountModel} from "../../../common/model/IAccountModel";
 import {RegisterCommand} from "../command/account/RegisterCommand";
 import {LoginCommand} from "../command/account/LoginCommand";
 import {IsLoginPasswordMatchesGuards} from "../command/guards/query/IsLoginPasswordMatchesGuards";
@@ -31,6 +30,7 @@ import {IsSuitableActionGuards} from "../command/guards/socket/IsSuitableActionG
 import {IsSuitableQueryGuards} from "../command/guards/query/IsSuitableQueryGuards";
 import {LogoutCommand} from "../command/account/LogoutCommand";
 import {ResponseCommand} from "../command/response/ResponseCommand";
+import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
 
 export interface IAuthContextImmutable extends IAppContextImmutable
 {
@@ -50,12 +50,12 @@ export class AuthContext extends AppContext implements IAuthContext
     @inject(Types.IDataBaseService)
     private db!: IDataBaseService;
 
-    @inject("Map<string, IAccountModel>")
-    private accountModelMap!: Map<string, IAccountModel>;
+    @inject(Types.IAccountModelContainer)
+    private accounts!: IAccountModelContainer;
 
     protected override init(): void
     {
-        this._id = "auth";
+        this.setId("auth");
 
         super.init();
 
@@ -63,7 +63,7 @@ export class AuthContext extends AppContext implements IAuthContext
 
         this.factory.mapToValue(Types.ISocketServerService, this.socket);
         this.factory.mapToValue(Types.IDataBaseService, this.db);
-        this.factory.mapToValue("Map<string, IAccountModel>", this.accountModelMap);
+        this.factory.mapToValue(Types.IAccountModelContainer, this.accounts);
 
         this.socket.startListen([
             SocketAction.REGISTER,
@@ -89,8 +89,15 @@ export class AuthContext extends AppContext implements IAuthContext
             {name: "dto", requiredValue: {email: Types.string, password: Types.string, nick: Types.string}}
         ]);
 
-        registerCommandAlias(LoginCommand, "login", "login user");
-        registerCommandAlias(LogoutCommand, "logout", "logout user");
+        registerCommandAlias(LoginCommand, "login", "login user", [
+            {name: "clientId", type: Types.string},
+            {name: "email", type: Types.string},
+            {name: "password", type: Types.string}
+        ]);
+
+        registerCommandAlias(LogoutCommand, "logout", "logout user", [
+            {name: "clientId", type: Types.string}
+        ]);
 
         registerCommandAlias([UpdateAccountSnapshotCommand, ResponseCommand],
             "guest_login", "login as guest user", [
