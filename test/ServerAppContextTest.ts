@@ -7,8 +7,9 @@ import {Done, Suite} from "mocha";
 import {Factory, Logger, LogLevel} from "domwires";
 import {IServerAppContext,} from "../src/com/domwires/devkit/server/main/context/IServerAppContext";
 import {AppContextMessageType, FactoriesConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
-import {ConfigIds} from "../src/com/domwires/devkit/server/ConfigIds";
+import {ConfigIds} from "../src/com/domwires/devkit/common/ConfigIds";
 import {Types} from "../src/com/domwires/devkit/common/Types";
+import {ServerConfigIds} from "../src/com/domwires/devkit/server/ServerConfigIds";
 
 describe('ServerAppContextTest', function (this: Suite)
 {
@@ -16,13 +17,12 @@ describe('ServerAppContextTest', function (this: Suite)
 
     const factoriesConfig: FactoriesConfig = {
         modelFactory: new Map([
-            [ConfigIds.netEnabled, {value: true}],
             [ConfigIds.netHost, {value: "127.0.0.1"}],
             [ConfigIds.httpPort, {value: 3123}],
             [ConfigIds.socketPort, {value: 3124}],
-            [ConfigIds.dbName, {value: "devkit_db"}],
-            [ConfigIds.dbHost, {value: "127.0.0.1"}],
-            [ConfigIds.dbPort, {value: 27017}]
+            [ServerConfigIds.dbName, {value: "devkit_db"}],
+            [ServerConfigIds.dbHost, {value: "127.0.0.1"}],
+            [ServerConfigIds.dbPort, {value: 27017}]
         ])
     };
 

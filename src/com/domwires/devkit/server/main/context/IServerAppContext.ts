@@ -19,7 +19,6 @@ import {SioSocketServerService} from "../../common/service/net/socket/impl/SioSo
 import {NetServerServiceConfig, NetServerServiceMessageType} from "../../common/service/net/INetServerService";
 import {DataBaseServiceConfig, IDataBaseService} from "../../common/service/net/db/IDataBaseService";
 import {Types} from "../../../common/Types";
-import {ConfigIds} from "../../ConfigIds";
 import {MongoDataBaseService} from "../../common/service/net/db/impl/MongoDataBaseService";
 import {OpenServiceCommand} from "../command/OpenServiceCommand";
 import {CreateChildContextsCommand} from "../command/CreateChildContextsCommand";
@@ -28,6 +27,8 @@ import {IAccountModelContainer} from "../../../common/model/IAccountModelContain
 import {CloseServiceCommand} from "../command/CloseServiceCommand";
 import {ShutDownCompleteCommand} from "../command/ShutDownCompleteCommand";
 import {InitializationCompleteCommand} from "../command/InitializationCompleteCommand";
+import {ConfigIds} from "../../../common/ConfigIds";
+import {ServerConfigIds} from "../../../server/ServerConfigIds";
 
 export interface IServerAppContextImmutable extends IAppContextImmutable
 {
@@ -87,12 +88,6 @@ export class ServerAppContext extends AppContext implements IServerAppContext
             ShutDownCompleteCommand).addTargetGuards(this.http);
 
         this.executeCommand(OpenServiceCommand, {service: this.http});
-
-        // await this.executeCommand(OpenServiceCommand, {service: this.http});
-        // await this.executeCommand(OpenServiceCommand, {service: this.socket});
-        // await this.executeCommand(OpenDataBaseServiceCommand, {service: this.db});
-
-        // this.executeCommand(CreateChildContextsCommand);
     }
 
     public initializationComplete(): IServerAppContext
@@ -135,11 +130,10 @@ export class ServerAppContext extends AppContext implements IServerAppContext
 
     private createHttp(): void
     {
-        const netEnabled: boolean = this.modelFactory.getInstance(Types.boolean, ConfigIds.netEnabled);
         const netHost: string = this.modelFactory.getInstance(Types.string, ConfigIds.netHost);
         const httpPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.httpPort);
 
-        const httpConfig: NetServerServiceConfig = {enabled: netEnabled, host: netHost, port: httpPort};
+        const httpConfig: NetServerServiceConfig = {host: netHost, port: httpPort};
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, httpConfig);
 
@@ -167,9 +161,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
     private createDb(): void
     {
         const dbConfig: DataBaseServiceConfig = {
-            host: this.modelFactory.getInstance(Types.string, ConfigIds.dbHost),
-            port: this.modelFactory.getInstance(Types.number, ConfigIds.dbPort),
-            dataBaseName: this.modelFactory.getInstance(Types.string, ConfigIds.dbName),
+            host: this.modelFactory.getInstance(Types.string, ServerConfigIds.dbHost),
+            port: this.modelFactory.getInstance(Types.number, ServerConfigIds.dbPort),
+            dataBaseName: this.modelFactory.getInstance(Types.string, ServerConfigIds.dbName),
         };
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, dbConfig);

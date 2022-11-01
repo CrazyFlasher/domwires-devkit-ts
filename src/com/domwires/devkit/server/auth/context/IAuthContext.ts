@@ -110,50 +110,50 @@ export class AuthContext extends AppContext implements IAuthContext
         this.map(SocketServerServiceMessageType.CLIENT_CONNECTED, AddAccountToMapCommand);
         this.map(SocketServerServiceMessageType.CLIENT_DISCONNECTED, RemoveAccountFromMapCommand);
 
-        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand, {action: SocketAction.LOGIN})
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand, {action: SocketAction.LOGIN})
             .addGuards(IsSuitableActionGuards);
 
-        this.map<ResultDto & { action: SocketAction; isGuest: boolean }>(NetServerServiceMessageType.GOT_REQUEST,
+        this.map<ResultDto & SocketActionData & { isGuest: boolean }>(NetServerServiceMessageType.GOT_REQUEST,
             [UpdateAccountSnapshotCommand, ResponseCommand], {
                 action: SocketAction.GUEST_LOGIN,
                 isGuest: true,
                 success: true
             }).addGuards(IsSuitableActionGuards);
 
-        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand, {action: SocketAction.REGISTER})
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand, {action: SocketAction.REGISTER})
             .addGuards(IsSuitableActionGuards);
 
-        this.map<{ action: SocketAction }>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand, {action: SocketAction.LOGOUT})
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand, {action: SocketAction.LOGOUT})
             .addGuards(IsSuitableActionGuards);
 
-        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.INSERT_SUCCESS, ResponseCommand, {
+        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.INSERT_SUCCESS, ResponseCommand, {
             queryId: SocketAction.REGISTER.name,
             action: SocketAction.REGISTER,
             success: true
         }).addGuards(IsSuitableQueryGuards);
 
-        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.INSERT_FAIL, ResponseCommand, {
+        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.INSERT_FAIL, ResponseCommand, {
             queryId: SocketAction.REGISTER.name,
             action: SocketAction.REGISTER,
             success: false,
             reason: ErrorReason.USER_EXISTS.name
         }).addGuards(IsSuitableQueryGuards);
 
-        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_SUCCESS,
+        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_SUCCESS,
             [UpdateAccountSnapshotCommand, ResponseCommand], {
                 queryId: SocketAction.LOGIN.name,
                 action: SocketAction.LOGIN,
                 success: true
             }).addGuards(IsSuitableQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
 
-        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_SUCCESS, ResponseCommand, {
+        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_SUCCESS, ResponseCommand, {
             queryId: SocketAction.LOGIN.name,
             action: SocketAction.LOGIN,
             success: false,
             reason: ErrorReason.USER_WRONG_PASSWORD.name
         }).addGuards(IsSuitableQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
 
-        this.map<ResultDto & { action: SocketAction; queryId: string }>(DataBaseServiceMessageType.FIND_FAIL, ResponseCommand, {
+        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_FAIL, ResponseCommand, {
             queryId: SocketAction.LOGIN.name,
             action: SocketAction.LOGIN,
             success: false,
@@ -165,5 +165,13 @@ export class AuthContext extends AppContext implements IAuthContext
         return this;
     }
 }
+
+type SocketActionQueryIdResultData = ResultDto & SocketActionData & {
+    queryId: string;
+};
+
+type SocketActionData = {
+    action: SocketAction;
+};
 
 setDefaultImplementation<IAuthContext>(Types.IAuthContext, AuthContext);
