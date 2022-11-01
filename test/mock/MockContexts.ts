@@ -58,7 +58,7 @@ export class BaseMockContext extends AppContext implements IServerAppContext
         mediatorFactory: IFactory; viewFactory: IFactory;
     };
 
-    public initComplete(): IServerAppContext
+    public initializationComplete(): IServerAppContext
     {
         throw new Error(DwError.NOT_IMPLEMENTED.name);
     }

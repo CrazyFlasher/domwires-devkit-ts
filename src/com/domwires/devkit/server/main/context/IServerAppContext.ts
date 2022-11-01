@@ -21,17 +21,13 @@ import {DataBaseServiceConfig, IDataBaseService} from "../../common/service/net/
 import {Types} from "../../../common/Types";
 import {ConfigIds} from "../../ConfigIds";
 import {MongoDataBaseService} from "../../common/service/net/db/impl/MongoDataBaseService";
-import {TargetIsHttpServiceGuards} from "../command/guards/TargetIsHttpServiceGuards";
 import {OpenServiceCommand} from "../command/OpenServiceCommand";
-import {TargetIsSocketServiceGuards} from "../command/guards/TargetIsSocketServiceGuards";
 import {CreateChildContextsCommand} from "../command/CreateChildContextsCommand";
 import {IAuthContext} from "../../auth/context/IAuthContext";
-import {TargetIsDataBaseServiceGuards} from "../command/guards/TargetIsDataBaseServiceGuards";
 import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
 import {CloseServiceCommand} from "../command/CloseServiceCommand";
 import {ShutDownCompleteCommand} from "../command/ShutDownCompleteCommand";
-import {InitCompleteCommand} from "../command/InitCompleteCommand";
-import {TargetIsAuthContextGuards} from "../command/guards/TargetIsAuthContextGuards";
+import {InitializationCompleteCommand} from "../command/InitializationCompleteCommand";
 
 export interface IServerAppContextImmutable extends IAppContextImmutable
 {
@@ -44,7 +40,7 @@ export interface IServerAppContext extends IServerAppContextImmutable, IAppConte
 
     shutDownComplete(): IServerAppContext;
 
-    initComplete(): IServerAppContext;
+    initializationComplete(): IServerAppContext;
 }
 
 export class ServerAppContext extends AppContext implements IServerAppContext
@@ -77,20 +73,18 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         this.createSocket();
         this.createDb();
 
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.socket}).addGuards(TargetIsHttpServiceGuards);
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.db}).addGuards(TargetIsSocketServiceGuards);
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, CreateChildContextsCommand).addGuards(TargetIsDataBaseServiceGuards);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.socket}).addTargetGuards(this.http);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.db}).addTargetGuards(this.socket);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, CreateChildContextsCommand).addTargetGuards(this.db);
 
         this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            CloseServiceCommand, {service: this.socket}).addGuards(TargetIsDataBaseServiceGuards);
+            CloseServiceCommand, {service: this.socket}).addTargetGuards(this.db);
 
         this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            CloseServiceCommand, {service: this.http}).addGuards(TargetIsSocketServiceGuards);
+            CloseServiceCommand, {service: this.http}).addTargetGuards(this.socket);
 
         this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            ShutDownCompleteCommand).addGuards(TargetIsHttpServiceGuards);
-
-        this.map(AppContextMessageType.READY, InitCompleteCommand).addGuards(TargetIsAuthContextGuards);
+            ShutDownCompleteCommand).addTargetGuards(this.http);
 
         this.executeCommand(OpenServiceCommand, {service: this.http});
 
@@ -101,7 +95,7 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         // this.executeCommand(CreateChildContextsCommand);
     }
 
-    public initComplete(): IServerAppContext
+    public initializationComplete(): IServerAppContext
     {
         this.ready();
 
@@ -188,6 +182,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
     public createChildContexts(): IServerAppContext
     {
         this.authContext = this.getContextInstance(Types.IAuthContext);
+
+        this.map(AppContextMessageType.READY, InitializationCompleteCommand).addTargetGuards(this.authContext);
+
         this.addModel(this.authContext);
 
         return this;

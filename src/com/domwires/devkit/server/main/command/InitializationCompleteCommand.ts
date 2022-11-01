@@ -3,7 +3,7 @@ import {inject} from "inversify";
 import {Types} from "../../../common/Types";
 import {IServerAppContext} from "../context/IServerAppContext";
 
-export class InitCompleteCommand extends AbstractCommand
+export class InitializationCompleteCommand extends AbstractCommand
 {
     @inject(Types.IServerAppContext)
     private context!: IServerAppContext;
@@ -12,6 +12,6 @@ export class InitCompleteCommand extends AbstractCommand
     {
         super.execute();
 
-        this.context.initComplete();
+        this.context.initializationComplete();
     }
 }
