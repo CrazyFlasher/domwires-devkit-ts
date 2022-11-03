@@ -1,16 +1,9 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
+import "../../auth/context/IServerAuthContext";
+import "../../../common/main/model/IAccountModelContainer";
 
-import "../../auth/context/IAuthContext";
-import "../../../common/model/IAccountModelContainer";
-
-import {
-    AppContext,
-    AppContextMessageType,
-    IAppContext,
-    IAppContextImmutable
-} from "../../../common/context/IAppContext";
-import {IInputView} from "../../../common/view/IInputView";
-import {Class, IFactory, setDefaultImplementation} from "domwires";
+import {AppContextMessageType} from "../../../common/app/context/IAppContext";
+import {IInputView} from "../../../common/app/view/IInputView";
+import {Class, setDefaultImplementation} from "domwires";
 import {CliInputView} from "../view/CliInputView";
 import {IHttpServerService} from "../../common/service/net/http/IHttpServerService";
 import {ISocketServerService, SocketServerServiceConfig} from "../../common/service/net/socket/ISocketServerService";
@@ -21,50 +14,40 @@ import {DataBaseServiceConfig, IDataBaseService} from "../../common/service/net/
 import {Types} from "../../../common/Types";
 import {MongoDataBaseService} from "../../common/service/net/db/impl/MongoDataBaseService";
 import {OpenServiceCommand} from "../command/OpenServiceCommand";
-import {CreateChildContextsCommand} from "../command/CreateChildContextsCommand";
-import {IAuthContext} from "../../auth/context/IAuthContext";
-import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
+import {CreateChildContextsCommand} from "../../../common/main/command/CreateChildContextsCommand";
 import {CloseServiceCommand} from "../command/CloseServiceCommand";
-import {ShutDownCompleteCommand} from "../command/ShutDownCompleteCommand";
-import {InitializationCompleteCommand} from "../command/InitializationCompleteCommand";
+import {ShutDownCompleteCommand} from "../../../common/main/command/ShutDownCompleteCommand";
+import {InitializationCompleteCommand} from "../../../common/main/command/InitializationCompleteCommand";
 import {ConfigIds} from "../../../common/ConfigIds";
-import {ServerConfigIds} from "../../../server/ServerConfigIds";
+import {ServerConfigIds} from "../../ServerConfigIds";
+import {AbstractMainContext, IMainContext, IMainContextImmutable} from "../../../common/main/context/IMainContext";
+import {IServerAuthContext} from "../../auth/context/IServerAuthContext";
 
-export interface IServerAppContextImmutable extends IAppContextImmutable
+export interface IServerMainContextImmutable extends IMainContextImmutable
 {
 
 }
 
-export interface IServerAppContext extends IServerAppContextImmutable, IAppContext
+export interface IServerMainContext extends IServerMainContextImmutable, IMainContext
 {
-    createChildContexts(): IServerAppContext;
+    createChildContexts(): IServerMainContext;
 
-    shutDownComplete(): IServerAppContext;
+    shutDownComplete(): IServerMainContext;
 
-    initializationComplete(): IServerAppContext;
+    initializationComplete(): IServerMainContext;
 }
 
-export class ServerAppContext extends AppContext implements IServerAppContext
+export class ServerMainContext extends AbstractMainContext implements IServerMainContext
 {
-    private contextFactory!: IFactory;
-    private modelFactory!: IFactory;
-    private serviceFactory!: IFactory;
-
-    private authContext!: IAuthContext;
+    private authContext!: IServerAuthContext;
 
     private http!: IHttpServerService;
     private socket!: ISocketServerService;
     private db!: IDataBaseService;
 
-    private accounts!: IAccountModelContainer;
-
     protected override init()
     {
         super.init();
-
-        this.accounts = this.getModelInstance(Types.IAccountModelContainer);
-
-        this.factory.mapToValue(Types.IServerAppContext, this);
 
         this.mapServiceToType(Types.IHttpServerService, ExpressHttpServerService);
         this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
@@ -90,37 +73,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         this.executeCommand(OpenServiceCommand, {service: this.http});
     }
 
-    public initializationComplete(): IServerAppContext
-    {
-        this.ready();
-
-        return this;
-    }
-
-    public shutDownComplete(): IServerAppContext
-    {
-        this.disposeComplete();
-
-        return this;
-    }
-
-    public override async dispose()
+    public override dispose(): void
     {
         this.executeCommand(CloseServiceCommand, {service: this.db});
-    }
-
-    protected override createFactories(): {
-        contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
-        mediatorFactory: IFactory; viewFactory: IFactory;
-    }
-    {
-        const result = super.createFactories();
-
-        this.contextFactory = result.contextFactory;
-        this.modelFactory = result.modelFactory;
-        this.serviceFactory = result.serviceFactory;
-
-        return result;
     }
 
     protected override get defaultUIViewClass(): Class<IInputView>
@@ -173,9 +128,9 @@ export class ServerAppContext extends AppContext implements IServerAppContext
         this.addModel(this.db);
     }
 
-    public createChildContexts(): IServerAppContext
+    public override createChildContexts(): IMainContext
     {
-        this.authContext = this.getContextInstance(Types.IAuthContext);
+        this.authContext = this.getContextInstance(Types.IServerAuthContext);
 
         this.map(AppContextMessageType.READY, InitializationCompleteCommand).addTargetGuards(this.authContext);
 
@@ -185,4 +140,4 @@ export class ServerAppContext extends AppContext implements IServerAppContext
     }
 }
 
-setDefaultImplementation<IServerAppContext>(Types.IServerAppContext, ServerAppContext);
+setDefaultImplementation<IServerMainContext>(Types.IServerMainContext, ServerMainContext);

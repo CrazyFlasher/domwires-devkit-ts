@@ -5,11 +5,17 @@ export class Types
     public static readonly IAppContext = "IAppContext";
     public static readonly IAppContextImmutable = "IAppContextImmutable";
 
-    public static readonly IAuthContext = "IAuthContext";
-    public static readonly IAuthContextImmutable = "IAuthContextImmutable";
+    public static readonly IServerAuthContext = "IServerAuthContext";
+    public static readonly IServerAuthContextImmutable = "IServerAuthContextImmutable";
 
-    public static readonly IServerAppContext = "IServerAppContext";
-    public static readonly IServerAppContextImmutable = "IServerAppContextImmutable";
+    public static readonly IClientAuthContext = "IClientAuthContext";
+    public static readonly IClientAuthContextImmutable = "IAuthContextImmutable";
+
+    public static readonly IServerMainContext = "IServerAppContext";
+    public static readonly IServerMainContextImmutable = "IServerAppContextImmutable";
+
+    public static readonly IClientMainContext = "IClientAppContext";
+    public static readonly IClientMainContextImmutable = "IClientAppContextImmutable";
 
     public static readonly IAccountModel = "IAccountModel";
     public static readonly IAccountModelImmutable = "IAccountModelImmutable";

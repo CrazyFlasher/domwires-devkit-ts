@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
     INetServerService,
     NetServerServiceConfig,
@@ -11,17 +9,18 @@ import {AbstractService} from "../../../../common/service/AbstractService";
 import {DwError} from "../../../../common/DwError";
 import {Enum} from "domwires";
 import {Types} from "../../../../common/Types";
+import {serviceIdentifier} from "domwires/dist/com/domwires/core/Decorators";
 
+@serviceIdentifier(Types.INetServerService)
 export abstract class AbstractNetServerService extends AbstractService implements INetServerService
 {
-    private static serviceIdentifier = Types.INetServerService;
-
     @inject(Types.ServiceConfig)
     protected netServerServiceConfig!: NetServerServiceConfig;
 
     private _host!: string;
     private _port!: number;
 
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     protected _requestData!: RequestData<any>;
     protected _isOpened = false;
 

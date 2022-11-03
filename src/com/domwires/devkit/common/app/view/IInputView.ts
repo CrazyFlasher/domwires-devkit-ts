@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
-
 import {IMessageDispatcher, MessageDispatcher, MessageType} from "domwires";
 
 export interface IInputView extends IMessageDispatcher
 {
-
 }
 
 export class InputViewMessageType extends MessageType<string>

@@ -1,8 +1,8 @@
 import {setDefaultImplementation} from "domwires";
 import {ISnapshotModel, ISnapshotModelImmutable, SnapshotModel} from "./ISnapshotModel";
-import {Types} from "../Types";
-import {AccountDto} from "../net/dto/Dto";
-import {snapshotValue} from "../Decorators";
+import {Types} from "../../Types";
+import {AccountDto} from "../../net/Dto";
+import {snapshotValue} from "../../Decorators";
 
 export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountDto>
 {

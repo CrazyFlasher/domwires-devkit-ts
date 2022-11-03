@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import "reflect-metadata";
 
-import "../src/com/domwires/devkit/server/main/context/IServerAppContext";
+import "../src/com/domwires/devkit/server/main/context/IServerMainContext";
 
-import {Done, Suite} from "mocha";
+import {Suite} from "mocha";
 import {Factory, Logger, LogLevel} from "domwires";
-import {IServerAppContext,} from "../src/com/domwires/devkit/server/main/context/IServerAppContext";
-import {AppContextMessageType, FactoriesConfig} from "../src/com/domwires/devkit/common/context/IAppContext";
+import {IServerMainContext,} from "../src/com/domwires/devkit/server/main/context/IServerMainContext";
+import {AppContextMessageType, FactoriesConfig} from "../src/com/domwires/devkit/common/app/context/IAppContext";
 import {ConfigIds} from "../src/com/domwires/devkit/common/ConfigIds";
 import {Types} from "../src/com/domwires/devkit/common/Types";
 import {ServerConfigIds} from "../src/com/domwires/devkit/server/ServerConfigIds";
 
 describe('ServerAppContextTest', function (this: Suite)
 {
-    let mainContext: IServerAppContext;
+    let mainContext: IServerMainContext;
 
     const factoriesConfig: FactoriesConfig = {
         modelFactory: new Map([
@@ -31,7 +31,7 @@ describe('ServerAppContextTest', function (this: Suite)
 
     });
 
-    afterEach((done: Done) =>
+    afterEach((done) =>
     {
         mainContext.addMessageListener(AppContextMessageType.DISPOSED, message =>
         {
@@ -43,12 +43,12 @@ describe('ServerAppContextTest', function (this: Suite)
         mainContext.dispose();
     });
 
-    it('testInitializedWithoutErrors', (done: Done) =>
+    it('testInitializedWithoutErrors', (done) =>
     {
         const f = new Factory(new Logger(LogLevel.INFO));
         f.mapToValue(Types.IFactory, f);
         f.mapToValue(Types.FactoriesConfig, factoriesConfig);
-        mainContext = f.getInstance<IServerAppContext>(Types.IServerAppContext);
+        mainContext = f.getInstance<IServerMainContext>(Types.IServerMainContext);
         mainContext.addMessageListener(AppContextMessageType.READY, message =>
         {
             if (message && message.initialTarget == mainContext)

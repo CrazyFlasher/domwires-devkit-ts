@@ -1,6 +1,6 @@
 import {Collection} from "../../../common/Collection";
 import {SocketAction} from "../../../../common/net/SocketAction";
-import {AccountDto} from "../../../../common/net/dto/Dto";
+import {AccountDto} from "../../../../common/net/Dto";
 import {AbstractAccountCommand} from "./AbstractAccountCommand";
 
 export class RegisterCommand extends AbstractAccountCommand
@@ -14,7 +14,7 @@ export class RegisterCommand extends AbstractAccountCommand
             this.db.insert<AccountDto>({
                 id: SocketAction.REGISTER,
                 relatedToClientId: this.clientId
-            }, Collection.USERS.name, [this.dto as AccountDto]);
+            }, Collection.USERS.name, [this.dto]);
         }
     }
 }

@@ -3,8 +3,8 @@
 
 import "reflect-metadata";
 
-import "../src/com/domwires/devkit/server/auth/context/IAuthContext";
-import "../src/com/domwires/devkit/common/model/IAccountModelContainer";
+import "../src/com/domwires/devkit/server/auth/context/IServerAuthContext";
+import "../src/com/domwires/devkit/common/main/model/IAccountModelContainer";
 
 import {Suite} from "mocha";
 import {expect} from "chai";
@@ -24,7 +24,6 @@ import {
     NetServerServiceConfig,
     NetServerServiceMessageType
 } from "../src/com/domwires/devkit/server/common/service/net/INetServerService";
-import {IAuthContext} from "../src/com/domwires/devkit/server/auth/context/IAuthContext";
 import {io, Socket} from "socket.io-client";
 import {SocketAction} from "../src/com/domwires/devkit/common/net/SocketAction";
 import {Types} from "../src/com/domwires/devkit/common/Types";
@@ -34,21 +33,22 @@ import {
     IDataBaseService
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
-import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/context/IAppContext";
-import {AccountDto, LoginDto, ResultDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
-import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/mediator/IUIMediator";
+import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/app/context/IAppContext";
+import {AccountDto, LoginDto, ResultDto} from "../src/com/domwires/devkit/common/net/Dto";
+import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/app/mediator/IUIMediator";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
 import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
 import {printMappedToAliasCommandsToConsole} from "../src/com/domwires/devkit/common/Global";
-import {IAccountModelContainer} from "../src/com/domwires/devkit/common/model/IAccountModelContainer";
+import {IAccountModelContainer} from "../src/com/domwires/devkit/common/main/model/IAccountModelContainer";
+import {IServerAuthContext} from "../src/com/domwires/devkit/server/auth/context/IServerAuthContext";
 
-describe('AuthContextTest', function (this: Suite)
+describe('ServerAuthContextTest', function (this: Suite)
 {
     let http: IHttpServerService;
     let socket: ISocketServerService;
     let db: IDataBaseService;
 
-    let context: IAuthContext;
+    let context: IServerAuthContext;
 
     let client: Socket;
     let clientId: string;
@@ -113,7 +113,7 @@ describe('AuthContextTest', function (this: Suite)
                 {
                     const dropCollectionComplete = () =>
                     {
-                        context = f.getInstance(Types.IAuthContext);
+                        context = f.getInstance(Types.IServerAuthContext);
                         context.addMessageListener(AppContextMessageType.READY, () =>
                         {
                             done();

@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
-
-import {AppContext, IAppContext} from "../../src/com/domwires/devkit/common/context/IAppContext";
+import {AppContext, IAppContext} from "../../src/com/domwires/devkit/common/app/context/IAppContext";
 import {Class, IFactory, IFactoryImmutable, IHierarchyObject, setDefaultImplementation} from "domwires";
 import {IMockModel} from "./MockModels";
 import {
-    IServerAppContext,
-    IServerAppContextImmutable
-} from "../../src/com/domwires/devkit/server/main/context/IServerAppContext";
-import {IInputView} from "../../src/com/domwires/devkit/common/view/IInputView";
+    IServerMainContext,
+    IServerMainContextImmutable
+} from "../../src/com/domwires/devkit/server/main/context/IServerMainContext";
+import {IInputView} from "../../src/com/domwires/devkit/common/app/view/IInputView";
 import {CliInputView} from "../../src/com/domwires/devkit/server/main/view/CliInputView";
 import {DwError} from "../../src/com/domwires/devkit/common/DwError";
 
@@ -38,7 +36,7 @@ export interface IBaseMockContext extends IBaseMockContextImmutable, IAppContext
     getMediatorMutable(): IHierarchyObject;
 }
 
-export interface IBaseMockContextImmutable extends IServerAppContextImmutable
+export interface IBaseMockContextImmutable extends IServerMainContextImmutable
 {
     getModelFactory(): IFactoryImmutable;
 
@@ -51,24 +49,24 @@ export interface IBaseMockContextImmutable extends IServerAppContextImmutable
     getFactory(): IFactoryImmutable;
 }
 
-export class BaseMockContext extends AppContext implements IServerAppContext
+export class BaseMockContext extends AppContext implements IServerMainContext
 {
     private factories!: {
         contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory;
         mediatorFactory: IFactory; viewFactory: IFactory;
     };
 
-    public initializationComplete(): IServerAppContext
+    public initializationComplete(): IServerMainContext
     {
         throw new Error(DwError.NOT_IMPLEMENTED.name);
     }
 
-    public shutDownComplete(): IServerAppContext
+    public shutDownComplete(): IServerMainContext
     {
         throw new Error(DwError.NOT_IMPLEMENTED.name);
     }
 
-    public createChildContexts(): IServerAppContext
+    public createChildContexts(): IServerMainContext
     {
         throw new Error(DwError.NOT_IMPLEMENTED.name);
     }

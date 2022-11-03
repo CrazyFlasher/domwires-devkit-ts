@@ -1,4 +1,4 @@
-import {LoginDto} from "../../../../../common/net/dto/Dto";
+import {LoginDto} from "../../../../../common/net/Dto";
 import {AbstractAuthContextGuards} from "../AbstractAuthContextGuards";
 
 export class IsLoginPasswordMatchesGuards extends AbstractAuthContextGuards

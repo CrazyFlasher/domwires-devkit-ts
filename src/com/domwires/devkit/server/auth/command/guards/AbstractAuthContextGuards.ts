@@ -3,8 +3,8 @@ import {inject} from "inversify";
 import {ISocketServerService} from "../../../common/service/net/socket/ISocketServerService";
 import {Types} from "../../../../common/Types";
 import {IDataBaseService} from "../../../common/service/net/db/IDataBaseService";
-import {IAccountModel} from "../../../../common/model/IAccountModel";
-import {IAccountModelContainer} from "../../../../common/model/IAccountModelContainer";
+import {IAccountModel} from "../../../../common/main/model/IAccountModel";
+import {IAccountModelContainer} from "../../../../common/main/model/IAccountModelContainer";
 
 export abstract class AbstractAuthContextGuards extends AbstractGuards
 {

@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {AbstractService} from "../../../../common/service/AbstractService";
 import {ClientServiceRequestType, INetClientService, NetClientServiceConfig, ResponseData} from "./INetClientService";
 import {inject} from "inversify";
 import {DwError} from "../../../../common/DwError";
 import {Types} from "../../../../common/Types";
+import {serviceIdentifier} from "domwires/dist/com/domwires/core/Decorators";
 
+@serviceIdentifier(Types.INetClientService)
 export abstract class AbstractNetClientService extends AbstractService implements INetClientService
 {
     @inject(Types.ServiceConfig)
     protected netClientServiceConfig!: NetClientServiceConfig;
 
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     protected _responseData!: ResponseData<any>;
     protected _isConnected!: boolean;
 
@@ -35,7 +37,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
         return this._responseData;
     }
 
-    public send<TData>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService
+    public send<TData extends Record<string, string>>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService
     {
         if (!this.checkEnabled())
         {
@@ -62,7 +64,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
         throw new Error(DwError.OVERRIDE.name);
     }
 
-    protected sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
+    protected sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
     {
         throw new Error(DwError.OVERRIDE.name);
     }

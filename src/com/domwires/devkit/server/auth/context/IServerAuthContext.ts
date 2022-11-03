@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
+import "../../../common/main/model/IAccountModel";
 
-import "../../../common/model/IAccountModel";
-
-import {AppContext, IAppContext, IAppContextImmutable} from "../../../common/context/IAppContext";
+import {AppContext, IAppContext, IAppContextImmutable} from "../../../common/app/context/IAppContext";
 import {inject} from "inversify";
 import {
     ISocketServerService,
@@ -21,28 +19,28 @@ import {RegisterCommand} from "../command/account/RegisterCommand";
 import {LoginCommand} from "../command/account/LoginCommand";
 import {IsLoginPasswordMatchesGuards} from "../command/guards/query/IsLoginPasswordMatchesGuards";
 import {registerCommandAlias} from "../../../common/Global";
-import {IInputView} from "../../../common/view/IInputView";
+import {IInputView} from "../../../common/app/view/IInputView";
 import {CliInputView} from "../../main/view/CliInputView";
 import {ErrorReason} from "../../../common/ErrorReason";
-import {ResultDto} from "../../../common/net/dto/Dto";
+import {ResultDto} from "../../../common/net/Dto";
 import {UpdateAccountSnapshotCommand} from "../command/account/UpdateAccountSnapshotCommand";
 import {IsSuitableActionGuards} from "../command/guards/socket/IsSuitableActionGuards";
 import {IsSuitableQueryGuards} from "../command/guards/query/IsSuitableQueryGuards";
 import {LogoutCommand} from "../command/account/LogoutCommand";
 import {ResponseCommand} from "../command/response/ResponseCommand";
-import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
+import {IAccountModelContainer} from "../../../common/main/model/IAccountModelContainer";
 
-export interface IAuthContextImmutable extends IAppContextImmutable
+export interface IServerAuthContextImmutable extends IAppContextImmutable
 {
 
 }
 
-export interface IAuthContext extends IAuthContextImmutable, IAppContext
+export interface IServerAuthContext extends IServerAuthContextImmutable, IAppContext
 {
     mapCommands(): IAppContext;
 }
 
-export class AuthContext extends AppContext implements IAuthContext
+export class ServerAuthContext extends AppContext implements IServerAuthContext
 {
     @inject(Types.ISocketServerService)
     private socket!: ISocketServerService;
@@ -59,7 +57,7 @@ export class AuthContext extends AppContext implements IAuthContext
 
         super.init();
 
-        this.factory.mapToValue(Types.IAuthContext, this);
+        this.factory.mapToValue(Types.IServerAuthContext, this);
 
         this.factory.mapToValue(Types.ISocketServerService, this.socket);
         this.factory.mapToValue(Types.IDataBaseService, this.db);
@@ -174,4 +172,4 @@ type SocketActionData = {
     action: SocketAction;
 };
 
-setDefaultImplementation<IAuthContext>(Types.IAuthContext, AuthContext);
+setDefaultImplementation<IServerAuthContext>(Types.IServerAuthContext, ServerAuthContext);

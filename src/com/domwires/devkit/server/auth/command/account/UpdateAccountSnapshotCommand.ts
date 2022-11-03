@@ -1,4 +1,4 @@
-import {AccountDto} from "../../../../common/net/dto/Dto";
+import {AccountDto} from "../../../../common/net/Dto";
 import {lazyInjectNamed} from "domwires";
 import {Types} from "../../../../common/Types";
 import {AbstractAccountCommand} from "./AbstractAccountCommand";

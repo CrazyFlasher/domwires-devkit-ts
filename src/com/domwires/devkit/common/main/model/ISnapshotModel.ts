@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {AbstractHierarchyObject, IHierarchyObject, IHierarchyObjectImmutable} from "domwires";
+import {SNAPSHOT_VALUE} from "../../Decorators";
 
 export interface ISnapshotModelImmutable<TSnapshot> extends IHierarchyObjectImmutable
 {
@@ -13,20 +11,21 @@ export interface ISnapshotModel<TSnapshot> extends ISnapshotModelImmutable<TSnap
     setSnapshot(value: TSnapshot): ISnapshotModel<TSnapshot>;
 }
 
-export class SnapshotModel<TSnapshot> extends AbstractHierarchyObject implements ISnapshotModel<TSnapshot>
+export class SnapshotModel<TSnapshot extends Record<string, unknown>> extends AbstractHierarchyObject implements ISnapshotModel<TSnapshot>
 {
     public get snapshot(): TSnapshot
     {
-        const result = {};
+        const result: Record<string, unknown> = {};
 
         for (const propName of Object.keys(this))
         {
             if (this.isSnapshotValue(propName))
             {
-                Reflect.set(result, this.removeDash(propName), Reflect.get(this as any, propName));
+                Reflect.set(result, this.removeDash(propName), Reflect.get(this, propName));
             }
         }
 
+        /* eslint-disable-next-line no-type-assertion/no-type-assertion */
         return result as TSnapshot;
     }
 
@@ -36,7 +35,7 @@ export class SnapshotModel<TSnapshot> extends AbstractHierarchyObject implements
         {
             if (this.isSnapshotValue("_" + propName))
             {
-                Reflect.set(this as any, "_" + propName, Reflect.get(value as any, propName));
+                Reflect.set(this, "_" + propName, Reflect.get(value, propName));
             }
         }
 
@@ -55,6 +54,6 @@ export class SnapshotModel<TSnapshot> extends AbstractHierarchyObject implements
 
     private isSnapshotValue(propName: string): boolean
     {
-        return Reflect.getMetadata("snapshotValue", this, propName) === "snapshotValue";
+        return Reflect.getMetadata(SNAPSHOT_VALUE, this, propName) !== undefined;
     }
 }

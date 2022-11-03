@@ -104,7 +104,7 @@ export class ExpressHttpServerService extends AbstractNetServerService implement
 
     public getRequestQueryParam(id: string): string | undefined
     {
-        return this.requestQuery ? this.requestQuery[id] as string : undefined;
+        return this.requestQuery ? Reflect.get(this.requestQuery, id) : undefined;
     }
 
     public get nodeHttpServer(): Server

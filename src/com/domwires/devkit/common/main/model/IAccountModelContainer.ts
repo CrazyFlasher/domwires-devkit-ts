@@ -6,7 +6,7 @@ import {
     setDefaultImplementation
 } from "domwires";
 import {IAccountModel, IAccountModelImmutable} from "./IAccountModel";
-import {Types} from "../Types";
+import {Types} from "../../Types";
 
 export class AccountModelContainerMessageType extends MessageType
 {

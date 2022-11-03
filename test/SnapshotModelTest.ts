@@ -5,10 +5,10 @@ import {Suite} from "mocha";
 import {expect} from "chai";
 import {Factory, IFactory, Logger, LogLevel} from "domwires";
 import {Types} from "../src/com/domwires/devkit/common/Types";
-import {IAccountModel} from "../src/com/domwires/devkit/common/model/IAccountModel";
-import {AccountDto} from "../src/com/domwires/devkit/common/net/dto/Dto";
+import {IAccountModel} from "../src/com/domwires/devkit/common/main/model/IAccountModel";
+import {AccountDto} from "../src/com/domwires/devkit/common/net/Dto";
 
-import "../src/com/domwires/devkit/common/model/IAccountModel";
+import "../src/com/domwires/devkit/common/main/model/IAccountModel";
 
 describe('SnapshotModelTest', function (this: Suite)
 {

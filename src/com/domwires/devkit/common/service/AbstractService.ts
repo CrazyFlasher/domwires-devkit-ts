@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import "reflect-metadata";
 import {AbstractHierarchyObject, IFactoryImmutable} from "domwires";
 import {IService, ServiceConfig, ServiceMessageType} from "./IService";
@@ -24,6 +22,7 @@ export abstract class AbstractService extends AbstractHierarchyObject implements
         this._enabled = this.config.enabled === undefined || this.config.enabled;
     }
 
+    /* eslint-disable-next-line @typescript-eslint/no-empty-function */
     public isIService(): void {}
 
     public init(): IService

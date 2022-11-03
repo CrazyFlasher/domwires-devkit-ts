@@ -1,12 +1,12 @@
 import {AbstractCommand} from "domwires";
 import {inject} from "inversify";
 import {Types} from "../../../common/Types";
-import {IAuthContext} from "../context/IAuthContext";
+import {IServerAuthContext} from "../context/IServerAuthContext";
 
 export class MapContextCommandsCommand extends AbstractCommand
 {
-    @inject(Types.IAuthContext)
-    private context!: IAuthContext;
+    @inject(Types.IServerAuthContext)
+    private context!: IServerAuthContext;
 
     public override execute(): void
     {

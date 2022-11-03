@@ -1,12 +1,12 @@
 import {AbstractCommand} from "domwires";
 import {inject} from "inversify";
-import {Types} from "../../../common/Types";
-import {IServerAppContext} from "../context/IServerAppContext";
+import {Types} from "../../Types";
+import {IMainContext} from "../context/IMainContext";
 
 export class CreateChildContextsCommand extends AbstractCommand
 {
-    @inject(Types.IServerAppContext)
-    private context!: IServerAppContext;
+    @inject(Types.IAppContext)
+    private context!: IMainContext;
 
     public override execute(): void
     {

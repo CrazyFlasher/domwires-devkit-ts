@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
     AbstractContext,
     Class,
@@ -28,14 +25,14 @@ import {IUIMediator, UIMediator, UIMediatorMessageType} from "../mediator/IUIMed
 import {IInputView} from "../view/IInputView";
 import {ExecuteCliCommand} from "../command/ExecuteCliCommand";
 import {IsCliCommandGuards} from "../command/guards/IsCliCommandGuards";
-import {DwError} from "../DwError";
-import {IService, IServiceImmutable} from "../service/IService";
-import {Types} from "../Types";
-import {FactoryNames} from "../FactoryNames";
+import {DwError} from "../../DwError";
+import {IService, IServiceImmutable} from "../../service/IService";
+import {Types} from "../../Types";
+import {FactoryNames} from "../../FactoryNames";
+import {serviceIdentifier} from "domwires/dist/com/domwires/core/Decorators";
 
 export interface IAppContextImmutable extends IContextImmutable
 {
-
 }
 
 export interface IAppContext extends IAppContextImmutable, IContext
@@ -109,10 +106,9 @@ export class AppContextMessageType extends MessageType
     public static readonly DISPOSED: AppContextMessageType = new AppContextMessageType();
 }
 
+@serviceIdentifier(Types.IAppContext)
 export class AppContext extends AbstractContext implements IAppContext
 {
-    private static serviceIdentifier = Types.IAppContext;
-
     @inject(Types.FactoriesConfig) @optional()
     private factoriesConfig!: FactoriesConfig;
 

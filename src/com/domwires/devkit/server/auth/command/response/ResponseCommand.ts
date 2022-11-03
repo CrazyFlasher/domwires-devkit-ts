@@ -1,6 +1,6 @@
 import {lazyInjectNamed} from "domwires";
 import {Types} from "../../../../common/Types";
-import {ResultDto} from "../../../../common/net/dto/Dto";
+import {ResultDto} from "../../../../common/net/Dto";
 import {SocketAction} from "../../../../common/net/SocketAction";
 import {AbstractAccountCommand} from "../account/AbstractAccountCommand";
 

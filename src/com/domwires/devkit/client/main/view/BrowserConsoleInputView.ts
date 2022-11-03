@@ -1,5 +1,5 @@
 import {postConstruct} from "inversify";
-import {AbstractInputView} from "../../../common/view/IInputView";
+import {AbstractInputView} from "../../../common/app/view/IInputView";
 
 export class BrowserConsoleInputView extends AbstractInputView
 {

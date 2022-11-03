@@ -1,8 +1,6 @@
 import {AbstractNetClientService} from "../AbstractNetClientService";
 import {ClientServiceRequestType, INetClientService, NetClientServiceMessageType} from "../INetClientService";
 import axios, {AxiosInstance} from "axios";
-import * as querystring from "querystring";
-import {ParsedUrlQueryInput} from "querystring";
 import {io, Socket} from "socket.io-client";
 
 export class AxiosSioNetClientService extends AbstractNetClientService implements INetClientService
@@ -60,7 +58,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         return this;
     }
 
-    private async _sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData)
+    private async _sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData)
     {
         let url: string = action;
         let queryString: string;
@@ -71,9 +69,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         {
             if (data)
             {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                queryString = querystring.stringify(data as ParsedUrlQueryInput);
+                queryString = new URLSearchParams(data).toString();
 
                 if (queryString) url += "?" + queryString;
             }
@@ -89,13 +85,13 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
             this.dispatchMessage(NetClientServiceMessageType.HTTP_RESPONSE, this._responseData);
         } catch (e)
         {
-            this.info("Http request error:", action, requestType, data, e);
+            this.warn("Http request error:", action, requestType, data, e);
 
             this.dispatchMessage(NetClientServiceMessageType.HTTP_ERROR);
         }
     }
 
-    protected override sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
+    protected override sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
     {
         this._sendHttpRequest(action, requestType, data);
     }

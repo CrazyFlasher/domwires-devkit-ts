@@ -3,7 +3,7 @@ import {inject} from "inversify";
 import {ISocketServerService} from "../../common/service/net/socket/ISocketServerService";
 import {IDataBaseService} from "../../common/service/net/db/IDataBaseService";
 import {Types} from "../../../common/Types";
-import {IAccountModelContainer} from "../../../common/model/IAccountModelContainer";
+import {IAccountModelContainer} from "../../../common/main/model/IAccountModelContainer";
 
 export abstract class AbstractAuthContextCommand extends AbstractCommand
 {

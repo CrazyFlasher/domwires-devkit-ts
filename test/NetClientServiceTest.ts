@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import {Done, Suite} from "mocha";
-import {Enum, Factory, IFactory, Logger} from "domwires";
+import {Enum, Factory, IFactory, Logger, LogLevel} from "domwires";
 import {expect} from "chai";
 import {
     ClientServiceRequestType,
@@ -48,7 +48,7 @@ class TestAction extends Enum
 // {
 describe('NetClientServiceTest', function (this: Suite)
 {
-    const logger = new Logger();
+    const logger = new Logger(LogLevel.VERBOSE);
 
     let factory: IFactory;
     let client: INetClientService;

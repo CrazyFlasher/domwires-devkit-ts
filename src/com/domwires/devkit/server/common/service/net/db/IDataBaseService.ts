@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {Enum, MessageType} from "domwires";
 import {INetServerService, INetServerServiceImmutable, NetServerServiceConfig} from "../INetServerService";
 
@@ -12,6 +10,7 @@ export type DataBaseServiceConfig = NetServerServiceConfig & {
     readonly dataBaseName: string;
 };
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export class DataBaseServiceMessageType<T = void> extends MessageType
 {
     public static readonly INSERT_SUCCESS: DataBaseServiceMessageType = new DataBaseServiceMessageType();

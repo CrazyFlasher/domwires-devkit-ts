@@ -1,17 +1,17 @@
 import {AbstractAuthContextCommand} from "../AbstractAuthContextCommand";
 import {lazyInjectNamed} from "domwires";
 import {Types} from "../../../../common/Types";
-import {LoginDto} from "../../../../common/net/dto/Dto";
+import {AccountDto} from "../../../../common/net/Dto";
 
 export abstract class AbstractAccountCommand extends AbstractAuthContextCommand
 {
     @lazyInjectNamed(Types.any, "dto")
-    private _dto!: LoginDto;
+    private _dto!: AccountDto;
 
     @lazyInjectNamed(Types.string, "clientId")
     private _clientId!: string;
 
-    protected dto!: LoginDto | undefined;
+    protected dto!: AccountDto | undefined;
 
     protected clientId!: string;
 
@@ -24,11 +24,11 @@ export abstract class AbstractAccountCommand extends AbstractAuthContextCommand
             this.dto = this._dto;
         } catch (e)
         {
-            const reqData = this.socket.getRequestData<LoginDto>();
+            const reqData = this.socket.getRequestData<AccountDto>();
 
             if (reqData)
             {
-                this.dto = this.socket.getRequestData<LoginDto>().data;
+                this.dto = this.socket.getRequestData<AccountDto>().data;
             }
         }
 

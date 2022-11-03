@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
     DataBaseServiceConfig,
     DataBaseServiceMessageType,
@@ -22,6 +20,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
     private client!: MongoClient;
     private db!: Db;
 
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     private _findResult!: any | undefined;
     private _deleteResult!: number;
     private _query!: Query | undefined;
@@ -157,6 +156,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
 
         try
         {
+            /* eslint-disable-next-line no-type-assertion/no-type-assertion */
             await this.db.collection<T>(collectionName).insertMany(itemList as []);
 
             this.dispatch(DataBaseServiceMessageType.INSERT_SUCCESS, query);
@@ -321,7 +321,7 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
         }
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     private static replaceKey(obj: any, key: string, to: string): void
     {
         if (obj[key] === undefined) return;
