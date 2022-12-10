@@ -13,19 +13,13 @@ export type SocketServerServiceConfig = NetServerServiceConfig & {
 
 export class SocketServerServiceMessageType extends MessageType
 {
-    public static readonly CLIENT_CONNECTED: SocketServerServiceMessageType = new SocketServerServiceMessageType();
-    public static readonly CLIENT_DISCONNECTED: SocketServerServiceMessageType = new SocketServerServiceMessageType();
+    public static readonly CLIENT_CONNECTED: MessageType<{ clientId: string }> = new SocketServerServiceMessageType();
+    public static readonly CLIENT_DISCONNECTED: MessageType<{ clientId: string }> = new SocketServerServiceMessageType();
 }
 
 export interface ISocketServerServiceImmutable extends INetServerServiceImmutable
 {
     get connectionsCount(): number;
-
-    get connectedClientId(): string;
-
-    get disconnectedClientId(): string;
-
-    get requestFromClientId(): string;
 }
 
 export interface ISocketServerService extends ISocketServerServiceImmutable, INetServerService

@@ -50,11 +50,17 @@ export class Types
     public static readonly IDataBaseService = "IDataBaseService";
     public static readonly IDataBaseServiceImmutable = "IDataBaseServiceImmutable";
 
+    public static readonly IAuthDataBaseService = "IAuthDataBaseService";
+    public static readonly IAuthDataBaseServiceImmutable = "IAuthDataBaseServiceImmutable";
+
     public static readonly INetClientService = "INetClientService";
     public static readonly INetClientServiceImmutable = "INetClientServiceImmutable";
 
     public static readonly INetServerService = "INetServerService";
     public static readonly INetServerServiceImmutable = "INetServerServiceImmutable";
+
+    public static readonly IEmailService = "IEmailService";
+    public static readonly IEmailServiceImmutable = "IEmailServiceImmutable";
 
     public static readonly Class = "Class";
 
@@ -62,7 +68,11 @@ export class Types
     public static readonly number = "number";
     public static readonly boolean = "boolean";
     public static readonly any = "any";
+    public static readonly function = "Function";
     public static readonly object = "object";
+    public static readonly empty = "";
 
     public static readonly SocketAction = "SocketAction";
+    public static readonly HttpAction = "HttpAction";
+    public static readonly ErrorReason = "ErrorReason";
 }

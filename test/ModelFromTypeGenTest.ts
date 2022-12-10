@@ -23,7 +23,7 @@ describe('ModelFromTypeDefTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory(new Logger(LogLevel.INFO));
+        factory = new Factory(new Logger(LogLevel.VERBOSE));
     });
 
     afterEach(() =>

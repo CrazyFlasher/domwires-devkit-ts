@@ -8,6 +8,13 @@ import {
 import {IInputView} from "../../src/com/domwires/devkit/common/app/view/IInputView";
 import {CliInputView} from "../../src/com/domwires/devkit/server/main/view/CliInputView";
 import {DwError} from "../../src/com/domwires/devkit/common/DwError";
+import {IServerAuthContext} from "../../src/com/domwires/devkit/server/auth/context/IServerAuthContext";
+import {IHttpServerService} from "../../src/com/domwires/devkit/server/common/service/net/http/IHttpServerService";
+import {
+    ISocketServerService
+} from "../../src/com/domwires/devkit/server/common/service/net/socket/ISocketServerService";
+import {IAuthDataBaseService} from "../../src/com/domwires/devkit/server/common/service/net/db/IAuthDataBaseService";
+import {IEmailService} from "../../src/com/domwires/devkit/server/common/service/net/email/IEmailService";
 
 export interface IMainMockContext extends IMainMockContextImmutable, IBaseMockContext
 {
@@ -67,6 +74,31 @@ export class BaseMockContext extends AppContext implements IServerMainContext
     }
 
     public createChildContexts(): IServerMainContext
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public get authContext(): IServerAuthContext
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public get db(): IAuthDataBaseService
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public get email(): IEmailService
+    {
+       throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public get http(): IHttpServerService
+    {
+        throw new Error(DwError.NOT_IMPLEMENTED.name);
+    }
+
+    public get socket(): ISocketServerService
     {
         throw new Error(DwError.NOT_IMPLEMENTED.name);
     }

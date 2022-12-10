@@ -8,7 +8,7 @@ export abstract class AbstractScript
     private readonly m = require('minimist');
     protected readonly args = this.m(process.argv.slice(2));
     protected readonly workingDirectory = process.cwd();
-    protected readonly logger = new Logger(LogLevel.INFO);
+    protected readonly logger = new Logger(LogLevel.VERBOSE);
 
     protected getFilePathList(path: string, subDirs = true): { name: string; path: string } []
     {

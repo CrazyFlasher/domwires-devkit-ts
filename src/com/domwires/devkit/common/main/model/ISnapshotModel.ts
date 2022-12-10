@@ -1,5 +1,10 @@
-import {AbstractHierarchyObject, IHierarchyObject, IHierarchyObjectImmutable} from "domwires";
+import {AbstractHierarchyObject, IHierarchyObject, IHierarchyObjectImmutable, MessageType} from "domwires";
 import {SNAPSHOT_VALUE} from "../../Decorators";
+
+export class SnapshotModelMessageType extends MessageType
+{
+    public static readonly SNAPSHOT_VALUES_UPDATED: SnapshotModelMessageType = new SnapshotModelMessageType();
+}
 
 export interface ISnapshotModelImmutable<TSnapshot> extends IHierarchyObjectImmutable
 {
@@ -8,11 +13,17 @@ export interface ISnapshotModelImmutable<TSnapshot> extends IHierarchyObjectImmu
 
 export interface ISnapshotModel<TSnapshot> extends ISnapshotModelImmutable<TSnapshot>, IHierarchyObject
 {
-    setSnapshot(value: TSnapshot): ISnapshotModel<TSnapshot>;
+    setSnapshot(value: TSnapshot, preset?: boolean): ISnapshotModel<TSnapshot>;
+
+    confirmPresetSnapshot(): ISnapshotModel<TSnapshot>;
+
+    clearSnapshotValues(): ISnapshotModel<TSnapshot>;
 }
 
 export class SnapshotModel<TSnapshot extends Record<string, unknown>> extends AbstractHierarchyObject implements ISnapshotModel<TSnapshot>
 {
+    private presetSnapshot!: TSnapshot | undefined;
+
     public get snapshot(): TSnapshot
     {
         const result: Record<string, unknown> = {};
@@ -29,15 +40,31 @@ export class SnapshotModel<TSnapshot extends Record<string, unknown>> extends Ab
         return result as TSnapshot;
     }
 
-    public setSnapshot(value: TSnapshot): ISnapshotModel<TSnapshot>
+    public setSnapshot(value: TSnapshot, preset?: boolean): ISnapshotModel<TSnapshot>
     {
-        for (const propName of Object.keys(value))
+        this.presetSnapshot = value;
+
+        if (!preset)
         {
-            if (this.isSnapshotValue("_" + propName))
+            this.confirmPresetSnapshot();
+        }
+
+        return this;
+    }
+
+    public clearSnapshotValues(): ISnapshotModel<TSnapshot>
+    {
+        for (const propName of Object.keys(this))
+        {
+            if (this.isSnapshotValue(propName))
             {
-                Reflect.set(this, "_" + propName, Reflect.get(value, propName));
+                Reflect.set(this, propName, undefined);
             }
         }
+
+        this.presetSnapshot = undefined;
+
+        this.dispatchMessage(SnapshotModelMessageType.SNAPSHOT_VALUES_UPDATED);
 
         return this;
     }
@@ -55,5 +82,25 @@ export class SnapshotModel<TSnapshot extends Record<string, unknown>> extends Ab
     private isSnapshotValue(propName: string): boolean
     {
         return Reflect.getMetadata(SNAPSHOT_VALUE, this, propName) !== undefined;
+    }
+
+    public confirmPresetSnapshot(): ISnapshotModel<TSnapshot>
+    {
+        if (this.presetSnapshot)
+        {
+            for (const propName of Object.keys(this.presetSnapshot))
+            {
+                if (this.isSnapshotValue("_" + propName))
+                {
+                    Reflect.set(this, "_" + propName, Reflect.get(this.presetSnapshot, propName));
+                }
+            }
+
+            this.presetSnapshot = undefined;
+
+            this.dispatchMessage(SnapshotModelMessageType.SNAPSHOT_VALUES_UPDATED);
+        }
+
+        return this;
     }
 }

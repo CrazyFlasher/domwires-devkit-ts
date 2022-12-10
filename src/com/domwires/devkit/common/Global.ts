@@ -8,7 +8,7 @@ const commandAliasToClassMap: Map<string, Class<ICommand> | Class<ICommand>[]> =
 const commandAliasToDescriptionMap: Map<string, string> = new Map<string, string>();
 const commandAliasToParamsMap: Map<string, any> = new Map<string, any>();
 
-const logger = new Logger(LogLevel.INFO);
+const logger = new Logger(LogLevel.VERBOSE);
 
 export function registerCommandAlias(commandClass: Class<ICommand> | Class<ICommand>[], alias: string, description?: string,
                                      params?: { name: string; type?: string; requiredValue?: string | boolean | number | object; optional?: boolean }[]): void
@@ -58,7 +58,8 @@ function paramsToString(params: { name: string; type?: string; requiredValue?: s
     for (const param of params)
     {
         result += param.name + (param.optional ? "?" : "")  + (param.type ? ":" + param.type : "") + (param.requiredValue ? "=" +
-            JSON.stringify(param.requiredValue).replace(/"/g, "") : "") + ";";
+            JSON.stringify(param.requiredValue).replace(/"/g, "") : "").replace(/:,/g, ",")
+            .replace(/:}/g, "}") + ";";
 
         count++;
 

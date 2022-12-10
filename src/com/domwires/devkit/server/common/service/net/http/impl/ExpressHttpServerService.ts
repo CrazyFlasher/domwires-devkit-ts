@@ -4,20 +4,18 @@ import {INetServerService, NetServerServiceMessageType} from "../../INetServerSe
 import express, {Response} from "express";
 import {Express, Router} from "express/ts4.0";
 import {Server} from "http";
-import {ParsedQs} from "qs";
 import bodyParser from "body-parser";
 import cors from "cors";
 import {Enum} from "domwires";
+import {IValidator} from "../../../../../../common/IValidator";
 
-// TODO: make final
 export class ExpressHttpServerService extends AbstractNetServerService implements IHttpServerService
 {
     private app!: Express;
     private server!: Server;
     private router!: Router;
 
-    private pendingResponse!: Response | undefined;
-    private requestQuery!: ParsedQs;
+    private pendingResponseList: Response[] = [];
 
     protected override createServer()
     {
@@ -37,19 +35,29 @@ export class ExpressHttpServerService extends AbstractNetServerService implement
         });
     }
 
-    protected override startListenSingle(action: Enum): void
+    protected override startListenSingle(action: { action: Enum; validator?: IValidator }): void
     {
         super.startListenSingle(action);
 
         if (this._isOpened)
         {
-            this.router.all("/" + action.name, (req, res) =>
+            this.router.all("/" + action.action.name, (req, res) =>
             {
-                this.requestQuery = req.query;
-                this._requestData = {action: req.path, data: req.body, method: HttpMethod.get(req.method)};
-                this.pendingResponse = res;
+                if (this.requestDataIsValid(action.action.name, req.query))
+                {
+                    this.pendingResponseList.push(res);
 
-                this.dispatchMessage(NetServerServiceMessageType.GOT_REQUEST);
+                    this.dispatchMessage(NetServerServiceMessageType.GOT_REQUEST, {
+                            action: action.action.name,
+                            data: req.body,
+                            method: HttpMethod.get(req.method),
+                            requestQueryParams: (id: string) => req.query ? Reflect.get(req.query, id) : undefined
+                        }
+                    );
+                } else
+                {
+                    this.warn("Non-protocol request from client:", req.path, req.query, req.body);
+                }
             });
         }
     }
@@ -80,10 +88,10 @@ export class ExpressHttpServerService extends AbstractNetServerService implement
     {
         if (this._isOpened)
         {
-            if (this.pendingResponse)
+            if (this.pendingResponseList.length)
             {
-                this.pendingResponse.end("Server closed!");
-                this.pendingResponse = undefined;
+                this.pendingResponseList.map(value => value.end("Server closed!"));
+                this.pendingResponseList.length = 0;
             }
 
             this.server.close((err?: Error) =>
@@ -102,11 +110,6 @@ export class ExpressHttpServerService extends AbstractNetServerService implement
         return this;
     }
 
-    public getRequestQueryParam(id: string): string | undefined
-    {
-        return this.requestQuery ? Reflect.get(this.requestQuery, id) : undefined;
-    }
-
     public get nodeHttpServer(): Server
     {
         return this.server;
@@ -115,22 +118,24 @@ export class ExpressHttpServerService extends AbstractNetServerService implement
     public sendResponse<TData>(data: TData, statusCode = 200,
                                customHeaders?: Map<string, number | string | ReadonlyArray<string>>): IHttpServerService
     {
-        if (!this.pendingResponse)
+        if (!this.pendingResponseList)
         {
             throw new Error("There are no pending response!");
         }
 
-        const pr = this.pendingResponse;
-        this.pendingResponse = undefined;
+        const pr = this.pendingResponseList.shift();
 
-        pr.statusCode = statusCode;
-
-        if (customHeaders)
+        if (pr)
         {
-            customHeaders.forEach((value, key) => pr.setHeader(key, value));
-        }
+            pr.statusCode = statusCode;
 
-        pr.end(data);
+            if (customHeaders)
+            {
+                customHeaders.forEach((value, key) => pr.setHeader(key, value));
+            }
+
+            pr.end(typeof data === "object" ? JSON.stringify(data) : data);
+        }
 
         return this;
     }

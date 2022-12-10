@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import "reflect-metadata";
 
@@ -19,7 +20,7 @@ import {
 import {
     SioSocketServerService
 } from "../src/com/domwires/devkit/server/common/service/net/socket/impl/SioSocketServerService";
-import {ContextConfig, Enum, Factory, Logger, LogLevel} from "domwires";
+import {ContextConfig, Enum, Factory, ILogger, Logger, LogLevel} from "domwires";
 import {
     NetServerServiceConfig,
     NetServerServiceMessageType
@@ -28,12 +29,14 @@ import {io, Socket} from "socket.io-client";
 import {SocketAction} from "../src/com/domwires/devkit/common/net/SocketAction";
 import {Types} from "../src/com/domwires/devkit/common/Types";
 import {
+    DataBaseErrorReason,
     DataBaseServiceConfig,
-    DataBaseServiceMessageType,
-    IDataBaseService
+    DataBaseServiceMessageType
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
-import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
-import {AppContextConfigBuilder, AppContextMessageType} from "../src/com/domwires/devkit/common/app/context/IAppContext";
+import {
+    AppContextConfigBuilder,
+    AppContextMessageType
+} from "../src/com/domwires/devkit/common/app/context/IAppContext";
 import {AccountDto, LoginDto, ResultDto} from "../src/com/domwires/devkit/common/net/Dto";
 import {UIMediatorMessageType} from "../src/com/domwires/devkit/common/app/mediator/IUIMediator";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
@@ -41,12 +44,32 @@ import {ErrorReason} from "../src/com/domwires/devkit/common/ErrorReason";
 import {printMappedToAliasCommandsToConsole} from "../src/com/domwires/devkit/common/Global";
 import {IAccountModelContainer} from "../src/com/domwires/devkit/common/main/model/IAccountModelContainer";
 import {IServerAuthContext} from "../src/com/domwires/devkit/server/auth/context/IServerAuthContext";
+import {
+    EmailServiceConfig,
+    IEmailService
+} from "../src/com/domwires/devkit/server/common/service/net/email/IEmailService";
+import {
+    NodemailerEmailService
+} from "../src/com/domwires/devkit/server/common/service/net/email/impl/NodemailerEmailService";
+import * as dotenv from "dotenv";
+import {ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
+import Http from "http";
+import {Utils} from "../src/com/domwires/devkit/common/utils/Utils";
+import {IAuthDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/IAuthDataBaseService";
+import {
+    AuthMongoDataBaseService
+} from "../src/com/domwires/devkit/server/common/service/net/db/impl/AuthMongoDataBaseService";
 
 describe('ServerAuthContextTest', function (this: Suite)
 {
+    dotenv.config();
+
+    const logger: ILogger = new Logger(LogLevel.VERBOSE);
+
     let http: IHttpServerService;
     let socket: ISocketServerService;
-    let db: IDataBaseService;
+    let db: IAuthDataBaseService;
+    let email: IEmailService;
 
     let context: IServerAuthContext;
 
@@ -57,7 +80,7 @@ describe('ServerAuthContextTest', function (this: Suite)
 
     beforeEach((done) =>
     {
-        const f = new Factory(new Logger(LogLevel.INFO));
+        const f = new Factory(new Logger(LogLevel.VERBOSE));
         f.mapToValue(Types.IFactory, f);
 
         accounts = f.getInstance(Types.IAccountModelContainer);
@@ -71,7 +94,8 @@ describe('ServerAuthContextTest', function (this: Suite)
 
         f.mapToType<IHttpServerService>(Types.IHttpServerService, ExpressHttpServerService);
         f.mapToType<ISocketServerService>(Types.ISocketServerService, SioSocketServerService);
-        f.mapToType<IDataBaseService>(Types.IDataBaseService, MongoDataBaseService);
+        f.mapToType<IAuthDataBaseService>(Types.IAuthDataBaseService, AuthMongoDataBaseService);
+        f.mapToType<IEmailService>(Types.IEmailService, NodemailerEmailService);
 
         const httpConfig: NetServerServiceConfig = {enabled: true, host: "127.0.0.1", port: 3001};
 
@@ -101,33 +125,62 @@ describe('ServerAuthContextTest', function (this: Suite)
                 const dbConfig: DataBaseServiceConfig = {
                     host: "127.0.0.1",
                     port: 27017,
-                    dataBaseName: "auth_context_test_db"
+                    dataBaseName: "server_auth_context_test_db"
                 };
 
                 f.mapToValue(Types.ServiceConfig, dbConfig);
 
-                db = f.getInstance(Types.IDataBaseService);
-                f.mapToValue(Types.IDataBaseService, db);
+                db = f.getInstance(Types.IAuthDataBaseService);
+                f.mapToValue(Types.IAuthDataBaseService, db);
 
                 db.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
                 {
-                    const dropCollectionComplete = () =>
+                    const dropAccounts = () =>
                     {
-                        context = f.getInstance(Types.IServerAuthContext);
-                        context.addMessageListener(AppContextMessageType.READY, () =>
+                        const dropTokens = () =>
                         {
-                            done();
-                        });
+                            const emailConfig: EmailServiceConfig = {
+                                host: process.env.EMAIL_HOST!,
+                                port: parseInt(process.env.EMAIL_PORT!),
+                                authUser: process.env.EMAIL_USER!,
+                                authPassword: process.env.EMAIL_PASSWORD ? process.env.EMAIl_PASSWORD! : ""
+                            };
 
-                        context.addModel(http);
-                        context.addModel(socket);
-                        context.addModel(db);
+                            f.mapToValue(Types.ServiceConfig, emailConfig);
+
+                            email = f.getInstance(Types.IEmailService);
+                            f.mapToValue(Types.IEmailService, email);
+
+                            const emailReady = () =>
+                            {
+                                context = f.getInstance(Types.IServerAuthContext);
+                                context.addMessageListener(AppContextMessageType.READY, () =>
+                                {
+                                    done();
+                                });
+
+                                context.addModel(http);
+                                context.addModel(socket);
+                                context.addModel(db);
+                                context.addModel(email);
+                            };
+
+                            email.addMessageListener(ServiceMessageType.INIT_SUCCESS, emailReady, true);
+                            email.addMessageListener(ServiceMessageType.INIT_FAIL, emailReady, true);
+
+                            email.init();
+                        };
+
+                        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropTokens, true);
+                        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropTokens, true);
+
+                        db.dropCollection(Collection.TOKENS.name);
                     };
 
-                    db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropCollectionComplete, true);
-                    db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropCollectionComplete, true);
+                    db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropAccounts, true);
+                    db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropAccounts, true);
 
-                    db.dropCollection(Collection.USERS.name);
+                    db.dropCollection(Collection.ACCOUNTS.name);
                 });
 
                 db.init();
@@ -179,14 +232,203 @@ describe('ServerAuthContextTest', function (this: Suite)
         {
             login(json =>
             {
-                expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.success).true;
-                expect(json.data.reason).undefined;
-                expect(accounts.getImmutable(client.id)?.nick).equals("Anton");
-                expect(accounts.getImmutable(client.id)?.isLoggedIn).true;
-                expect(accounts.getImmutable(client.id)?.isGuest).false;
+                try
+                {
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.result.success).true;
+                    expect(json.data.result.reason).undefined;
+                    expect(json.data.data?.nick).equals("Anton");
+                    expect(json.data.data?.email).equals("anton@javelin.ee");
+
+                    expect(accounts.getImmutable(client.id)?.nick).equals("Anton");
+                    expect(accounts.getImmutable(client.id)?.isLoggedIn).true;
+                    expect(accounts.getImmutable(client.id)?.isGuest).false;
+                    expect(accounts.getImmutable(client.id)?.id).not.undefined;
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
 
                 done();
+            });
+        });
+    });
+
+    it('testUpdatePasswordSuccess', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+            const oldPass = "123qweASD";
+
+            c.on("data", json =>
+            {
+                if (attempt === 0)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.LOGIN.name);
+                        expect(json.data.result.success).true;
+                        expect(json.data.result.reason).undefined;
+
+                        c.emit("data", {
+                            action: SocketAction.UPDATE_PASSWORD.name,
+                            data: {oldPassword: "123qweASD", newPassword: "123qweASDzxc"}
+                        });
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.UPDATE_PASSWORD.name);
+                        expect(json.data.result.success).true;
+                        expect(json.data.result.reason).undefined;
+
+                        expect(accounts.get(c.id)!.password).not.equals(Utils.hashPassword(oldPass));
+
+                        c.disconnect();
+                        done();
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+            });
+        });
+    });
+
+    it('testUpdatePasswordFailNoMatch', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+
+            c.on("data", json =>
+            {
+                if (attempt === 0)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.LOGIN.name);
+                        expect(json.data.result.success).true;
+                        expect(json.data.result.reason).undefined;
+
+                        c.emit("data", {
+                            action: SocketAction.UPDATE_PASSWORD.name,
+                            data: {oldPassword: "123qweASD123", newPassword: "123qweASDzxc"}
+                        });
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.UPDATE_PASSWORD.name);
+                        expect(json.data.result.success).false;
+                        expect(json.data.result.reason).equals(ErrorReason.OLD_PASSWORD_NO_MATCH.name);
+
+                        c.disconnect();
+                        done();
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+            });
+        });
+    });
+
+    it('testUpdateAccountDataSuccess', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+
+            c.on("data", json =>
+            {
+                if (attempt === 0)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.LOGIN.name);
+                        expect(json.data.result.success).true;
+                        expect(json.data.result.reason).undefined;
+
+                        c.emit("data", {
+                            action: SocketAction.UPDATE_ACCOUNT_DATA.name,
+                            data: {nick: "Ololosha"}
+                        });
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        expect(json.action).equals(SocketAction.UPDATE_ACCOUNT_DATA.name);
+                        expect(json.data.result.success).true;
+
+                        expect(accounts.get(c.id)!.nick).equals("Ololosha");
+
+                        c.disconnect();
+                        done();
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
             });
         });
     });
@@ -197,12 +439,19 @@ describe('ServerAuthContextTest', function (this: Suite)
         {
             login(json =>
             {
-                expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.success).false;
-                expect(json.data.reason).equals(ErrorReason.USER_NOT_FOUND.name);
+                try
+                {
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.result.success).false;
+                    expect(json.data.result.reason).equals(ErrorReason.NOT_FOUND.name);
 
-                done();
-            }, {email: "no@user.com", password: "123123"});
+                    done();
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
+            }, {email: "no@user.com", password: "123123ASDASDasd"});
         });
     });
 
@@ -210,22 +459,43 @@ describe('ServerAuthContextTest', function (this: Suite)
     {
         insert().then(() =>
         {
-            login(json =>
-            {
-                expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.success).false;
-                expect(json.data.reason).equals(ErrorReason.USER_NOT_FOUND.name);
+            let attempt = 0;
 
-                login(json =>
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "nonono@user.com", password: "123asdCXZ"}
+                });
+            });
+
+            c.on("data", json =>
+            {
+                if (attempt === 0)
+                {
+                    attempt++;
+
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.result.success).false;
+                    expect(json.data.result.reason).equals(ErrorReason.NOT_FOUND.name);
+
+                    c.emit("data", {
+                        action: SocketAction.LOGIN.name,
+                        data: {email: "anton@javelin.ee", password: "123qweASD"}
+                    });
+                }
+                else
                 {
                     expect(json.action).equals(SocketAction.LOGIN.name);
-                    expect(json.data.success).true;
-                    expect(json.data.reason).undefined;
+                    expect(json.data.result.success).true;
+                    expect(json.data.result.reason).undefined;
 
+                    c.disconnect();
                     done();
-                });
-
-            }, {email: "no@user.com", password: "123123"});
+                }
+            });
         });
     });
 
@@ -235,12 +505,19 @@ describe('ServerAuthContextTest', function (this: Suite)
         {
             login(json =>
             {
-                expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.success).false;
-                expect(json.data.reason).equals(ErrorReason.USER_WRONG_PASSWORD.name);
+                try
+                {
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.result.success).false;
+                    expect(json.data.result.reason).equals(ErrorReason.WRONG_PASSWORD.name);
 
-                done();
-            }, {email: "anton@javelin.ee", password: "ololo"});
+                    done();
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
+            }, {email: "anton@javelin.ee", password: "ololo123"});
         });
     });
 
@@ -250,9 +527,16 @@ describe('ServerAuthContextTest', function (this: Suite)
         {
             login(json =>
             {
-                expect(json.action).equals(SocketAction.LOGIN.name);
-                expect(json.data.success).true;
-                expect(json.data.reason).undefined;
+                try
+                {
+                    expect(json.action).equals(SocketAction.LOGIN.name);
+                    expect(json.data.result.success).true;
+                    expect(json.data.result.reason).undefined;
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
 
                 done();
             }, undefined, true);
@@ -263,11 +547,18 @@ describe('ServerAuthContextTest', function (this: Suite)
     {
         register(json =>
         {
-            expect(json.action).equals(SocketAction.REGISTER.name);
-            expect(json.data.success).true;
-            expect(json.data.reason).undefined;
+            try
+            {
+                expect(json.action).equals(SocketAction.REGISTER.name);
+                expect(json.data.result.success).true;
+                expect(json.data.result.reason).undefined;
 
-            done();
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
         });
     });
 
@@ -277,12 +568,55 @@ describe('ServerAuthContextTest', function (this: Suite)
         {
             register(json =>
             {
-                expect(json.action).equals(SocketAction.REGISTER.name);
-                expect(json.data.success).false;
-                expect(json.data.reason).equals(ErrorReason.USER_EXISTS.name);
+                try
+                {
+                    expect(json.action).equals(SocketAction.REGISTER.name);
+                    expect(json.data.result.success).false;
+                    expect(json.data.result.reason).equals(DataBaseErrorReason.DUPLICATE.name);
 
-                done();
+                    done();
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
             });
+        });
+    });
+
+    it('testRegisterFailFieldMissing', (done) =>
+    {
+        register(json =>
+        {
+        }, false, {password: "123qweASD"}, () =>
+        {
+            try
+            {
+                expect(client.disconnected).true;
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
+        });
+    });
+
+    it('testRegisterFailEmailInvalid', (done) =>
+    {
+        register(json =>
+        {
+        }, false, {email: "puk", password: "123qweASD", nick: "olo"}, () =>
+        {
+            try
+            {
+                expect(client.disconnected).true;
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
         });
     });
 
@@ -290,11 +624,18 @@ describe('ServerAuthContextTest', function (this: Suite)
     {
         register(json =>
         {
-            expect(json.action).equals(SocketAction.REGISTER.name);
-            expect(json.data.success).true;
-            expect(json.data.reason).undefined;
+            try
+            {
+                expect(json.action).equals(SocketAction.REGISTER.name);
+                expect(json.data.result.success).true;
+                expect(json.data.result.reason).undefined;
 
-            done();
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
         }, true);
     });
 
@@ -316,7 +657,14 @@ describe('ServerAuthContextTest', function (this: Suite)
 
         client.on("disconnect", () =>
         {
-            expect(accounts.getImmutable(clientId)).undefined;
+            try
+            {
+                expect(accounts.getImmutable(clientId)).undefined;
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
 
             done();
         });
@@ -326,10 +674,17 @@ describe('ServerAuthContextTest', function (this: Suite)
     {
         guestLogin(() =>
         {
-            expect(accounts.getImmutable(clientId)?.isGuest).true;
-            expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
+            try
+            {
+                expect(accounts.getImmutable(clientId)?.isGuest).true;
+                expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
 
-            done();
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
         });
     });
 
@@ -337,36 +692,312 @@ describe('ServerAuthContextTest', function (this: Suite)
     {
         guestLogin(() =>
         {
-            expect(accounts.getImmutable(clientId)?.isGuest).true;
-            expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
+            try
+            {
+                expect(accounts.getImmutable(clientId)?.isGuest).true;
+                expect(accounts.getImmutable(clientId)?.isLoggedIn).true;
 
-            done();
+                done();
+            } catch (e)
+            {
+                logger.error(e);
+                throw e;
+            }
         }, true);
     });
 
-    function register(onComplete: (data: { action: string; data: ResultDto }) => void, byCmd = false): void
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testResetPasswordResetSuccess', (done) =>
     {
-        createClient(() =>
+        register(() =>
         {
-            const regDto: AccountDto = {email: "anton@javelin.ee", password: "123qwe", nick: "Anton"};
-            !byCmd ? send(SocketAction.REGISTER, regDto) : cmd("register", regDto);
-        }, json =>
-        {
-            onComplete(json);
+            resetPassword((json) =>
+            {
+                try
+                {
+                    expect(json.data.result.success).true;
+
+                    setTimeout(() =>
+                    {
+                        clientRequest("http://127.0.0.1:3001/password-reset?token=" + json.data.data.tokenId, (data, code) =>
+                        {
+                            const response: { action: string; data: { result: ResultDto } } = JSON.parse(data);
+
+                            expect(code).equals(200);
+                            expect(response.data.result.success).true;
+
+                            done();
+                        });
+                    }, 1000);
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
+            });
         });
+    });
+
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testResetPasswordResetFailTokenExpired', (done) =>
+    {
+        register(() =>
+        {
+            resetPassword((json) =>
+            {
+                try
+                {
+                    expect(json.data.result.success).true;
+
+                    setTimeout(() =>
+                    {
+                        clientRequest("http://127.0.0.1:3001/password-reset?token=" + json.data.data.tokenId, (data, code) =>
+                        {
+                            const response: { action: string; data: { result: ResultDto } } = JSON.parse(data);
+
+                            expect(code).equals(200);
+                            expect(response.data.result.success).false;
+                            expect(response.data.result.reason).equals(ErrorReason.TOKEN_EXPIRED.name);
+
+                            done();
+                        });
+                    }, 1500);
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
+            });
+        });
+    });
+
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testResetPasswordResetFailWrongTokenId', (done) =>
+    {
+        register(() =>
+        {
+            resetPassword((json) =>
+            {
+                try
+                {
+                    expect(json.data.result.success).true;
+
+                    setTimeout(() =>
+                    {
+                        clientRequest("http://127.0.0.1:3001/password-reset?token=6348acd2e1a47ca32e79f46f", (data, code) =>
+                        {
+                            const response: { action: string; data: { result: ResultDto } } = JSON.parse(data);
+
+                            expect(code).equals(200);
+                            expect(response.data.result.success).false;
+                            expect(response.data.result.reason).equals(ErrorReason.FAILED_TO_FIND_TOKEN.name);
+
+                            done();
+                        });
+                    }, 1500);
+                } catch (e)
+                {
+                    logger.error(e);
+                    throw e;
+                }
+            });
+        });
+    });
+
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testUpdateEmailSuccess', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+
+            c.on("data", json =>
+            {
+                if (attempt == 0)
+                {
+                    attempt++;
+
+                    c.emit("data", {
+                        action: SocketAction.UPDATE_EMAIL.name,
+                        data: {email: "anton.nefjodov@gmail.com"}
+                    });
+                }
+                else if (attempt == 1)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.data.result.success).true;
+
+                        setTimeout(() =>
+                        {
+                            clientRequest("http://127.0.0.1:3001/update-email?token=" + json.data.data.tokenId, (data, code) =>
+                            {
+                                const response: { action: string; data: { result: ResultDto } } = JSON.parse(data);
+
+                                expect(code).equals(200);
+                                expect(response.data.result.success).true;
+
+                                c.disconnect();
+                                done();
+                            });
+                        }, 1000);
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+            });
+        });
+    });
+
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testUpdateEmailFailExists', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+
+            c.on("data", json =>
+            {
+                if (attempt == 0)
+                {
+                    attempt++;
+
+                    c.emit("data", {
+                        action: SocketAction.UPDATE_EMAIL.name,
+                        data: {email: "anton@javelin.ee"}
+                    });
+                }
+                else if (attempt == 1)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.data.result.success).false;
+                        expect(json.data.result.reason).equals(ErrorReason.EMAIL_EXISTS.name);
+
+                        c.disconnect();
+                        done();
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+            });
+        });
+    });
+
+    (process.env.EMAIL_PASSWORD ? it : it.skip)('testDeleteAccountSuccess', (done) =>
+    {
+        insert().then(() =>
+        {
+            const c = io("ws://127.0.0.1:3002");
+
+            c.on("connect", () =>
+            {
+                c.emit("data", {
+                    action: SocketAction.LOGIN.name,
+                    data: {email: "anton@javelin.ee", password: "123qweASD"}
+                });
+            });
+
+            let attempt = 0;
+
+            c.on("data", json =>
+            {
+                if (attempt == 0)
+                {
+                    attempt++;
+
+                    c.emit("data", {
+                        action: SocketAction.DELETE_ACCOUNT.name
+                    });
+                }
+                else if (attempt == 1)
+                {
+                    attempt++;
+
+                    try
+                    {
+                        expect(json.data.result.success).true;
+
+                        setTimeout(() =>
+                        {
+                            clientRequest("http://127.0.0.1:3001/delete-account?token=" + json.data.data.tokenId, (data, code) =>
+                            {
+                                const response: { action: string; data: { result: ResultDto } } = JSON.parse(data);
+
+                                expect(code).equals(200);
+                                expect(response.data.result.success).true;
+
+                                c.disconnect();
+                                done();
+                            });
+                        }, 1000);
+                    } catch (e)
+                    {
+                        logger.error(e);
+                        throw e;
+                    }
+                }
+            });
+        });
+    });
+
+    function register(onComplete: (data: { action: string; data: { result: ResultDto; data?: AccountDto } }) => void, byCmd = false, dto?: any, onDisconnect?: () => void): void
+    {
+        const created = () =>
+        {
+            const regDto: AccountDto = !dto ? {email: "anton@javelin.ee", password: "123qweASD", nick: "Anton"} : dto;
+            !byCmd ? send(SocketAction.REGISTER, regDto) : cmd("register", regDto, true);
+        };
+
+        if (!client || !client.connected)
+        {
+            createClient(created, json =>
+            {
+                onComplete(json);
+            }, onDisconnect);
+        }
     }
 
-    function login(onComplete: (data: { action: string; data: ResultDto }) => void, dto?: LoginDto, byCmd = false): void
+    function login(onComplete: (data: { action: string; data: { result: ResultDto; data?: AccountDto } }) => void,
+                   dto?: LoginDto, byCmd = false, onDisconnect?: () => void): void
     {
-        createClient(() =>
+        const created = () =>
         {
-            const loginDto: LoginDto = {email: "anton@javelin.ee", password: "123qwe"};
+            const loginDto: LoginDto = {email: "anton@javelin.ee", password: "123qweASD"};
             const d = dto ? dto : loginDto;
-            !byCmd ? send(SocketAction.LOGIN, d) : cmd("login", d);
-        }, json =>
+            !byCmd ? send(SocketAction.LOGIN, d) : cmd("login", d, true);
+        };
+
+        if (!client || !client.connected)
         {
-            onComplete(json);
-        });
+            createClient(created, json =>
+            {
+                onComplete(json);
+            }, onDisconnect);
+        }
     }
 
     function guestLogin(onComplete: (data: { action: string; data: ResultDto }) => void, byCmd = false): void
@@ -392,6 +1023,18 @@ describe('ServerAuthContextTest', function (this: Suite)
         });
     }
 
+    function resetPassword(onComplete: (data: { action: string; data: { result: ResultDto; data: { tokenId: string } } }) => void, byCmd = false): void
+    {
+        createClient(() =>
+        {
+            const dto: LoginDto = {email: "anton@javelin.ee"};
+            !byCmd ? send(SocketAction.RESET_PASSWORD, dto) : cmd("reset_password", dto);
+        }, json =>
+        {
+            onComplete(json);
+        });
+    }
+
     function cmd(name: string, data?: any, wrapInDto = true): void
     {
         printMappedToAliasCommandsToConsole();
@@ -399,18 +1042,20 @@ describe('ServerAuthContextTest', function (this: Suite)
         let dto;
         if (wrapInDto)
         {
-            dto = data ? {dto: data, clientId: client.id} : {clientId: client.id};
+            dto = data ? {data: data, requestFromClientId: client.id} : {
+                requestFromClientId: client.id
+            };
         }
         else
         {
             if (data)
             {
-                data.clientId = client.id;
+                data.requestFromClientId = client.id;
                 dto = data;
             }
             else
             {
-                dto = {clientId: client.id};
+                dto = {requestFromClientId: client.id};
             }
         }
         context.tryToExecuteCommand(UIMediatorMessageType.INPUT,
@@ -423,14 +1068,19 @@ describe('ServerAuthContextTest', function (this: Suite)
         client.emit("data", {action: action.name, data: data});
     }
 
-    function createClient(onConnect: () => void, onData?: (data: any) => void): void
+    function createClient(onConnect: () => void, onData?: (data: any) => void, onDisconnect?: () => void): void
     {
-        if (client) client.disconnect();
+        if (client && client.connected)
+        {
+            client.disconnect();
+        }
 
-        client = io("ws://127.0.0.1:3001");
+        client = io("ws://127.0.0.1:3002");
 
         client.on("connect", () =>
         {
+            client.off("connect");
+
             clientId = client.id;
             onConnect();
         });
@@ -442,13 +1092,52 @@ describe('ServerAuthContextTest', function (this: Suite)
                 onData(data);
             });
         }
+
+        if (onDisconnect)
+        {
+            client.on("disconnect", () =>
+            {
+                client.off("disconnect");
+
+                onDisconnect();
+            });
+        }
     }
 
     async function insert()
     {
-        await db.insert({}, Collection.USERS.name, [
-            {email: "anton@javelin.ee", password: "123qwe", nick: "Anton", gender: "male"}
+        await db.insert(Collection.ACCOUNTS.name, [
+            {
+                email: "anton@javelin.ee",
+                password: Utils.hashPassword("123qweASD"),
+                nick: "Anton", gender: "male"
+            }
         ]);
+    }
+
+    function clientRequest(url: string, callback?: (data: string, code?: number) => void, method?: string): void
+    {
+        const m = !method ? "GET" : method;
+
+        logger.info("\nRequest:", url, "method:", m);
+
+        Http.get(url, {method: m}, res =>
+        {
+            let data = "";
+            res.on("data", (chunk: string) =>
+            {
+                data += chunk;
+            });
+            res.on("end", () =>
+            {
+                logger.info("\nResponse:", data, "\nCode:", res.statusCode);
+
+                if (callback)
+                {
+                    callback(data, res.statusCode);
+                }
+            });
+        }).end();
     }
 
 });

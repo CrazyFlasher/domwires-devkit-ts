@@ -1,4 +1,5 @@
 import {
+    DataBaseErrorReason,
     DataBaseServiceConfig,
     DataBaseServiceMessageType,
     IDataBaseService,
@@ -6,12 +7,23 @@ import {
     UpdateOperator
 } from "../IDataBaseService";
 import {inject} from "inversify";
-import {Db, Filter, FindCursor, FindOptions, MongoClient} from "mongodb";
+import {
+    Db,
+    DeleteResult,
+    Document,
+    Filter,
+    FindCursor,
+    FindOptions,
+    MongoClient,
+    MongoServerError,
+    OptionalUnlessRequiredId,
+    UpdateResult
+} from "mongodb";
 import {Types} from "../../../../../../common/Types";
 import {AbstractNetServerService} from "../../AbstractNetServerService";
 import {INetServerService} from "../../INetServerService";
+import {ObjectId} from "bson";
 
-// TODO: make final
 export class MongoDataBaseService extends AbstractNetServerService implements IDataBaseService
 {
     @inject(Types.ServiceConfig)
@@ -19,11 +31,6 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
 
     private client!: MongoClient;
     private db!: Db;
-
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    private _findResult!: any | undefined;
-    private _deleteResult!: number;
-    private _query!: Query | undefined;
 
     private readonly filterOperatorMap: Map<string, string> = new Map<string, string>([
         ["$equals", "$eq"],
@@ -95,20 +102,31 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
         return this;
     }
 
-    public async createCollection(list: { name: string; uniqueIndexList?: string[] }[])
+    public async createCollection(list: { name: string; uniqueIndexList?: string[]; mandatoryFields?: string[] }[])
+        : Promise<{ result?: boolean; errorReason?: DataBaseErrorReason }>
     {
-        if (!this.checkIsOpened()) return;
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         for await (const data of list)
         {
             try
             {
-                const resultCollection = await this.db.collection(data.name);
+                const resultCollection = await this.db.createCollection(data.name, data.mandatoryFields ? {
+                    validator: {
+                        $jsonSchema: {
+                            required: data.mandatoryFields,
+                            properties: {
+                                email: {
+                                    pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"
+                                }
+                            }
+                        }
+                    }
+                } : undefined);
 
                 if (data.uniqueIndexList && data.uniqueIndexList.length > 0)
                 {
                     await resultCollection.createIndex(data.uniqueIndexList, {unique: true});
-
                     this.createTableSuccess();
                 }
                 else
@@ -120,10 +138,14 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
                 this.warn("Cannot create collection:", data.name, data.uniqueIndexList, e);
 
                 this.dispatchMessage(DataBaseServiceMessageType.CREATE_COLLECTION_FAIL);
+
+                return {errorReason: DataBaseErrorReason.CREATE_COLLECTION_FAILED};
             }
         }
 
         this.dispatchMessage(DataBaseServiceMessageType.CREATE_COLLECTION_LIST_COMPLETE);
+
+        return {result: true};
     }
 
     private createTableSuccess(): void
@@ -131,54 +153,90 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
         this.dispatchMessage(DataBaseServiceMessageType.CREATE_COLLECTION_SUCCESS);
     }
 
-    public async dropCollection(name: string)
+    public async dropCollection(name: string): Promise<{ result?: boolean; errorReason?: DataBaseErrorReason }>
     {
-        if (!this.checkIsOpened()) return;
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         try
         {
             await this.db.dropCollection(name);
 
-            this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS);
+            this.dropCollectionResult(true);
+
+            return {result: true};
         } catch (e)
         {
-            this.error("Cannot drop collection:", name, e);
+            this.warn("Cannot drop collection:", name, e);
 
-            this.dispatchMessage(DataBaseServiceMessageType.DROP_COLLECTION_FAIL);
+            this.dropCollectionResult(false);
         }
+
+        return {errorReason: DataBaseErrorReason.DROP_COLLECTION_FAILED};
     }
 
-    public async insert<T>(query: Query, collectionName: string, itemList: ReadonlyArray<T>)
+    protected dropCollectionResult(success: boolean): void
     {
-        if (!this.checkIsOpened()) return;
+        this.dispatchMessage(success ? DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS :
+            DataBaseServiceMessageType.DROP_COLLECTION_FAIL);
+    }
 
-        this._query = undefined;
+    public async insert<TEntity, TData = void>(collectionName: string, itemList: TEntity[], query?: Query<TData>):
+        Promise<{ query?: Query<TData>; result?: ObjectId[] | ObjectId; errorReason?: DataBaseErrorReason }>
+    {
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         try
         {
-            /* eslint-disable-next-line no-type-assertion/no-type-assertion */
-            await this.db.collection<T>(collectionName).insertMany(itemList as []);
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            let insertResult: any | undefined;
 
-            this.dispatch(DataBaseServiceMessageType.INSERT_SUCCESS, query);
+            if (itemList.length > 1)
+            {
+                /* eslint-disable-next-line no-type-assertion/no-type-assertion */
+                const insertManyResult = await this.db.collection<TEntity>(collectionName).insertMany(itemList as []);
+
+                insertResult = insertManyResult.insertedIds;
+            }
+            else if (itemList.length == 1)
+            {
+                /* eslint-disable-next-line no-type-assertion/no-type-assertion */
+                const insertOneResult = await this.db.collection<TEntity>(collectionName).insertOne(itemList[0] as OptionalUnlessRequiredId<TEntity>);
+
+                insertResult = insertOneResult.insertedId;
+            }
+
+            this.dispatch(DataBaseServiceMessageType.INSERT_SUCCESS, query, insertResult);
+
+            return {query, result: insertResult};
         } catch (e)
         {
             this.warn("Cannot insert:", collectionName, JSON.stringify(itemList), e);
 
-            this.dispatch(DataBaseServiceMessageType.INSERT_FAIL, query);
+            /* eslint-disable-next-line no-type-assertion/no-type-assertion */
+            const mongoError: MongoServerError = e as MongoServerError;
+
+            let errorReason: DataBaseErrorReason | undefined;
+
+            if (mongoError.code === 121)
+            {
+                errorReason = DataBaseErrorReason.VALIDATION_FAILED;
+            }
+            else if (mongoError.code === 11000)
+            {
+                errorReason = DataBaseErrorReason.DUPLICATE;
+            }
+
+            this.dispatch(DataBaseServiceMessageType.INSERT_FAIL, query, undefined, errorReason);
+
+            return {query, errorReason};
         }
     }
 
-    public getFindResult<T>(): T
+    public async find<TFilter, TEntity extends TFilter = TFilter, TData = void, P = void>
+    (collectionName: string, filter: TFilter, projection?: P, query?: Query<TData>, limit?: number, sort?: { field: string; ascending?: boolean }):
+        Promise<{ query?: Query<TData>; result?: TEntity[]; errorReason?: DataBaseErrorReason }>
     {
-        return this._findResult;
-    }
-
-    public async find<T>(query: Query, collectionName: string, filter: T, limit?: number, sort?: { field: string; ascending?: boolean })
-    {
-        if (!this.checkIsOpened()) return;
-
-        this._query = undefined;
-        this._findResult = undefined;
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         try
         {
@@ -196,9 +254,20 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
                 }
             }
 
-            const collection = this.db.collection<T>(collectionName);
-            const cursor: FindCursor = await collection
-                .find<T>(this.toMongoOperators(filter, this.filterOperatorMap), opts);
+            const collection = this.db.collection<TFilter>(collectionName);
+
+            let cursor: FindCursor;
+
+            if (!projection)
+            {
+                cursor = await collection
+                    .find<TEntity>(this.toMongoOperators(filter, this.filterOperatorMap), opts);
+            }
+            else
+            {
+                cursor = await collection
+                    .find<TEntity>(this.toMongoOperators(filter, this.filterOperatorMap), opts).project(projection);
+            }
 
             const result = await cursor.toArray();
 
@@ -206,27 +275,30 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
             {
                 this.warn("Nothing found:", collectionName, filter);
 
-                this.dispatch(DataBaseServiceMessageType.FIND_FAIL, query);
+                this.dispatch(DataBaseServiceMessageType.FIND_FAIL, query, undefined, DataBaseErrorReason.NOT_FOUND);
+
+                return {query, errorReason: DataBaseErrorReason.NOT_FOUND};
             }
             else
             {
-                this._findResult = result;
+                this.dispatch(DataBaseServiceMessageType.FIND_SUCCESS, query, result);
 
-                this.dispatch(DataBaseServiceMessageType.FIND_SUCCESS, query);
+                return {query, result};
             }
         } catch (e)
         {
             this.warn("Cannot find:", collectionName, filter, e);
 
             this.dispatch(DataBaseServiceMessageType.FIND_FAIL, query);
+
+            return {query, errorReason: DataBaseErrorReason.NOT_FOUND};
         }
     }
 
-    private dispatch(messageType: DataBaseServiceMessageType, query: Query): void
+    protected dispatch<TResult, TData>(messageType: DataBaseServiceMessageType, query?: Query<TData>, result?: TResult,
+                                       errorReason?: DataBaseErrorReason): void
     {
-        this._query = query;
-
-        this.dispatchMessage(messageType, query);
+        this.dispatchMessage(messageType, {query, result, errorReason});
     }
 
     private toMongoOperators<T>(filter: T, operatorMap: Map<string, string>): Filter<T>
@@ -271,53 +343,71 @@ export class MongoDataBaseService extends AbstractNetServerService implements ID
         return out;
     }
 
-    public async update<T>(collectionName: string, filter: T, updateFilter: UpdateOperator<T>)
+    public async update<TFilter, TEntity extends TFilter = TFilter, TUFilter = TEntity, TData = void>
+    (collectionName: string, filter: TFilter, updateFilter: UpdateOperator<TUFilter>, query?: Query<TData>, many = false):
+        Promise<{ query?: Query<TData>; result?: boolean; errorReason?: DataBaseErrorReason }>
     {
-        if (!this.checkIsOpened()) return;
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         try
         {
-            await this.db.collection<T>(collectionName)
-                .updateMany(this.toMongoOperators(filter, this.filterOperatorMap),
-                    this.toMongoUpdateOperators(updateFilter, this.updateOperatorMap));
+            let result: UpdateResult | Document;
 
-            this.dispatchMessage(DataBaseServiceMessageType.UPDATE_SUCCESS);
+            if (many)
+            {
+                result = await this.db.collection<TFilter>(collectionName)
+                    .updateMany(this.toMongoOperators(filter, this.filterOperatorMap),
+                        this.toMongoUpdateOperators(updateFilter, this.updateOperatorMap));
+            }
+            else
+            {
+                result = await this.db.collection<TFilter>(collectionName)
+                    .updateOne(this.toMongoOperators(filter, this.filterOperatorMap),
+                        this.toMongoUpdateOperators(updateFilter, this.updateOperatorMap));
+            }
+
+            this.dispatch(DataBaseServiceMessageType.UPDATE_SUCCESS, query, result.upsertedId);
+
+            return {query, result: result.acknowledged};
         } catch (e)
         {
             this.warn("Cannot update:", collectionName, filter, updateFilter, e);
 
-            this.dispatchMessage(DataBaseServiceMessageType.UPDATE_FAIL);
+            this.dispatch(DataBaseServiceMessageType.UPDATE_FAIL, query, undefined, DataBaseErrorReason.UPDATE_FAILED);
+
+            return {query, errorReason: DataBaseErrorReason.UPDATE_FAILED};
         }
     }
 
-    public get deleteResult(): number
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    public async delete<TFilter, TEntity extends TFilter = TFilter, TData = void>(collectionName: string, filter: TFilter, query?: Query<TData>, many = false):
+        Promise<{ query?: Query<TData>; result?: number; errorReason?: DataBaseErrorReason }>
     {
-        return this._deleteResult;
-    }
-
-    public get query(): Query | undefined
-    {
-        return this._query;
-    }
-
-    public async delete<T>(collectionName: string, filter: T)
-    {
-        if (!this.checkIsOpened()) return;
-
-        this._deleteResult = 0;
+        if (!this.checkIsOpened()) return {errorReason: DataBaseErrorReason.DATABASE_SERVICE_CLOSED};
 
         try
         {
-            const result = await this.db.collection<T>(collectionName).deleteMany(this.toMongoOperators(filter, this.filterOperatorMap));
+            let result: DeleteResult;
 
-            this._deleteResult = result.deletedCount;
+            if (many)
+            {
+                result = await this.db.collection<TFilter>(collectionName).deleteMany(this.toMongoOperators(filter, this.filterOperatorMap));
+            }
+            else
+            {
+                result = await this.db.collection<TFilter>(collectionName).deleteOne(this.toMongoOperators(filter, this.filterOperatorMap));
+            }
 
-            this.dispatchMessage(DataBaseServiceMessageType.DELETE_SUCCESS);
+            this.dispatch(DataBaseServiceMessageType.DELETE_SUCCESS, query, result.deletedCount);
+
+            return {query, result: result.deletedCount};
         } catch (e)
         {
             this.warn("Cannot delete:", collectionName, filter, e);
 
-            this.dispatchMessage(DataBaseServiceMessageType.DELETE_FAIL);
+            this.dispatch(DataBaseServiceMessageType.DELETE_FAIL, query, undefined, DataBaseErrorReason.DELETE_FAILED);
+
+            return {query, errorReason: DataBaseErrorReason.DELETE_FAILED};
         }
     }
 

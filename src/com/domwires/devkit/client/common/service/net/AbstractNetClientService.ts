@@ -37,7 +37,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
         return this._responseData;
     }
 
-    public send<TData extends Record<string, string>>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService
+    public send<TData>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService
     {
         if (!this.checkEnabled())
         {
@@ -64,7 +64,7 @@ export abstract class AbstractNetClientService extends AbstractService implement
         throw new Error(DwError.OVERRIDE.name);
     }
 
-    protected sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
+    protected sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
     {
         throw new Error(DwError.OVERRIDE.name);
     }

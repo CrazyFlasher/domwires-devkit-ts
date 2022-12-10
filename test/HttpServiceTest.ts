@@ -105,7 +105,7 @@ describe('HttpServiceTest', function (this: Suite)
         {
             expect(http.isListening(TestAction.TEST)).false;
 
-            http.startListen([TestAction.TEST]);
+            http.startListen([{action: TestAction.TEST}]);
 
             expect(http.isListening(TestAction.TEST)).true;
 
@@ -128,7 +128,7 @@ describe('HttpServiceTest', function (this: Suite)
     {
         http.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            http.startListen([TestAction.TEST]);
+            http.startListen([{action: TestAction.TEST}]);
 
             clientRequest("http://127.0.0.1:3123/test", (data: string, code?: number) =>
             {
@@ -151,7 +151,7 @@ describe('HttpServiceTest', function (this: Suite)
     {
         http.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            http.startListen([TestAction.TEST]);
+            http.startListen([{action: TestAction.TEST}]);
 
             clientRequest("http://127.0.0.1:3123/tes", (data: string, code?: number) =>
             {
@@ -161,9 +161,9 @@ describe('HttpServiceTest', function (this: Suite)
             });
         });
 
-        http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
+        http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, (message, data) =>
         {
-            http.sendResponse({id: http.getRequestData().action, data: "PIZDEC!"});
+            http.sendResponse({id: data!.action, data: "PIZDEC!"});
         });
 
         http.init();
@@ -173,14 +173,14 @@ describe('HttpServiceTest', function (this: Suite)
     {
         http.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            http.startListen([TestAction.TEST]);
+            http.startListen([{action: TestAction.TEST}]);
 
             clientRequest("http://127.0.0.1:3123/test?id=olo");
         });
 
-        http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
+        http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, (message, data) =>
         {
-            expect(http.getRequestQueryParam("id")).equals("olo");
+            expect(data!.requestQueryParams!("id")).equals("olo");
             done();
         });
 

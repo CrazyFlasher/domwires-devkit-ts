@@ -3,14 +3,17 @@ import {ISnapshotModel, ISnapshotModelImmutable, SnapshotModel} from "./ISnapsho
 import {Types} from "../../Types";
 import {AccountDto} from "../../net/Dto";
 import {snapshotValue} from "../../Decorators";
+import {ObjectId} from "bson";
 
 export interface IAccountModelImmutable extends ISnapshotModelImmutable<AccountDto>
 {
-    get email(): string;
+    get id(): ObjectId | undefined;
 
-    get password(): string;
+    get email(): string | undefined;
 
-    get nick(): string;
+    get password(): string | undefined;
+
+    get nick(): string | undefined;
 
     get isLoggedIn(): boolean;
 
@@ -28,33 +31,40 @@ export interface IAccountModel extends ISnapshotModel<AccountDto>, IAccountModel
     setIsLoggedIn(value: boolean): IAccountModel;
 
     setIsGuest(value: boolean): IAccountModel;
+
+    setId(value: ObjectId): IAccountModel;
 }
 
 export class AccountModel extends SnapshotModel<AccountDto> implements IAccountModel
 {
     @snapshotValue()
-    private _nick!: string;
+    private _nick!: string | undefined;
 
     @snapshotValue()
-    private _email!: string;
+    private _email!: string | undefined;
 
-    @snapshotValue()
-    private _password!: string;
+    private _password!: string | undefined;
 
     private _isLoggedIn!: boolean;
     private _isGuest!: boolean;
+    private _id!: ObjectId | undefined;
 
-    public get email(): string
+    public get id(): ObjectId | undefined
+    {
+        return this._id;
+    }
+
+    public get email(): string | undefined
     {
         return this._email;
     }
 
-    public get password(): string
+    public get password(): string | undefined
     {
         return this._password;
     }
 
-    public get nick(): string
+    public get nick(): string | undefined
     {
         return this._nick;
     }
@@ -67,6 +77,13 @@ export class AccountModel extends SnapshotModel<AccountDto> implements IAccountM
     public get isLoggedIn(): boolean
     {
         return this._isLoggedIn;
+    }
+
+    public setId(value: ObjectId): IAccountModel
+    {
+        this._id = value;
+
+        return this;
     }
 
     public setEmail(value: string): IAccountModel

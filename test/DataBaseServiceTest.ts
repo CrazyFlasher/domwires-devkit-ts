@@ -3,10 +3,12 @@ import {Done, Suite} from "mocha";
 import {Enum, Factory, IFactory, Logger, LogLevel} from "domwires";
 import {expect} from "chai";
 import {
+    DataBaseErrorReason,
     DataBaseServiceConfig,
     DataBaseServiceMessageType,
     FilterOperator,
-    IDataBaseService
+    IDataBaseService,
+    Query
 } from "../src/com/domwires/devkit/server/common/service/net/db/IDataBaseService";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
 import {Types} from "../src/com/domwires/devkit/common/Types";
@@ -14,10 +16,10 @@ import {NetServerServiceMessageType} from "../src/com/domwires/devkit/server/com
 
 class QueryId extends Enum
 {
-    public static readonly TEST_1:QueryId = new QueryId();
-    public static readonly TEST_2:QueryId = new QueryId();
-    public static readonly TEST_3:QueryId = new QueryId();
-    public static readonly TEST_123:QueryId = new QueryId();
+    public static readonly TEST_1: QueryId = new QueryId();
+    public static readonly TEST_2: QueryId = new QueryId();
+    public static readonly TEST_3: QueryId = new QueryId();
+    public static readonly TEST_123: QueryId = new QueryId();
 }
 
 /*describe('SioSocketServerServiceTest', function (this: Suite)
@@ -35,7 +37,7 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     beforeEach((done: Done) =>
     {
-        factory = new Factory(new Logger(LogLevel.INFO));
+        factory = new Factory(new Logger(LogLevel.VERBOSE));
         factory.mapToType<IDataBaseService>(Types.IDataBaseService, MongoDataBaseService);
 
         const config: DataBaseServiceConfig = {
@@ -48,12 +50,20 @@ describe('DataBaseServiceTest', function (this: Suite)
 
         db = factory.getInstance(Types.IDataBaseService);
 
-        const dropCollectionComplete = () =>
+        const dropCollectionComplete_2 = () =>
         {
             db.createCollection([
                 {name: COLLECTION_NAME, uniqueIndexList: ["lastName"]},
                 {name: "ololo", uniqueIndexList: ["puk"]},
             ]);
+        };
+
+        const dropCollectionComplete_1 = () =>
+        {
+            db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropCollectionComplete_2, true);
+            db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropCollectionComplete_2, true);
+
+            db.dropCollection("ololo");
         };
 
         db.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
@@ -63,8 +73,8 @@ describe('DataBaseServiceTest', function (this: Suite)
             db.dropCollection(COLLECTION_NAME);
         });
 
-        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropCollectionComplete);
-        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropCollectionComplete);
+        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_FAIL, dropCollectionComplete_1, true);
+        db.addMessageListener(DataBaseServiceMessageType.DROP_COLLECTION_SUCCESS, dropCollectionComplete_1, true);
 
         db.addMessageListener(DataBaseServiceMessageType.CREATE_COLLECTION_LIST_COMPLETE, () =>
         {
@@ -114,9 +124,9 @@ describe('DataBaseServiceTest', function (this: Suite)
 
         // Update
 
-        db.addMessageListener<PermLiver[]>(DataBaseServiceMessageType.FIND_SUCCESS, () =>
+        db.addMessageListener<{ query: Query; result: PermLiver[] }>(DataBaseServiceMessageType.FIND_SUCCESS, (message, data) =>
         {
-            const people = db.getFindResult<PermLiver[]>();
+            const people = data!.result;
 
             expect(people && people.length).equals(1);
             expect(people && people[0].firstName).equals("Siplqy");
@@ -130,9 +140,9 @@ describe('DataBaseServiceTest', function (this: Suite)
         {
             // Delete
 
-            db.addMessageListener<PermLiver[]>(DataBaseServiceMessageType.FIND_SUCCESS, () =>
+            db.addMessageListener<{ query: Query; result: PermLiver[] }>(DataBaseServiceMessageType.FIND_SUCCESS, (message, data) =>
             {
-                const people = db.getFindResult<PermLiver[]>();
+                const people = data!.result;
 
                 expect(people && people[0].firstName).equals("Gidroponka");
                 expect(people && people[0].lastName).equals("Nitokaja");
@@ -145,13 +155,13 @@ describe('DataBaseServiceTest', function (this: Suite)
 
         // Find after delete
 
-        db.addMessageListener(DataBaseServiceMessageType.DELETE_SUCCESS, () =>
+        db.addMessageListener<{ query: Query; result: number }>(DataBaseServiceMessageType.DELETE_SUCCESS, (message, data) =>
         {
-            expect(db.deleteResult).equals(1);
+            expect(data!.result).equals(1);
 
-            db.addMessageListener<PermLiver[]>(DataBaseServiceMessageType.FIND_SUCCESS, () =>
+            db.addMessageListener<{ query: Query; result: PermLiver[] }>(DataBaseServiceMessageType.FIND_SUCCESS, (message, data) =>
             {
-                const people = db.getFindResult<PermLiver[]>();
+                const people = data!.result;
 
                 expect(people && people.length).equals(2);
 
@@ -164,7 +174,7 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     it('testInsertFindUpdateDeleteWithAwait', async () =>
     {
-        let people: PermLiver[];
+        let people: PermLiver[] | undefined;
 
         // Insert
 
@@ -172,37 +182,48 @@ describe('DataBaseServiceTest', function (this: Suite)
 
         // Find
 
-        await find();
+        let findResult = await find();
 
-        people = db.getFindResult<PermLiver[]>();
+        expect(findResult).not.undefined;
 
-        expect(people && people.length).equals(1);
-        expect(people && people[0].firstName).equals("Siplqy");
+        if (findResult)
+        {
+            expect(findResult.query!.id).equals(QueryId.TEST_123);
+            expect(findResult.result && findResult.result[0].firstName).equals("Siplqy");
+        }
 
         // Update
 
-        await update();
+        const updateResult = await update();
+
+        expect(updateResult).not.undefined;
+
+        if (updateResult) expect(updateResult.result).true;
 
         // Find after update
 
-        await findAfterUpdate();
+        findResult = await findAfterUpdate();
 
-        people = db.getFindResult<PermLiver[]>();
+        expect(findResult).not.undefined;
+
+        if (findResult) people = findResult.result;
 
         expect(people && people[0].firstName).equals("Gidroponka");
         expect(people && people[0].lastName).equals("Nitokaja");
 
         // Delete
 
-        await deletePeople();
+        const deleteResult = await deletePeople();
 
-        expect(db.deleteResult).equals(1);
+        expect(deleteResult!.result).equals(1);
 
         // Find after delete
 
-        await findAfterDelete();
+        findResult = await findAfterDelete();
 
-        people = db.getFindResult<PermLiver[]>();
+        expect(findResult).not.undefined;
+
+        if (findResult) people = findResult.result;
 
         expect(people && people.length).equals(2);
     });
@@ -223,30 +244,39 @@ describe('DataBaseServiceTest', function (this: Suite)
 
         insert();
 
+        type SomeData = {
+            readonly olo: string;
+        };
+
         db.addMessageListener(DataBaseServiceMessageType.INSERT_SUCCESS, () =>
         {
-            db.find<PermLiver>({id: QueryId.TEST_3}, COLLECTION_NAME, {lastName: "Sjavovna"}, 1);
-            db.find<PermLiver>({id: QueryId.TEST_1}, COLLECTION_NAME, {lastName: "Hahalkin"}, 1);
-            db.find<PermLiver>({id: QueryId.TEST_2}, COLLECTION_NAME, {lastName: "Hujznajet"}, 1);
+            db.find<PermLiver, PermLiver, SomeData>(COLLECTION_NAME, {lastName: "Sjavovna"}, undefined, {
+                id: QueryId.TEST_3,
+                data: {olo: "puk"}
+            }, 1);
+            db.find<PermLiver>(COLLECTION_NAME, {lastName: "Hahalkin"}, undefined, {id: QueryId.TEST_1}, 1);
+            db.find<PermLiver>(COLLECTION_NAME, {lastName: "Hujznajet"}, undefined, {id: QueryId.TEST_2}, 1);
         });
 
-        db.addMessageListener(DataBaseServiceMessageType.FIND_SUCCESS, () =>
+        db.addMessageListener<{ query: Query<SomeData>; result: PermLiver[]; errorReason: DataBaseErrorReason }>
+        (DataBaseServiceMessageType.FIND_SUCCESS, (message, data) =>
         {
-            if (db.getFindResult<PermLiver[]>()[0].firstName === "Sjava")
+            if (data!.result[0].firstName === "Sjava")
             {
-                expect(db.query?.id).equals(QueryId.TEST_1);
+                expect(data!.query.id).equals(QueryId.TEST_1);
 
                 tryToComplete();
             }
-            else if (db.getFindResult<PermLiver[]>()[0].firstName === "Siplqy")
+            else if (data!.result[0].firstName === "Siplqy")
             {
-                expect(db.query?.id).equals(QueryId.TEST_2);
+                expect(data!.query.id).equals(QueryId.TEST_2);
 
                 tryToComplete();
             }
-            else if (db.getFindResult<PermLiver[]>()[0].firstName === "Gidroponka")
+            else if (data!.result[0].firstName === "Gidroponka")
             {
-                expect(db.query?.id).equals(QueryId.TEST_3);
+                expect(data!.query.id).equals(QueryId.TEST_3);
+                expect(data!.query.data!.olo).equals("puk");
 
                 tryToComplete();
             }
@@ -255,16 +285,16 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     async function insert()
     {
-        await db.insert<PermLiver>({id: QueryId.TEST_123}, COLLECTION_NAME, [
+        return await db.insert<PermLiver>(COLLECTION_NAME, [
             {firstName: "Sjava", lastName: "Hahalkin", age: 39, male: true},
             {firstName: "Siplqy", lastName: "Hujznajet", age: 45, male: true},
-            {firstName: "Gidroponka", lastName: "Sjavovna", age: 32, male: false},
-        ]);
+            {firstName: "Gidroponka", lastName: "Sjavovna", age: 32, male: false}
+        ], {id: QueryId.TEST_123});
     }
 
     async function find()
     {
-        await db.find<PermLiver>({id: QueryId.TEST_123}, COLLECTION_NAME, {age: {$greater: 35}}, 1, {
+        return await db.find<PermLiver>(COLLECTION_NAME, {age: {$greater: 35}}, undefined, {id: QueryId.TEST_123}, 1, {
             field: "age",
             ascending: false
         });
@@ -272,24 +302,23 @@ describe('DataBaseServiceTest', function (this: Suite)
 
     async function update()
     {
-        await db.update<PermLiver>(COLLECTION_NAME,
-            {firstName: "Gidroponka"},
-            {$set: {lastName: "Nitokaja"}});
+        return await db.update<PermLiver>(COLLECTION_NAME,
+            {firstName: "Gidroponka"}, {$set: {lastName: "Nitokaja"}}, {id: QueryId.TEST_1});
     }
 
     async function findAfterUpdate()
     {
-        await db.find<PermLiver>({id: QueryId.TEST_123}, COLLECTION_NAME, {firstName: "Gidroponka"});
+        return await db.find<PermLiver>(COLLECTION_NAME, {firstName: "Gidroponka"}, undefined, {id: QueryId.TEST_123});
     }
 
     async function deletePeople()
     {
-        await db.delete<PermLiver>(COLLECTION_NAME, {firstName: {$regexMatch: "Sipl"}});
+        return await db.delete<PermLiver>(COLLECTION_NAME, {firstName: {$regexMatch: "Sipl"}}, {id: QueryId.TEST_1});
     }
 
     async function findAfterDelete()
     {
-        await db.find<PermLiver>({id: QueryId.TEST_123}, COLLECTION_NAME, {});
+        return await db.find<PermLiver>(COLLECTION_NAME, {}, undefined, {id: QueryId.TEST_123});
     }
 });
 

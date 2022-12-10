@@ -8,27 +8,44 @@ import {
 } from "../../common/service/net/socket/ISocketServerService";
 import {NetServerServiceMessageType} from "../../common/service/net/INetServerService";
 import {SocketAction} from "../../../common/net/SocketAction";
-import {AddAccountToMapCommand} from "../command/AddAccountToMapCommand";
-import {RemoveAccountFromMapCommand} from "../command/RemoveAccountFromMapCommand";
+import {CreateAccountModelCommand} from "../command/internal/CreateAccountModelCommand";
+import {RemoveAccountModelCommand} from "../command/internal/RemoveAccountModelCommand";
 import {Types} from "../../../common/Types";
-import {DataBaseServiceMessageType, IDataBaseService} from "../../common/service/net/db/IDataBaseService";
-import {InitUsersTableCommand} from "../command/InitUsersTableCommand";
-import {MapContextCommandsCommand} from "../command/MapContextCommandsCommand";
+import {MapContextCommandsCommand} from "../command/internal/MapContextCommandsCommand";
 import {Class, setDefaultImplementation} from "domwires";
-import {RegisterCommand} from "../command/account/RegisterCommand";
-import {LoginCommand} from "../command/account/LoginCommand";
-import {IsLoginPasswordMatchesGuards} from "../command/guards/query/IsLoginPasswordMatchesGuards";
-import {registerCommandAlias} from "../../../common/Global";
 import {IInputView} from "../../../common/app/view/IInputView";
 import {CliInputView} from "../../main/view/CliInputView";
-import {ErrorReason} from "../../../common/ErrorReason";
-import {ResultDto} from "../../../common/net/Dto";
-import {UpdateAccountSnapshotCommand} from "../command/account/UpdateAccountSnapshotCommand";
-import {IsSuitableActionGuards} from "../command/guards/socket/IsSuitableActionGuards";
-import {IsSuitableQueryGuards} from "../command/guards/query/IsSuitableQueryGuards";
-import {LogoutCommand} from "../command/account/LogoutCommand";
-import {ResponseCommand} from "../command/response/ResponseCommand";
+import {IsSuitableSocketActionGuards} from "../command/guards/IsSuitableSocketActionGuards";
 import {IAccountModelContainer} from "../../../common/main/model/IAccountModelContainer";
+import {
+    EmptyRequestValidator,
+    LoginValidator,
+    RegisterValidator,
+    ResetPasswordValidator,
+    TokenValidator,
+    UpdateAccountDataValidator,
+    UpdateEmailValidator,
+    UpdatePasswordValidator
+} from "./RequestDataValidators";
+import {CreateDataBaseCollectionsCommand} from "../command/internal/CreateDataBaseCollectionsCommand";
+import {IEmailService} from "../../common/service/net/email/IEmailService";
+import {IHttpServerService} from "../../common/service/net/http/IHttpServerService";
+import {HttpAction} from "../../../common/net/HttpAction";
+import {AuthDataBaseServiceMessageType, IAuthDataBaseService} from "../../common/service/net/db/IAuthDataBaseService";
+import {RegisterCommand} from "../command/clientRequest/RegisterCommand";
+import {LoginCommand} from "../command/clientRequest/LoginCommand";
+import {GuestLoginCommand} from "../command/clientRequest/GuestLoginCommand";
+import {LogoutCommand} from "../command/clientRequest/LogoutCommand";
+import {ResetPasswordCommand} from "../command/clientRequest/ResetPasswordCommand";
+import {ConfirmResetPasswordCommand} from "../command/clientRequest/ConfirmResetPasswordCommand";
+import {IsSuitableHttpActionGuards} from "../command/guards/IsSuitableHttpActionGuards";
+import {UpdatePasswordCommand} from "../command/clientRequest/UpdatePasswordCommand";
+import {UpdateAccountDataCommand} from "../command/clientRequest/UpdateAccountDataCommand";
+import {UpdateEmailCommand} from "../command/clientRequest/UpdateEmailCommand";
+import {ConfirmUpdateEmailCommand} from "../command/clientRequest/ConfirmUpdateEmailCommand";
+import {DeleteAccountCommand} from "../command/clientRequest/DeleteAccountCommand";
+import {ConfirmDeleteAccountCommand} from "../command/clientRequest/ConfirmDeleteAccountCommand";
+import {registerCommandAlias} from "../../../common/Global";
 
 export interface IServerAuthContextImmutable extends IAppContextImmutable
 {
@@ -42,11 +59,17 @@ export interface IServerAuthContext extends IServerAuthContextImmutable, IAppCon
 
 export class ServerAuthContext extends AppContext implements IServerAuthContext
 {
+    @inject(Types.IHttpServerService)
+    private http!: IHttpServerService;
+
     @inject(Types.ISocketServerService)
     private socket!: ISocketServerService;
 
-    @inject(Types.IDataBaseService)
-    private db!: IDataBaseService;
+    @inject(Types.IAuthDataBaseService)
+    private db!: IAuthDataBaseService;
+
+    @inject(Types.IEmailService)
+    private email!: IEmailService;
 
     @inject(Types.IAccountModelContainer)
     private accounts!: IAccountModelContainer;
@@ -60,19 +83,32 @@ export class ServerAuthContext extends AppContext implements IServerAuthContext
         this.factory.mapToValue(Types.IServerAuthContext, this);
 
         this.factory.mapToValue(Types.ISocketServerService, this.socket);
-        this.factory.mapToValue(Types.IDataBaseService, this.db);
+        this.factory.mapToValue(Types.IAuthDataBaseService, this.db);
         this.factory.mapToValue(Types.IAccountModelContainer, this.accounts);
+        this.factory.mapToValue(Types.IEmailService, this.email);
+        this.factory.mapToValue(Types.IHttpServerService, this.http);
 
         this.socket.startListen([
-            SocketAction.REGISTER,
-            SocketAction.LOGIN,
-            SocketAction.GUEST_LOGIN,
-            SocketAction.LOGOUT
+            {action: SocketAction.REGISTER, validator: new RegisterValidator()},
+            {action: SocketAction.LOGIN, validator: new LoginValidator()},
+            {action: SocketAction.GUEST_LOGIN, validator: new EmptyRequestValidator()},
+            {action: SocketAction.LOGOUT, validator: new EmptyRequestValidator()},
+            {action: SocketAction.RESET_PASSWORD, validator: new ResetPasswordValidator()},
+            {action: SocketAction.UPDATE_PASSWORD, validator: new UpdatePasswordValidator()},
+            {action: SocketAction.UPDATE_ACCOUNT_DATA, validator: new UpdateAccountDataValidator()},
+            {action: SocketAction.UPDATE_EMAIL, validator: new UpdateEmailValidator()},
+            {action: SocketAction.DELETE_ACCOUNT, validator: new EmptyRequestValidator()}
         ]);
 
-        this.map(DataBaseServiceMessageType.CREATE_COLLECTION_LIST_COMPLETE, MapContextCommandsCommand);
+        this.http.startListen([
+            {action: HttpAction.CONFIRM_RESET_PASSWORD, validator: new TokenValidator()},
+            {action: HttpAction.CONFIRM_UPDATE_EMAIL, validator: new TokenValidator()},
+            {action: HttpAction.CONFIRM_DELETE_ACCOUNT, validator: new TokenValidator()}
+        ]);
 
-        this.executeCommand(InitUsersTableCommand);
+        this.map(AuthDataBaseServiceMessageType.COLLECTIONS_CREATE_SUCCESS, MapContextCommandsCommand);
+
+        this.executeCommand(CreateDataBaseCollectionsCommand);
     }
 
     protected override get defaultUIViewClass(): Class<IInputView>
@@ -82,94 +118,141 @@ export class ServerAuthContext extends AppContext implements IServerAuthContext
 
     public mapCommands(): IAppContext
     {
-        registerCommandAlias(RegisterCommand, "register", "register user", [
-            {name: "clientId", type: Types.string},
-            {name: "dto", requiredValue: {email: Types.string, password: Types.string, nick: Types.string}}
-        ]);
+        this.registerCommandAliases();
 
-        registerCommandAlias(LoginCommand, "login", "login user", [
-            {name: "clientId", type: Types.string},
-            {name: "email", type: Types.string},
-            {name: "password", type: Types.string}
-        ]);
+        this.map(SocketServerServiceMessageType.CLIENT_CONNECTED, CreateAccountModelCommand);
+        this.map(SocketServerServiceMessageType.CLIENT_DISCONNECTED, RemoveAccountModelCommand);
 
-        registerCommandAlias(LogoutCommand, "logout", "logout user", [
-            {name: "clientId", type: Types.string}
-        ]);
-
-        registerCommandAlias([UpdateAccountSnapshotCommand, ResponseCommand],
-            "guest_login", "login as guest user", [
-                {name: "clientId", type: Types.string},
-                {name: "actionName", requiredValue: SocketAction.GUEST_LOGIN.name},
-                {name: "success", requiredValue: true},
-                {name: "isGuest", requiredValue: true}
-            ]);
-
-        this.map(SocketServerServiceMessageType.CLIENT_CONNECTED, AddAccountToMapCommand);
-        this.map(SocketServerServiceMessageType.CLIENT_DISCONNECTED, RemoveAccountFromMapCommand);
-
-        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand, {action: SocketAction.LOGIN})
-            .addGuards(IsSuitableActionGuards);
-
-        this.map<ResultDto & SocketActionData & { isGuest: boolean }>(NetServerServiceMessageType.GOT_REQUEST,
-            [UpdateAccountSnapshotCommand, ResponseCommand], {
-                action: SocketAction.GUEST_LOGIN,
-                isGuest: true,
-                success: true
-            }).addGuards(IsSuitableActionGuards);
-
-        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand, {action: SocketAction.REGISTER})
-            .addGuards(IsSuitableActionGuards);
-
-        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand, {action: SocketAction.LOGOUT})
-            .addGuards(IsSuitableActionGuards);
-
-        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.INSERT_SUCCESS, ResponseCommand, {
-            queryId: SocketAction.REGISTER.name,
-            action: SocketAction.REGISTER,
-            success: true
-        }).addGuards(IsSuitableQueryGuards);
-
-        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.INSERT_FAIL, ResponseCommand, {
-            queryId: SocketAction.REGISTER.name,
-            action: SocketAction.REGISTER,
-            success: false,
-            reason: ErrorReason.USER_EXISTS.name
-        }).addGuards(IsSuitableQueryGuards);
-
-        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_SUCCESS,
-            [UpdateAccountSnapshotCommand, ResponseCommand], {
-                queryId: SocketAction.LOGIN.name,
-                action: SocketAction.LOGIN,
-                success: true
-            }).addGuards(IsSuitableQueryGuards).addGuards(IsLoginPasswordMatchesGuards);
-
-        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_SUCCESS, ResponseCommand, {
-            queryId: SocketAction.LOGIN.name,
-            action: SocketAction.LOGIN,
-            success: false,
-            reason: ErrorReason.USER_WRONG_PASSWORD.name
-        }).addGuards(IsSuitableQueryGuards).addGuardsNot(IsLoginPasswordMatchesGuards);
-
-        this.map<SocketActionQueryIdResultData>(DataBaseServiceMessageType.FIND_FAIL, ResponseCommand, {
-            queryId: SocketAction.LOGIN.name,
-            action: SocketAction.LOGIN,
-            success: false,
-            reason: ErrorReason.USER_NOT_FOUND.name
-        }).addGuards(IsSuitableQueryGuards);
+        this.mapRegisterCommand();
+        this.mapLoginCommand();
+        this.mapGuestLoginCommand();
+        this.mapLogoutCommand();
+        this.mapResetPasswordCommand();
+        this.mapConfirmResetPasswordCommand();
+        this.mapUpdatePasswordCommand();
+        this.mapUpdateAccountDataCommand();
+        this.mapUpdateEmailCommand();
+        this.mapConfirmUpdateEmailCommand();
+        this.mapDeleteAccountCommand();
+        this.mapConfirmDeleteAccountCommand();
 
         this.ready();
 
         return this;
     }
+
+    private registerCommandAliases(): void
+    {
+        registerCommandAlias(RegisterCommand, "register", "register user", [
+            {name: "clientId"},
+            {name: "dto", requiredValue: {email: Types.empty, password: Types.empty, nick: Types.empty}}
+        ]);
+
+        registerCommandAlias(LoginCommand, "login", "login user", [
+            {name: "clientId"},
+            {name: "dto", requiredValue: {email: Types.empty, password: Types.empty}}
+        ]);
+
+        registerCommandAlias(LogoutCommand, "logout", "logout user", [
+            {name: "clientId"}
+        ]);
+
+        registerCommandAlias(GuestLoginCommand, "guest_login", "login as guest user", [
+            {name: "clientId"}
+        ]);
+    }
+
+    private mapRegisterCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand,
+            {requiredAction: SocketAction.REGISTER}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapLoginCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand,
+            {requiredAction: SocketAction.LOGIN}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapGuestLoginCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, GuestLoginCommand,
+            {requiredAction: SocketAction.GUEST_LOGIN,}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapLogoutCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand,
+            {requiredAction: SocketAction.LOGOUT}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapResetPasswordCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, ResetPasswordCommand,
+            {requiredAction: SocketAction.RESET_PASSWORD}
+        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+    }
+
+    private mapConfirmResetPasswordCommand(): void
+    {
+        this.map<HttpActionData>(NetServerServiceMessageType.GOT_REQUEST, ConfirmResetPasswordCommand,
+            {requiredAction: HttpAction.CONFIRM_RESET_PASSWORD}
+        ).addGuards(IsSuitableHttpActionGuards);
+    }
+
+    private mapUpdatePasswordCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdatePasswordCommand,
+            {requiredAction: SocketAction.UPDATE_PASSWORD}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapUpdateAccountDataCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdateAccountDataCommand,
+            {requiredAction: SocketAction.UPDATE_ACCOUNT_DATA}
+        ).addGuards(IsSuitableSocketActionGuards);
+    }
+
+    private mapUpdateEmailCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdateEmailCommand,
+            {requiredAction: SocketAction.UPDATE_EMAIL}
+        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+    }
+
+    private mapConfirmUpdateEmailCommand(): void
+    {
+        this.map<HttpActionData>(NetServerServiceMessageType.GOT_REQUEST, ConfirmUpdateEmailCommand,
+            {requiredAction: HttpAction.CONFIRM_UPDATE_EMAIL}
+        ).addGuards(IsSuitableHttpActionGuards);
+    }
+
+    private mapDeleteAccountCommand(): void
+    {
+        this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, DeleteAccountCommand,
+            {requiredAction: SocketAction.DELETE_ACCOUNT}
+        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+    }
+
+    private mapConfirmDeleteAccountCommand(): void
+    {
+        this.map<HttpActionData>(NetServerServiceMessageType.GOT_REQUEST, ConfirmDeleteAccountCommand,
+            {requiredAction: HttpAction.CONFIRM_DELETE_ACCOUNT}
+        ).addGuards(IsSuitableHttpActionGuards);
+    }
 }
 
-type SocketActionQueryIdResultData = ResultDto & SocketActionData & {
-    queryId: string;
+type SocketActionData = {
+    requiredAction: SocketAction;
 };
 
-type SocketActionData = {
-    action: SocketAction;
+type HttpActionData = {
+    requiredAction: HttpAction;
 };
 
 setDefaultImplementation<IServerAuthContext>(Types.IServerAuthContext, ServerAuthContext);

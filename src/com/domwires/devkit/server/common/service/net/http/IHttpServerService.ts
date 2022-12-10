@@ -40,13 +40,12 @@ export class HttpMethod extends Enum
 
 export interface IHttpServerServiceImmutable extends INetServerServiceImmutable
 {
-    getRequestQueryParam(id: string): string | undefined;
 }
 
 export interface IHttpServerService extends IHttpServerServiceImmutable, INetServerService
 {
     sendResponse<TData>(data: TData, statusCode?: number,
-                    customHeaders?: Map<string, number | string | ReadonlyArray<string>>): IHttpServerService;
+                        customHeaders?: Map<string, number | string | ReadonlyArray<string>>): IHttpServerService;
 
     get nodeHttpServer(): Server;
 }

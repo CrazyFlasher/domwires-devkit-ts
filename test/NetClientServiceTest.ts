@@ -80,29 +80,29 @@ describe('NetClientServiceTest', function (this: Suite)
 
         const httpOpenSuccess = () =>
         {
-            http.startListen(([TestAction.TEST]));
+            http.startListen(([{action: TestAction.TEST}]));
 
             const sentHttpResponse = (success: boolean) =>
             {
                 http.sendResponse<string>(success ? "hi" : "Invalid request data!", success ? 200 : 500);
             };
 
-            const sendTcpResponse = (success: boolean) =>
+            const sendTcpResponse = (success: boolean, clientId: string, action: string) =>
             {
                 const data: string = success ? "hi" : "Invalid request data!";
-                socket.sendResponse(socket.requestFromClientId, {
-                    action: socket.getRequestData().action,
+                socket.sendResponse(clientId, {
+                    action: action,
                     data
                 });
             };
 
-            http.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
+            http.addMessageListener<RequestData<TalkAction>>(NetServerServiceMessageType.GOT_REQUEST, (message, data) =>
             {
-                logger.info("Got request from client:", http.getRequestData().action);
+                logger.info("Got request from client:", data!.action);
 
-                if (http.getRequestData().method === HttpMethod.GET)
+                if (data!.method === HttpMethod.GET)
                 {
-                    if (http.getRequestQueryParam("say") === "hello")
+                    if (data!.requestQueryParams!("say") === "hello")
                     {
                         sentHttpResponse(true);
                     }
@@ -111,10 +111,9 @@ describe('NetClientServiceTest', function (this: Suite)
                         sentHttpResponse(false);
                     }
                 }
-                else if (http.getRequestData().method === HttpMethod.POST)
+                else if (data!.method === HttpMethod.POST)
                 {
-                    const data = http.getRequestData<TalkAction>().data;
-                    if (data && data.say === "hello")
+                    if (data!.data!.say === "hello")
                     {
                         sentHttpResponse(true);
                     }
@@ -135,24 +134,23 @@ describe('NetClientServiceTest', function (this: Suite)
 
             socket = factory.getInstance(Types.ISocketServerService);
 
-            socket.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
+            socket.addMessageListener<RequestData<TalkAction>>(NetServerServiceMessageType.GOT_REQUEST, (message, data) =>
             {
-                logger.info("Got request from client:", socket.getRequestData().action);
+                logger.info("Got request from client:", data!.action);
 
-                const data = socket.getRequestData<TalkAction>().data;
-                if (data && data.say === "hello")
+                if (data && data.data!.say === "hello")
                 {
-                    sendTcpResponse(true);
+                    sendTcpResponse(true, data!.requestFromClientId!, data!.action);
                 }
                 else
                 {
-                    sendTcpResponse(false);
+                    sendTcpResponse(false, data!.requestFromClientId!, data!.action);
                 }
             });
 
             socket.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
             {
-                socket.startListen(([TestAction.TEST]));
+                socket.startListen(([{action: TestAction.TEST}]));
 
                 client.addMessageListener(NetClientServiceMessageType.CONNECTED, () =>
                 {

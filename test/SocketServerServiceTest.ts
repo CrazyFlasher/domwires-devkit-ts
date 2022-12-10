@@ -34,7 +34,7 @@ describe('SocketServerServiceTest', function (this: Suite)
 
     beforeEach(() =>
     {
-        factory = new Factory(new Logger(LogLevel.INFO));
+        factory = new Factory(new Logger(LogLevel.VERBOSE));
         factory.mapToType<SioSocketServerService>(Types.ISocketServerService, SioSocketServerService);
 
         const socketConfig: SocketServerServiceConfig = {host: "127.0.0.1", port: 3010};
@@ -110,11 +110,11 @@ describe('SocketServerServiceTest', function (this: Suite)
             io("ws://127.0.0.1:3010");
         });
 
-        server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, () =>
+        server.addMessageListener(SocketServerServiceMessageType.CLIENT_CONNECTED, (message, data) =>
         {
             expect(server.connectionsCount).equals(1);
 
-            server.disconnectClient(server.connectedClientId);
+            server.disconnectClient(data!.clientId);
         });
 
         server.addMessageListener(SocketServerServiceMessageType.CLIENT_DISCONNECTED, () =>
@@ -133,7 +133,7 @@ describe('SocketServerServiceTest', function (this: Suite)
 
         server.addMessageListener(NetServerServiceMessageType.OPEN_SUCCESS, () =>
         {
-            server.startListen([TestAction.TEST]);
+            server.startListen([{action: TestAction.TEST}]);
 
             client = io("ws://127.0.0.1:3010");
             client.on("data", json =>
@@ -148,12 +148,12 @@ describe('SocketServerServiceTest', function (this: Suite)
             client.emit("data", {action: "test", data: "lalala!"});
         });
 
-        server.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, () =>
+        server.addMessageListener(NetServerServiceMessageType.GOT_REQUEST, (message, data) =>
         {
-            expect(server.getRequestData().action).equals("test");
-            expect(server.getRequestData().data).equals("lalala!");
+            expect(data!.action).equals("test");
+            expect(data!.data).equals("lalala!");
 
-            server.sendResponse(server.requestFromClientId, {
+            server.sendResponse(data!.requestFromClientId!, {
                 action: "test",
                 data: "otvet"
             });

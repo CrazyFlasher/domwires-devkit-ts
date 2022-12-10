@@ -10,9 +10,8 @@ import {ISocketServerService, SocketServerServiceConfig} from "../../common/serv
 import {ExpressHttpServerService} from "../../common/service/net/http/impl/ExpressHttpServerService";
 import {SioSocketServerService} from "../../common/service/net/socket/impl/SioSocketServerService";
 import {NetServerServiceConfig, NetServerServiceMessageType} from "../../common/service/net/INetServerService";
-import {DataBaseServiceConfig, IDataBaseService} from "../../common/service/net/db/IDataBaseService";
+import {DataBaseServiceConfig} from "../../common/service/net/db/IDataBaseService";
 import {Types} from "../../../common/Types";
-import {MongoDataBaseService} from "../../common/service/net/db/impl/MongoDataBaseService";
 import {OpenServiceCommand} from "../command/OpenServiceCommand";
 import {CreateChildContextsCommand} from "../../../common/main/command/CreateChildContextsCommand";
 import {CloseServiceCommand} from "../command/CloseServiceCommand";
@@ -22,6 +21,12 @@ import {ConfigIds} from "../../../common/ConfigIds";
 import {ServerConfigIds} from "../../ServerConfigIds";
 import {AbstractMainContext, IMainContext, IMainContextImmutable} from "../../../common/main/context/IMainContext";
 import {IServerAuthContext} from "../../auth/context/IServerAuthContext";
+import {IAuthDataBaseService} from "../../common/service/net/db/IAuthDataBaseService";
+import {AuthMongoDataBaseService} from "../../common/service/net/db/impl/AuthMongoDataBaseService";
+import {EmailServiceConfig, IEmailService} from "../../common/service/net/email/IEmailService";
+import {ServiceMessageType} from "../../../common/service/IService";
+import {InitEmailServiceCommand} from "../command/InitEmailServiceCommand";
+import {NodemailerEmailService} from "../../common/service/net/email/impl/NodemailerEmailService";
 
 export interface IServerMainContextImmutable extends IMainContextImmutable
 {
@@ -30,20 +35,25 @@ export interface IServerMainContextImmutable extends IMainContextImmutable
 
 export interface IServerMainContext extends IServerMainContextImmutable, IMainContext
 {
-    createChildContexts(): IServerMainContext;
+    get db(): IAuthDataBaseService;
 
-    shutDownComplete(): IServerMainContext;
+    get socket(): ISocketServerService;
 
-    initializationComplete(): IServerMainContext;
+    get http(): IHttpServerService;
+
+    get authContext(): IServerAuthContext;
+
+    get email(): IEmailService;
 }
 
 export class ServerMainContext extends AbstractMainContext implements IServerMainContext
 {
-    private authContext!: IServerAuthContext;
+    private _authContext!: IServerAuthContext;
 
-    private http!: IHttpServerService;
-    private socket!: ISocketServerService;
-    private db!: IDataBaseService;
+    private _http!: IHttpServerService;
+    private _socket!: ISocketServerService;
+    private _db!: IAuthDataBaseService;
+    private _email!: IEmailService;
 
     protected override init()
     {
@@ -51,31 +61,34 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
 
         this.mapServiceToType(Types.IHttpServerService, ExpressHttpServerService);
         this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
-        this.mapServiceToType(Types.IDataBaseService, MongoDataBaseService);
+        this.mapServiceToType(Types.IAuthDataBaseService, AuthMongoDataBaseService);
+        this.mapServiceToType(Types.IEmailService, NodemailerEmailService);
 
         this.createHttp();
         this.createSocket();
         this.createDb();
+        this.createEmail();
 
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.socket}).addTargetGuards(this.http);
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this.db}).addTargetGuards(this.socket);
-        this.map(NetServerServiceMessageType.OPEN_SUCCESS, CreateChildContextsCommand).addTargetGuards(this.db);
-
-        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            CloseServiceCommand, {service: this.socket}).addTargetGuards(this.db);
-
-        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            CloseServiceCommand, {service: this.http}).addTargetGuards(this.socket);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this._socket}).addTargetGuards(this._http);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, OpenServiceCommand, {service: this._db}).addTargetGuards(this._socket);
+        this.map(ServiceMessageType.INIT_SUCCESS, InitEmailServiceCommand, {service: this._email}).addTargetGuards(this._db);
+        this.map(NetServerServiceMessageType.OPEN_SUCCESS, CreateChildContextsCommand).addTargetGuards(this._db);
 
         this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
-            ShutDownCompleteCommand).addTargetGuards(this.http);
+            CloseServiceCommand, {service: this._socket}).addTargetGuards(this._db);
 
-        this.executeCommand(OpenServiceCommand, {service: this.http});
+        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
+            CloseServiceCommand, {service: this._http}).addTargetGuards(this._socket);
+
+        this.map([NetServerServiceMessageType.CLOSE_SUCCESS, NetServerServiceMessageType.CLOSE_FAIL],
+            ShutDownCompleteCommand).addTargetGuards(this._http);
+
+        this.executeCommand(OpenServiceCommand, {service: this._http});
     }
 
     public override dispose(): void
     {
-        this.executeCommand(CloseServiceCommand, {service: this.db});
+        this.executeCommand(CloseServiceCommand, {service: this._db});
     }
 
     protected override get defaultUIViewClass(): Class<IInputView>
@@ -92,25 +105,25 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, httpConfig);
 
-        this.http = this.getServiceInstance(Types.IHttpServerService);
+        this._http = this.getServiceInstance(Types.IHttpServerService);
 
-        this.addModel(this.http);
+        this.addModel(this._http);
     }
 
     private createSocket(): void
     {
         const socketConfig: SocketServerServiceConfig = {
-            enabled: this.http.enabled,
-            host: this.http.host,
+            enabled: this._http.enabled,
+            host: this._http.host,
             port: this.modelFactory.getInstance(Types.number, ConfigIds.socketPort),
-            http: this.http.nodeHttpServer
+            http: this._http.nodeHttpServer
         };
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, socketConfig);
 
-        this.socket = this.getServiceInstance(Types.ISocketServerService);
+        this._socket = this.getServiceInstance(Types.ISocketServerService);
 
-        this.addModel(this.socket);
+        this.addModel(this._socket);
     }
 
     private createDb(): void
@@ -123,20 +136,61 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, dbConfig);
 
-        this.db = this.getServiceInstance(Types.IDataBaseService);
+        this._db = this.getServiceInstance(Types.IAuthDataBaseService);
 
-        this.addModel(this.db);
+        this.addModel(this._db);
+    }
+
+    private createEmail(): void
+    {
+        const emailConfig: EmailServiceConfig = {
+            host: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailHost),
+            port: this.modelFactory.getInstance(Types.number, ServerConfigIds.emailPort),
+            authUser: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailAuthUser),
+            authPassword: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailAuthPassword)
+        };
+
+        this.serviceFactory.mapToValue(Types.ServiceConfig, emailConfig);
+
+        this._email = this.getServiceInstance(Types.IEmailService);
+
+        this.addModel(this._email);
     }
 
     public override createChildContexts(): IMainContext
     {
-        this.authContext = this.getContextInstance(Types.IServerAuthContext);
+        this._authContext = this.getContextInstance(Types.IServerAuthContext);
 
-        this.map(AppContextMessageType.READY, InitializationCompleteCommand).addTargetGuards(this.authContext);
+        this.map(AppContextMessageType.READY, InitializationCompleteCommand).addTargetGuards(this._authContext);
 
-        this.addModel(this.authContext);
+        this.addModel(this._authContext);
 
         return this;
+    }
+
+    public get db(): IAuthDataBaseService
+    {
+        return this._db;
+    }
+
+    public get email(): IEmailService
+    {
+        return this._email;
+    }
+
+    public get socket(): ISocketServerService
+    {
+        return this._socket;
+    }
+
+    public get http(): IHttpServerService
+    {
+        return this._http;
+    }
+
+    public get authContext(): IServerAuthContext
+    {
+        return this._authContext;
     }
 }
 

@@ -16,6 +16,7 @@
     "@typescript-eslint/member-delimiter-style": "error",
     "@typescript-eslint/explicit-member-accessibility": "error",
     "@typescript-eslint/no-empty-interface": "off",
-    "no-type-assertion/no-type-assertion": "error"
+    "no-type-assertion/no-type-assertion": "off",
+    "@typescript-eslint/no-non-null-assertion": "off"
   }
 }

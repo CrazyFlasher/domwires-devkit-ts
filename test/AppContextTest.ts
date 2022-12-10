@@ -21,7 +21,7 @@ import {injectable} from "inversify";
 import {printMappedToAliasCommandsToConsole, registerCommandAlias} from "../src/com/domwires/devkit/common/Global";
 import {Types} from "../src/com/domwires/devkit/common/Types";
 
-const logger = new Logger(LogLevel.INFO);
+const logger = new Logger(LogLevel.VERBOSE);
 
 @injectable()
 export class TestObj
@@ -155,7 +155,7 @@ describe('AppContextTest', function (this: Suite)
     {
         registerCommandAlias(TestCommand, "test_cmd");
 
-        const f = new Factory(new Logger(LogLevel.INFO));
+        const f = new Factory(new Logger(LogLevel.VERBOSE));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         f.mapToValue<TestObj>(TestObj, to);
         f.mapToValue(Types.IFactory, f);
@@ -171,7 +171,7 @@ describe('AppContextTest', function (this: Suite)
     {
         registerCommandAlias(TestCommandWithParams, "test_cmd");
 
-        const f = new Factory(new Logger(LogLevel.INFO));
+        const f = new Factory(new Logger(LogLevel.VERBOSE));
         const to: TestObj = mainContextFactory.getInstance<TestObj>(TestObj);
         f.mapToValue<TestObj>(TestObj, to);
         f.mapToValue(Types.IFactory, f);

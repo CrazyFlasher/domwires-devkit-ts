@@ -5,7 +5,6 @@ import {inject} from "inversify";
 import {Server, Socket} from "socket.io";
 import {Types} from "../../../../../../common/Types";
 
-// TODO: make final
 export class SioSocketServerService extends AbstractNetServerService implements ISocketServerService
 {
     @inject(Types.ServiceConfig)
@@ -14,9 +13,6 @@ export class SioSocketServerService extends AbstractNetServerService implements 
     private util = require("util");
 
     private server!: Server;
-    private _connectedClientId!: string;
-    private _disconnectedClientId!: string;
-    private _requestFromClientId!: string;
 
     protected override createServer()
     {
@@ -31,7 +27,7 @@ export class SioSocketServerService extends AbstractNetServerService implements 
 
         try
         {
-            this.server = new Server(this.socketServerServiceConfig.http);
+            this.server = new Server(this.socketServerServiceConfig.http, {maxHttpBufferSize: 1000});
             this.server.listen(this.socketServerServiceConfig.port);
 
             this.openSuccess();
@@ -54,13 +50,15 @@ export class SioSocketServerService extends AbstractNetServerService implements 
     {
         this.server.on("connection", socket =>
         {
+            this.info("Client connected:", socket.id);
+
+            this.dispatchMessage(SocketServerServiceMessageType.CLIENT_CONNECTED, {clientId: socket.id});
+
             socket.on("disconnect", (reason) =>
             {
                 this.info("Client disconnected:", socket.id, reason);
 
-                this._disconnectedClientId = socket.id;
-
-                this.dispatchMessage(SocketServerServiceMessageType.CLIENT_DISCONNECTED);
+                this.handleClientDisconnection(socket);
             });
 
             socket.on("data", (json) =>
@@ -78,24 +76,30 @@ export class SioSocketServerService extends AbstractNetServerService implements 
                 {
                     if (this.isListening(json.action))
                     {
-                        this._requestFromClientId = socket.id;
-                        this._requestData = {action: json.action, data: json.data};
-
-                        this.dispatchMessage(NetServerServiceMessageType.GOT_REQUEST);
+                        if (this.requestDataIsValid(json.action, json.data))
+                        {
+                            this.dispatchMessage(NetServerServiceMessageType.GOT_REQUEST, {
+                                action: json.action, data: json.data, requestFromClientId: socket.id
+                            });
+                        } else
+                        {
+                            this.warn("Non-protocol request from client:", socket.id, json);
+                            this.disconnectClient(socket.id);
+                        }
                     }
                     else
                     {
                         this.warn("Ignoring socket request: " + json.action);
+                        this.disconnectClient(socket.id);
                     }
                 }
             });
-
-            this.info("Client connected:", socket.id);
-
-            this._connectedClientId = socket.id;
-
-            this.dispatchMessage(SocketServerServiceMessageType.CLIENT_CONNECTED);
         });
+    }
+
+    private handleClientDisconnection(socket: Socket): void
+    {
+        this.dispatchMessage(SocketServerServiceMessageType.CLIENT_DISCONNECTED, {clientId: socket.id});
     }
 
     public override close(): INetServerService
@@ -116,11 +120,6 @@ export class SioSocketServerService extends AbstractNetServerService implements 
         }
 
         return this;
-    }
-
-    public get connectedClientId(): string
-    {
-        return this._connectedClientId;
     }
 
     public get connectionsCount(): number
@@ -146,7 +145,10 @@ export class SioSocketServerService extends AbstractNetServerService implements 
             if (socket)
             {
                 this.info("Disconnecting client:", clientId);
+
                 socket.disconnect(true);
+
+                this.handleClientDisconnection(socket);
             }
             else
             {
@@ -157,16 +159,6 @@ export class SioSocketServerService extends AbstractNetServerService implements 
         return this;
     }
 
-    public get disconnectedClientId(): string
-    {
-        return this._disconnectedClientId;
-    }
-
-    public get requestFromClientId(): string
-    {
-        return this._requestFromClientId;
-    }
-
     public sendResponse<TData>(clientId: string, data: RequestData<TData>): ISocketServerService
     {
         if (this.checkIsOpened())
@@ -175,8 +167,6 @@ export class SioSocketServerService extends AbstractNetServerService implements 
             if (socket)
             {
                 socket.emit("data", data);
-
-                this.dispatchMessage(NetServerServiceMessageType.SEND_RESPONSE);
             }
         }
         return this;

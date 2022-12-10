@@ -45,5 +45,5 @@ export interface INetClientService extends IService, INetClientServiceImmutable
 
     disconnect(): INetClientService;
 
-    send<TData extends Record<string, string>>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService;
+    send<TData>(action: string, data?: TData, requestType?: ClientServiceRequestType): INetClientService;
 }

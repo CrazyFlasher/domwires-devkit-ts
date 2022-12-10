@@ -1,9 +1,23 @@
 import {Enum, MessageType} from "domwires";
 import {INetServerService, INetServerServiceImmutable, NetServerServiceConfig} from "../INetServerService";
+import {ObjectId} from "bson";
 
-export type Query = {
+export class DataBaseErrorReason extends Enum
+{
+    public static readonly DATABASE_SERVICE_CLOSED: DataBaseErrorReason = new DataBaseErrorReason("DATABASE_SERVICE_CLOSED");
+    public static readonly NOT_FOUND: DataBaseErrorReason = new DataBaseErrorReason("NOT_FOUND");
+    public static readonly VALIDATION_FAILED: DataBaseErrorReason = new DataBaseErrorReason("VALIDATION_FAILED");
+    public static readonly DUPLICATE: DataBaseErrorReason = new DataBaseErrorReason("DUPLICATE");
+    public static readonly UPDATE_FAILED: DataBaseErrorReason = new DataBaseErrorReason("UPDATE_FAILED");
+    public static readonly DELETE_FAILED: DataBaseErrorReason = new DataBaseErrorReason("DELETE_FAILED");
+    public static readonly CREATE_COLLECTION_FAILED: DataBaseErrorReason = new DataBaseErrorReason("CREATE_COLLECTION_FAILED");
+    public static readonly DROP_COLLECTION_FAILED: DataBaseErrorReason = new DataBaseErrorReason("DROP_COLLECTION_FAILED");
+}
+
+export type Query<TData = void> = {
     readonly id?: Enum;
     readonly relatedToClientId?: string;
+    readonly data?: TData;
 };
 
 export type DataBaseServiceConfig = NetServerServiceConfig & {
@@ -116,24 +130,27 @@ export type UpdateOperator<T> = {
 
 export interface IDataBaseServiceImmutable extends INetServerServiceImmutable
 {
-    get deleteResult(): number;
-
-    get query(): Query | undefined;
-
-    getFindResult<T>(): T;
-
-    find<T>(query: Query, collectionName: string, filter: T, limit?: number, sort?: { field: string; ascending?: boolean }): void;
+    find<TFilter, TEntity extends TFilter = TFilter, TData = void, P = void>
+    (collectionName: string, filter: TFilter, projection?: P, query?: Query<TData>, limit?: number, sort?: { field: string; ascending?: boolean }):
+        Promise<{ query?: Query<TData>; result?: TEntity[]; errorReason?: DataBaseErrorReason }>;
 }
 
 export interface IDataBaseService extends IDataBaseServiceImmutable, INetServerService
 {
-    createCollection(list: { name: string; uniqueIndexList?: string[] }[]): void;
+    createCollection(list: { name: string; uniqueIndexList?: string[]; mandatoryFields?: string[] }[]):
+        Promise<{ result?: boolean; errorReason?: DataBaseErrorReason }>;
 
-    dropCollection(name: string): void;
+    dropCollection(name: string): Promise<{ result?: boolean; errorReason?: DataBaseErrorReason }>;
 
-    insert<T>(query: Query, collectionName: string, itemList: ReadonlyArray<T>): void;
+    insert<TEntity, TData = void>(collectionName: string, itemList: ReadonlyArray<TEntity>, query?: Query<TData>):
+        Promise<{ query?: Query<TData>; result?: ObjectId[] | ObjectId; errorReason?: DataBaseErrorReason }>;
 
-    update<T>(collectionName: string, filter: T, updateFilter: UpdateOperator<T>): void;
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    update<TFilter, TEntity extends TFilter = TFilter, TUFilter = TEntity, TData = void>
+    (collectionName: string, filter: TFilter, updateFilter: UpdateOperator<TUFilter>, query?: Query<TData>, many?: boolean):
+        Promise<{ query?: Query<TData>; result?: boolean; errorReason?: DataBaseErrorReason }>;
 
-    delete<T>(collectionName: string, filter: T): void;
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    delete<TFilter, TEntity extends TFilter = TFilter, TData = void>(collectionName: string, filter: TFilter, query?: Query<TData>, many?: boolean):
+        Promise<{ query?: Query<TData>; result?: number; errorReason?: DataBaseErrorReason }>;
 }

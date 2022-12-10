@@ -2,3 +2,4 @@ dist
 src/index.common.ts
 src/index.server.ts
 src/index.client.ts
+.env

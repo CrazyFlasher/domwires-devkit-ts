@@ -1,15 +1,11 @@
-import {
-    INetServerService,
-    NetServerServiceConfig,
-    NetServerServiceMessageType,
-    RequestData,
-} from "./INetServerService";
+import {INetServerService, NetServerServiceConfig, NetServerServiceMessageType,} from "./INetServerService";
 import {inject} from "inversify";
 import {AbstractService} from "../../../../common/service/AbstractService";
 import {DwError} from "../../../../common/DwError";
 import {Enum} from "domwires";
 import {Types} from "../../../../common/Types";
 import {serviceIdentifier} from "domwires/dist/com/domwires/core/Decorators";
+import {IValidator} from "../../../../common/IValidator";
 
 @serviceIdentifier(Types.INetServerService)
 export abstract class AbstractNetServerService extends AbstractService implements INetServerService
@@ -20,11 +16,9 @@ export abstract class AbstractNetServerService extends AbstractService implement
     private _host!: string;
     private _port!: number;
 
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    protected _requestData!: RequestData<any>;
     protected _isOpened = false;
 
-    private actionMap: Map<string, Enum> = new Map<string, Enum>();
+    private actionMap: Map<string, { action: Enum; validator?: IValidator }> = new Map();
 
     protected override postConstruct(): void
     {
@@ -95,27 +89,49 @@ export abstract class AbstractNetServerService extends AbstractService implement
         throw new Error(DwError.OVERRIDE.name);
     }
 
-    public startListen(actionList: Enum[]): INetServerService
+    public startListen(actionList: { action: Enum; validator?: IValidator }[]): INetServerService
     {
         if (!this.checkIsOpened())
         {
             return this;
         }
 
-        actionList.map(action =>
+        actionList.map(value =>
         {
-            if (!this.isListening(action))
+            if (!this.isListening(value.action))
             {
-                this.startListenSingle(action);
+                this.startListenSingle(value);
             }
         });
 
         return this;
     }
 
-    protected startListenSingle(action: Enum): void
+    protected startListenSingle(action: { action: Enum; validator?: IValidator }): void
     {
-        this.actionMap.set(action.name, action);
+        this.actionMap.set(action.action.name, action);
+    }
+
+    protected requestDataIsValid<T>(action: string, data?: T): boolean
+    {
+        const validator = this.getActionValidator(action);
+
+        return validator && validator.isValid(data) || !validator;
+    }
+
+    private getActionValidator(actionName: string): IValidator | undefined
+    {
+        if (this.actionMap.has(actionName))
+        {
+            const action = this.actionMap.get(actionName);
+
+            if (action)
+            {
+                return action.validator;
+            }
+        }
+
+        return undefined;
     }
 
     public isListening(action: Enum): boolean;
@@ -151,11 +167,6 @@ export abstract class AbstractNetServerService extends AbstractService implement
     protected stopListenSingle(action: Enum): void
     {
         this.actionMap.delete(action.name);
-    }
-
-    public getRequestData<TData>(): RequestData<TData>
-    {
-        return this._requestData;
     }
 
     public get isOpened(): boolean

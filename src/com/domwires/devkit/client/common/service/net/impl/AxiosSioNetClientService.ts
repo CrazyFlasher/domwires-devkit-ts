@@ -28,9 +28,20 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
             {
                 this.socket.on("data", data =>
                 {
-                    this._responseData = {action: data.action, requestType: ClientServiceRequestType.TCP, data: data.data};
+                    this._responseData = {
+                        action: data.action,
+                        requestType: ClientServiceRequestType.TCP,
+                        data: data.data
+                    };
 
                     this.dispatchMessage(NetClientServiceMessageType.TCP_RESPONSE, this._responseData);
+                });
+
+                this.socket.on("disconnect", () =>
+                {
+                    this._isConnected = false;
+
+                    this.dispatchMessage(NetClientServiceMessageType.DISCONNECTED);
                 });
 
                 this._isConnected = true;
@@ -49,16 +60,11 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         if (!this.checkConnected()) return this;
 
         this.socket.disconnect();
-        // this.socket = undefined;
-
-        this._isConnected = false;
-
-        this.dispatchMessage(NetClientServiceMessageType.DISCONNECTED);
 
         return this;
     }
 
-    private async _sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData)
+    private async _sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData)
     {
         let url: string = action;
         let queryString: string;
@@ -69,6 +75,8 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         {
             if (data)
             {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 queryString = new URLSearchParams(data).toString();
 
                 if (queryString) url += "?" + queryString;
@@ -91,7 +99,7 @@ export class AxiosSioNetClientService extends AbstractNetClientService implement
         }
     }
 
-    protected override sendHttpRequest<TData extends Record<string, string>>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
+    protected override sendHttpRequest<TData>(action: string, requestType: ClientServiceRequestType | undefined, data?: TData): void
     {
         this._sendHttpRequest(action, requestType, data);
     }
