@@ -1,0 +1,14 @@
+{
+  "modelFactory": {
+    "netHost": {"value": "127.0.0.1"},
+    "httpPort": {"value": 3123},
+    "socketPort": {"value": 3124},
+    "dbName": {"value": "devkit_db"},
+    "dbHost": {"value": "127.0.0.1"},
+    "dbPort": {"value": 27017},
+    "emailHost": {"value": "smtp.gmail.com"},
+    "emailPort": {"value": 587},
+    "emailAuthUser": {"value": "anton.nefjodov@gmail.com"},
+    "emailAuthPassword": {"value": "junenhsoiwrfbhrd"}
+  }
+}

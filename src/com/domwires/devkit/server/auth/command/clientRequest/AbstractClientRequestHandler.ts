@@ -8,13 +8,11 @@ import {DwError} from "../../../../common/DwError";
 
 export abstract class AbstractClientRequestHandler<TReqData = void> extends AbstractAuthContextCommand
 {
-    // action: json.action, data: json.data, requestFromClientId: socket.id
-
     @lazyInjectNamed(Types.string, "action")
     private _reqAction!: string;
     protected reqAction!: Enum | undefined;
 
-    @lazyInjectNamed(Types.string, "requestFromClientId")
+    @lazyInjectNamed(Types.string, "clientId")
     private _requestFromClientId!: string | undefined;
     protected requestFromClientId!: string | undefined;
 
@@ -59,7 +57,6 @@ export abstract class AbstractClientRequestHandler<TReqData = void> extends Abst
         } catch (e)
         {
             this.logger.error(e);
-            throw e;
         }
 
         this.resolve();

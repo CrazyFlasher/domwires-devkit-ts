@@ -13,9 +13,9 @@ export class GuestLoginCommand extends AbstractClientRequestHandler
                 .setSnapshot(Utils.newGuestDto);
 
             this.socketResponse({success: true, data: this.account.snapshot});
-
-            this.resolve();
         }
+
+        this.resolve();
     }
 
     protected override get cliReqAction(): Enum

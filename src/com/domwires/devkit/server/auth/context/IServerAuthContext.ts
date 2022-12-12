@@ -46,6 +46,9 @@ import {ConfirmUpdateEmailCommand} from "../command/clientRequest/ConfirmUpdateE
 import {DeleteAccountCommand} from "../command/clientRequest/DeleteAccountCommand";
 import {ConfirmDeleteAccountCommand} from "../command/clientRequest/ConfirmDeleteAccountCommand";
 import {registerCommandAlias} from "../../../common/Global";
+import {ClientExistsGuards} from "../command/guards/ClientExistsGuards";
+import {ListClientsCommand} from "../command/clientRequest/ListClientsCommand";
+import {ClientNotExistGuards} from "../command/guards/ClientNotExistGuards";
 
 export interface IServerAuthContextImmutable extends IAppContextImmutable
 {
@@ -143,58 +146,68 @@ export class ServerAuthContext extends AppContext implements IServerAuthContext
 
     private registerCommandAliases(): void
     {
+        registerCommandAlias(CreateAccountModelCommand, "create_client", "creates new client", [
+            {name: "clientId"}
+        ], ClientNotExistGuards);
+
+        registerCommandAlias(RemoveAccountModelCommand, "remove_client", "removes client", [
+            {name: "clientId"}
+        ], ClientExistsGuards);
+
+        registerCommandAlias(ListClientsCommand, "list_clients", "list clients");
+
         registerCommandAlias(RegisterCommand, "register", "register user", [
             {name: "clientId"},
-            {name: "dto", requiredValue: {email: Types.empty, password: Types.empty, nick: Types.empty}}
-        ]);
+            {name: "data", requiredValue: {email: Types.empty, password: Types.empty, nick: Types.empty}}
+        ], ClientExistsGuards);
 
         registerCommandAlias(LoginCommand, "login", "login user", [
             {name: "clientId"},
-            {name: "dto", requiredValue: {email: Types.empty, password: Types.empty}}
-        ]);
+            {name: "data", requiredValue: {email: Types.empty, password: Types.empty}}
+        ], ClientExistsGuards);
 
         registerCommandAlias(LogoutCommand, "logout", "logout user", [
             {name: "clientId"}
-        ]);
+        ], ClientExistsGuards);
 
         registerCommandAlias(GuestLoginCommand, "guest_login", "login as guest user", [
             {name: "clientId"}
-        ]);
+        ], ClientExistsGuards);
     }
 
     private mapRegisterCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, RegisterCommand,
             {requiredAction: SocketAction.REGISTER}
-        ).addGuards(IsSuitableSocketActionGuards);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapLoginCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LoginCommand,
             {requiredAction: SocketAction.LOGIN}
-        ).addGuards(IsSuitableSocketActionGuards);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapGuestLoginCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, GuestLoginCommand,
-            {requiredAction: SocketAction.GUEST_LOGIN,}
-        ).addGuards(IsSuitableSocketActionGuards);
+            {requiredAction: SocketAction.GUEST_LOGIN}
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapLogoutCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, LogoutCommand,
             {requiredAction: SocketAction.LOGOUT}
-        ).addGuards(IsSuitableSocketActionGuards);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapResetPasswordCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, ResetPasswordCommand,
             {requiredAction: SocketAction.RESET_PASSWORD}
-        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards).addTargetGuards(this.socket);
     }
 
     private mapConfirmResetPasswordCommand(): void
@@ -208,21 +221,21 @@ export class ServerAuthContext extends AppContext implements IServerAuthContext
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdatePasswordCommand,
             {requiredAction: SocketAction.UPDATE_PASSWORD}
-        ).addGuards(IsSuitableSocketActionGuards);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapUpdateAccountDataCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdateAccountDataCommand,
             {requiredAction: SocketAction.UPDATE_ACCOUNT_DATA}
-        ).addGuards(IsSuitableSocketActionGuards);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards);
     }
 
     private mapUpdateEmailCommand(): void
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, UpdateEmailCommand,
             {requiredAction: SocketAction.UPDATE_EMAIL}
-        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket).addGuards(ClientExistsGuards);
     }
 
     private mapConfirmUpdateEmailCommand(): void
@@ -236,7 +249,7 @@ export class ServerAuthContext extends AppContext implements IServerAuthContext
     {
         this.map<SocketActionData>(NetServerServiceMessageType.GOT_REQUEST, DeleteAccountCommand,
             {requiredAction: SocketAction.DELETE_ACCOUNT}
-        ).addGuards(IsSuitableSocketActionGuards).addTargetGuards(this.socket);
+        ).addGuards(IsSuitableSocketActionGuards).addGuards(ClientExistsGuards).addTargetGuards(this.socket);
     }
 
     private mapConfirmDeleteAccountCommand(): void

@@ -11,6 +11,12 @@ export class CreateAccountModelCommand extends AbstractAuthContextCommand
     {
         super.execute();
 
-        this.accounts.add(this.factory.getInstance(Types.IAccountModel), this.connectedClientId);
+        try
+        {
+            this.accounts.add(this.factory.getInstance(Types.IAccountModel), this.connectedClientId);
+        } catch (e)
+        {
+            this.logger.warn("'clientId' is not injected!");
+        }
     }
 }

@@ -27,7 +27,6 @@ export class Types
     public static readonly IUIMediator = "IUIMediator";
     public static readonly ILogger = "ILogger";
     public static readonly ContextConfig = "ContextConfig";
-    public static readonly AppContextConfig = "AppContextConfig";
 
     public static readonly IFactory = "IFactory";
     public static readonly IFactoryImmutable = "IFactoryImmutable";

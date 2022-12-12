@@ -1,6 +1,15 @@
-import {AbstractCommand, Class, ICommand, ICommandMapper, ILogger, lazyInject, lazyInjectNamed} from "domwires";
+import {
+    AbstractCommand,
+    Class,
+    ICommand,
+    ICommandMapper,
+    IGuards,
+    ILogger,
+    lazyInject,
+    lazyInjectNamed
+} from "domwires";
 import {inject, named, optional} from "inversify";
-import {getCommandClassByAlias} from "../../Global";
+import {getCommandClassByAlias, getGuardsClassByAlias, getGuardsNotClassByAlias} from "../../Global";
 import {Types} from "../../Types";
 
 export class ExecuteCliCommand extends AbstractCommand
@@ -16,6 +25,8 @@ export class ExecuteCliCommand extends AbstractCommand
 
     @lazyInjectNamed(Types.string, "value")
     private value!: string;
+
+    private hJson = require("hjson");
 
     public override execute(): void
     {
@@ -41,7 +52,7 @@ export class ExecuteCliCommand extends AbstractCommand
             if (paramsJsonString)
             {
                 paramsJsonString = "{" + paramsJsonString + "}";
-                params = JSON.parse(paramsJsonString);
+                params = this.hJson.parse(paramsJsonString);
             }
         } catch (e)
         {
@@ -56,14 +67,17 @@ export class ExecuteCliCommand extends AbstractCommand
             try
             {
                 const cmd = getCommandClassByAlias(commandAlias);
+                const guards = getGuardsClassByAlias(commandAlias);
+                const guardsNot = getGuardsNotClassByAlias(commandAlias);
+
                 if (cmd)
                 {
                     if (cmd instanceof Array)
                     {
-                        cmd.map(value => this.exec(value, params));
+                        cmd.map(value => this.exec(value, params, guards, guardsNot));
                     } else
                     {
-                        this.exec(cmd, params);
+                        this.exec(cmd, params, guards, guardsNot);
                     }
                 }
             } catch (e)
@@ -73,8 +87,39 @@ export class ExecuteCliCommand extends AbstractCommand
         }
     }
 
-    private exec(cmd: Class<ICommand>, params?: Record<string, unknown>): void
+    private exec(cmd: Class<ICommand>, params?: Record<string, unknown>, guards?: Class<IGuards> | Class<IGuards>[],
+                 guardsNot?: Class<IGuards> | Class<IGuards>[])
     {
-        this.commandMapper.executeCommand(cmd, params);
+        try
+        {
+            let guardsList: Class<IGuards>[] | undefined;
+            if (guards)
+            {
+                if (guards instanceof Array)
+                {
+                    guardsList = guards;
+                } else
+                {
+                    guardsList = [guards];
+                }
+            }
+
+            let guardsNotList: Class<IGuards>[] | undefined;
+            if (guardsNot)
+            {
+                if (guardsNot instanceof Array)
+                {
+                    guardsNotList = guardsNot;
+                } else
+                {
+                    guardsNotList = [guardsNot];
+                }
+            }
+
+            this.commandMapper.executeCommand(cmd, params, guardsList, guardsNotList);
+        } catch (e)
+        {
+            this.logger.warn("Failed to execute command:", cmd, params);
+        }
     }
 }

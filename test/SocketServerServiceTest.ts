@@ -153,7 +153,7 @@ describe('SocketServerServiceTest', function (this: Suite)
             expect(data!.action).equals("test");
             expect(data!.data).equals("lalala!");
 
-            server.sendResponse(data!.requestFromClientId!, {
+            server.sendResponse(data!.clientId!, {
                 action: "test",
                 data: "otvet"
             });

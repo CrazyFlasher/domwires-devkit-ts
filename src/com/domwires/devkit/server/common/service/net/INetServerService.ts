@@ -9,7 +9,7 @@ export type NetServerServiceConfig = ServiceConfig & {
 };
 
 export type RequestData<TData = unknown> = {
-    readonly requestFromClientId?: string;
+    readonly clientId?: string;
     readonly action: string;
     readonly data?: TData;
     readonly method?: HttpMethod;

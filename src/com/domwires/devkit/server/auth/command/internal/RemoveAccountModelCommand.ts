@@ -11,6 +11,12 @@ export class RemoveAccountModelCommand extends AbstractAuthContextCommand
     {
         super.execute();
 
-        this.accounts.remove(this.disconnectedClientId);
+        try
+        {
+            this.accounts.remove(this.disconnectedClientId);
+        } catch (e)
+        {
+            this.logger.warn("'clientId' is not injected!");
+        }
     }
 }

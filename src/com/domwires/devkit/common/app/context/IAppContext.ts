@@ -215,6 +215,16 @@ export class AppContext extends AbstractContext implements IAppContext
         mediatorFactory: IFactory; viewFactory: IFactory;
     }
     {
+        const toMap = (config: FactoryConfig): FactoryConfig =>
+        {
+            if (config instanceof Map)
+            {
+                return config;
+            }
+
+            return new Map(Object.entries(config));
+        };
+
         if (!this._contextFactory)
         {
             this._contextFactory = new Factory(this.logger);
@@ -225,11 +235,11 @@ export class AppContext extends AbstractContext implements IAppContext
 
             if (this.factoriesConfig)
             {
-                if (this.factoriesConfig.contextFactory) this._contextFactory.appendMappingConfig(this.factoriesConfig.contextFactory);
-                if (this.factoriesConfig.modelFactory) this._modelFactory.appendMappingConfig(this.factoriesConfig.modelFactory);
-                if (this.factoriesConfig.serviceFactory) this._serviceFactory.appendMappingConfig(this.factoriesConfig.serviceFactory);
-                if (this.factoriesConfig.mediatorFactory) this._mediatorFactory.appendMappingConfig(this.factoriesConfig.mediatorFactory);
-                if (this.factoriesConfig.viewFactory) this._viewFactory.appendMappingConfig(this.factoriesConfig.viewFactory);
+                if (this.factoriesConfig.contextFactory) this._contextFactory.appendMappingConfig(toMap(this.factoriesConfig.contextFactory));
+                if (this.factoriesConfig.modelFactory) this._modelFactory.appendMappingConfig(toMap(this.factoriesConfig.modelFactory));
+                if (this.factoriesConfig.serviceFactory) this._serviceFactory.appendMappingConfig(toMap(this.factoriesConfig.serviceFactory));
+                if (this.factoriesConfig.mediatorFactory) this._mediatorFactory.appendMappingConfig(toMap(this.factoriesConfig.mediatorFactory));
+                if (this.factoriesConfig.viewFactory) this._viewFactory.appendMappingConfig(toMap(this.factoriesConfig.viewFactory));
             }
         }
 

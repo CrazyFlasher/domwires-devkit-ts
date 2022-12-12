@@ -34,7 +34,7 @@ export class UIMediator extends AbstractHierarchyObject
             }
             else
             {
-                data.value = "/cmd:" + data.value;
+                // data.value = "/cmd:" + data.value;
                 this.dispatchMessage(UIMediatorMessageType.INPUT, data);
             }
         }

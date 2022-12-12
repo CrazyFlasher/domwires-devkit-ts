@@ -140,11 +140,11 @@ describe('NetClientServiceTest', function (this: Suite)
 
                 if (data && data.data!.say === "hello")
                 {
-                    sendTcpResponse(true, data!.requestFromClientId!, data!.action);
+                    sendTcpResponse(true, data!.clientId!, data!.action);
                 }
                 else
                 {
-                    sendTcpResponse(false, data!.requestFromClientId!, data!.action);
+                    sendTcpResponse(false, data!.clientId!, data!.action);
                 }
             });
 

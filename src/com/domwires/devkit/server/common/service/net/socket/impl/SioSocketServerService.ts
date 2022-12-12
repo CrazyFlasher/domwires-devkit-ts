@@ -79,7 +79,7 @@ export class SioSocketServerService extends AbstractNetServerService implements 
                         if (this.requestDataIsValid(json.action, json.data))
                         {
                             this.dispatchMessage(NetServerServiceMessageType.GOT_REQUEST, {
-                                action: json.action, data: json.data, requestFromClientId: socket.id
+                                action: json.action, data: json.data, clientId: socket.id
                             });
                         } else
                         {

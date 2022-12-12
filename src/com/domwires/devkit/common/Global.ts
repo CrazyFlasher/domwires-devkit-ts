@@ -2,16 +2,19 @@
 
 // TODO: remove Global
 
-import {Class, definableFromString, ICommand, Logger, LogLevel} from "domwires";
+import {Class, definableFromString, ICommand, IGuards, Logger, LogLevel} from "domwires";
 
 const commandAliasToClassMap: Map<string, Class<ICommand> | Class<ICommand>[]> = new Map<string, Class<ICommand> | Class<ICommand>[]>();
+const commandAliasToGuardsMap: Map<string, Class<IGuards> | Class<IGuards>[]> = new Map<string, Class<IGuards> | Class<IGuards>[]>();
+const commandAliasToGuardsNotMap: Map<string, Class<IGuards> | Class<IGuards>[]> = new Map<string, Class<IGuards> | Class<IGuards>[]>();
 const commandAliasToDescriptionMap: Map<string, string> = new Map<string, string>();
 const commandAliasToParamsMap: Map<string, any> = new Map<string, any>();
 
 const logger = new Logger(LogLevel.VERBOSE);
 
 export function registerCommandAlias(commandClass: Class<ICommand> | Class<ICommand>[], alias: string, description?: string,
-                                     params?: { name: string; type?: string; requiredValue?: string | boolean | number | object; optional?: boolean }[]): void
+                                     params?: { name: string; type?: string; requiredValue?: string | boolean | number | object; optional?: boolean }[],
+                                     guards?: Class<IGuards> | Class<IGuards>[], guardsNot?: Class<IGuards> | Class<IGuards>[]): void
 {
     if (alias === "/help")
     {
@@ -36,7 +39,17 @@ export function registerCommandAlias(commandClass: Class<ICommand> | Class<IComm
             definableFromString(value, alias);
         });
 
+        if (commandAliasToClassMap.has(alias))
+        {
+            logger.warn("Command '" + alias + "' already registered. Overwriting...");
+            if (commandAliasToGuardsMap.has(alias)) commandAliasToGuardsMap.delete(alias);
+            if (commandAliasToGuardsNotMap.has(alias)) commandAliasToGuardsNotMap.delete(alias);
+            if (commandAliasToParamsMap.has(alias)) commandAliasToParamsMap.delete(alias);
+        }
+
         commandAliasToClassMap.set(alias, list);
+        if (guards) commandAliasToGuardsMap.set(alias, guards);
+        if (guardsNot) commandAliasToGuardsNotMap.set(alias, guardsNot);
 
         if (params)
         {
@@ -80,6 +93,26 @@ export function getCommandClassByAlias(alias: string): Class<ICommand> | Class<I
     }
 
     logger.warn("Cannot find command by alias '" + alias + "'. Did you call 'registerCommandAlias?");
+
+    return undefined;
+}
+
+export function getGuardsClassByAlias(alias: string): Class<IGuards> | Class<IGuards>[] | undefined
+{
+    if (commandAliasToGuardsMap.has(alias))
+    {
+        return commandAliasToGuardsMap.get(alias);
+    }
+
+    return undefined;
+}
+
+export function getGuardsNotClassByAlias(alias: string): Class<IGuards> | Class<IGuards>[] | undefined
+{
+    if (commandAliasToGuardsNotMap.has(alias))
+    {
+        return commandAliasToGuardsNotMap.get(alias);
+    }
 
     return undefined;
 }

@@ -27,6 +27,8 @@ export abstract class AbstractMainContext extends AppContext implements IMainCon
 
     protected override init(): void
     {
+        this.setId("main");
+
         super.init();
 
         this.factory.mapToValue(Types.IAppContext, this);

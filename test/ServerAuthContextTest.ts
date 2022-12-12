@@ -1042,20 +1042,20 @@ describe('ServerAuthContextTest', function (this: Suite)
         let dto;
         if (wrapInDto)
         {
-            dto = data ? {data: data, requestFromClientId: client.id} : {
-                requestFromClientId: client.id
+            dto = data ? {data: data, clientId: client.id} : {
+                clientId: client.id
             };
         }
         else
         {
             if (data)
             {
-                data.requestFromClientId = client.id;
+                data.clientId = client.id;
                 dto = data;
             }
             else
             {
-                dto = {requestFromClientId: client.id};
+                dto = {clientId: client.id};
             }
         }
         context.tryToExecuteCommand(UIMediatorMessageType.INPUT,
