@@ -601,7 +601,7 @@ class ModelFromTypeGen extends AbstractScript
 
     private fixLineEnd(s: string): string
     {
-        return s.split("\r\n").join("\n\n").split("\n\n").join("\r\n");
+        return s.split("\r\n").join("\n").split("\n").join("\r\n");
     }
 }
 
