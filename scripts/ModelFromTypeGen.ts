@@ -70,12 +70,12 @@ class ModelFromTypeGen extends AbstractScript
 
     private loadTemplate(): void
     {
-        this.modelTemplate = this.fs.readFileSync(this.templatesPath + "/ModelTemplate").toString();
-        this.iModelTemplate = this.fs.readFileSync(this.templatesPath + "/IModelTemplate").toString();
-        this.iModelImmutableTemplate = this.fs.readFileSync(this.templatesPath + "/IModelImmutableTemplate").toString();
-        this.modelMessageTypeTemplate = this.fs.readFileSync(this.templatesPath + "/ModelMessageTypeTemplate").toString();
-        this.getterTemplate = this.fs.readFileSync(this.templatesPath + "/GetterTemplate").toString();
-        this.setterTemplate = this.fs.readFileSync(this.templatesPath + "/SetterTemplate").toString();
+        this.modelTemplate = this.fs.readFileSync(this.templatesPath + "/ModelTemplate").toString().split("\n").join("\r\n");
+        this.iModelTemplate = this.fs.readFileSync(this.templatesPath + "/IModelTemplate").toString().split("\n").join("\r\n");
+        this.iModelImmutableTemplate = this.fs.readFileSync(this.templatesPath + "/IModelImmutableTemplate").toString().split("\n").join("\r\n");
+        this.modelMessageTypeTemplate = this.fs.readFileSync(this.templatesPath + "/ModelMessageTypeTemplate").toString().split("\n").join("\r\n");
+        this.getterTemplate = this.fs.readFileSync(this.templatesPath + "/GetterTemplate").toString().split("\n").join("\r");
+        this.setterTemplate = this.fs.readFileSync(this.templatesPath + "/SetterTemplate").toString().split("\n").join("\r");
 
         if (this.verbose)
         {
@@ -520,7 +520,7 @@ class ModelFromTypeGen extends AbstractScript
 
         for (let i = 0; i < x; i++)
         {
-            out += this.os.EOL;
+            out += "\r\n";
         }
 
         return out;
@@ -574,7 +574,8 @@ class ModelFromTypeGen extends AbstractScript
             .split("    ").join("")
             .split("  ").join("")
             .split(" ").join("")
-            .split(this.os.EOL).join("")
+            .split("\n").join("")
+            .split("\r").join("")
             .split("readonly").join("readonly ")
             .split("var").join("var ")
             .split("package").join("package ")
