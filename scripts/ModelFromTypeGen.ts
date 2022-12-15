@@ -70,12 +70,12 @@ class ModelFromTypeGen extends AbstractScript
 
     private loadTemplate(): void
     {
-        this.modelTemplate = this.fs.readFileSync(this.templatesPath + "/ModelTemplate").toString().split("\n").join("\r\n");
-        this.iModelTemplate = this.fs.readFileSync(this.templatesPath + "/IModelTemplate").toString().split("\n").join("\r\n");
-        this.iModelImmutableTemplate = this.fs.readFileSync(this.templatesPath + "/IModelImmutableTemplate").toString().split("\n").join("\r\n");
-        this.modelMessageTypeTemplate = this.fs.readFileSync(this.templatesPath + "/ModelMessageTypeTemplate").toString().split("\n").join("\r\n");
-        this.getterTemplate = this.fs.readFileSync(this.templatesPath + "/GetterTemplate").toString().split("\n").join("\r");
-        this.setterTemplate = this.fs.readFileSync(this.templatesPath + "/SetterTemplate").toString().split("\n").join("\r");
+        this.modelTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/ModelTemplate").toString());
+        this.iModelTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/IModelTemplate").toString());
+        this.iModelImmutableTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/IModelImmutableTemplate").toString());
+        this.modelMessageTypeTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/ModelMessageTypeTemplate").toString());
+        this.getterTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/GetterTemplate").toString());
+        this.setterTemplate = this.fixLineEnd(this.fs.readFileSync(this.templatesPath + "/SetterTemplate").toString());
 
         if (this.verbose)
         {
@@ -597,6 +597,11 @@ class ModelFromTypeGen extends AbstractScript
         {
             this.typeDefImports = this.typeDefImports.split("./").join(this.relatedImportPath);
         }
+    }
+
+    private fixLineEnd(s: string): string
+    {
+        return s.split("\r\n").join("\n\n").split("\n\n").join("\r\n");
     }
 }
 
