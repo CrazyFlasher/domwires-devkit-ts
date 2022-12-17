@@ -8,7 +8,6 @@ import {CliInputView} from "../view/CliInputView";
 import {IHttpServerService} from "../../common/service/net/http/IHttpServerService";
 import {ISocketServerService, SocketServerServiceConfig} from "../../common/service/net/socket/ISocketServerService";
 import {ExpressHttpServerService} from "../../common/service/net/http/impl/ExpressHttpServerService";
-import {SioSocketServerService} from "../../common/service/net/socket/impl/SioSocketServerService";
 import {NetServerServiceConfig, NetServerServiceMessageType} from "../../common/service/net/INetServerService";
 import {DataBaseServiceConfig} from "../../common/service/net/db/IDataBaseService";
 import {Types} from "../../../common/Types";
@@ -60,7 +59,7 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
         super.init();
 
         this.mapServiceToType(Types.IHttpServerService, ExpressHttpServerService);
-        this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
+        // this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
         this.mapServiceToType(Types.IAuthDataBaseService, AuthMongoDataBaseService);
         this.mapServiceToType(Types.IEmailService, NodemailerEmailService);
 

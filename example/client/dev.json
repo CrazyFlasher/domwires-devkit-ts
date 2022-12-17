@@ -1,0 +1,7 @@
+{
+  "modelFactory": {
+    "netHost": {"value": "127.0.0.1"},
+    "httpPort": {"value": 3123},
+    "socketPort": {"value": 3124}
+  }
+}

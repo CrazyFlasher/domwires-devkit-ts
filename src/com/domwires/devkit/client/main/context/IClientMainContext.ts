@@ -1,5 +1,6 @@
 import "../../auth/context/IClientAuthContext";
 import "../../../common/main/model/IAccountModel";
+import "../../../common/main/model/IAccountModelContainer";
 
 import {IInputView} from "../../../common/app/view/IInputView";
 import {Class, setDefaultImplementation} from "domwires";

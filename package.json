@@ -43,7 +43,10 @@
     "@types/nodemailer": "6.4.6",
     "nodemailer": "6.8.0",
     "@types/integer": "4.0.1",
-    "hjson": "3.2.2"
+    "hjson": "3.2.2",
+    "esbuild": "0.16.7",
+    "@esbuild-plugins/node-modules-polyfill": "0.1.4",
+    "http-server": "14.1.1"
   },
   "engines": {
     "node": ">=16.17.0"
@@ -60,6 +63,8 @@
     "eslint-run": "eslint . --ext .ts",
     "clean": "rimraf dist/",
     "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css dist/",
-    "sample-server-run": "ts-node --project example/tsconfig.json example/SampleServerApp.ts"
+    "sample-server-run": "ts-node --project example/server/tsconfig.json example/server/SampleServerApp.ts",
+    "sample-client-build": "ts-node --project example/client/tsconfig.json example/client/build.ts",
+    "sample-client-run": "http-server example/client/dist -a localhost -p 1234 -o /index.html"
   }
 }

@@ -43,6 +43,7 @@ export class Types
     public static readonly IHttpServerService = "IHttpServerService";
     public static readonly IHttpServerServiceImmutable = "IHttpServerServiceImmutable";
 
+    public static readonly SioSocketServerService = "SioSocketServerService";
     public static readonly ISocketServerService = "ISocketServerService";
     public static readonly ISocketServerServiceImmutable = "ISocketServerServiceImmutable";
 

@@ -1,11 +1,11 @@
 import "reflect-metadata";
-import "../src/com/domwires/devkit/server/main/context/IServerMainContext";
+import "../../src/com/domwires/devkit/server/main/context/IServerMainContext";
 
 import {AbstractServerApp} from "domwires/dist/com/domwires/core/app/AbstractServerApp";
 import {postConstruct} from "inversify";
 import {Factory, IFactory, Logger, LogLevel} from "domwires";
-import {AppContextConfigBuilder, FactoriesConfig} from "../src/com/domwires/devkit/common/app/context/IAppContext";
-import {Types} from "../src/com/domwires/devkit/common/Types";
+import {AppContextConfigBuilder, FactoriesConfig} from "../../src/com/domwires/devkit/common/app/context/IAppContext";
+import {Types} from "../../src/com/domwires/devkit/common/Types";
 
 class SampleServerApp extends AbstractServerApp<FactoriesConfig>
 {
@@ -17,7 +17,7 @@ class SampleServerApp extends AbstractServerApp<FactoriesConfig>
 
     protected override get configPath(): string
     {
-        return "./example/dev.json";
+        return "./example/server/dev.json";
     }
 
     private async initApp()

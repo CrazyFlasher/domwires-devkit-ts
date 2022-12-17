@@ -27,7 +27,10 @@ export class SioSocketServerService extends AbstractNetServerService implements 
 
         try
         {
-            this.server = new Server(this.socketServerServiceConfig.http, {maxHttpBufferSize: 1000});
+            this.server = new Server(this.socketServerServiceConfig.http, {
+                maxHttpBufferSize: 1000, cors: {
+                    origin: "*"
+                }});
             this.server.listen(this.socketServerServiceConfig.port);
 
             this.openSuccess();

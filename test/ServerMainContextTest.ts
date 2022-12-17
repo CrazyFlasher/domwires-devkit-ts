@@ -2,6 +2,7 @@
 import "reflect-metadata";
 
 import "../src/com/domwires/devkit/server/main/context/IServerMainContext";
+import "../src/com/domwires/devkit/server/ServerDefs";
 
 import {Suite} from "mocha";
 import {Factory, Logger, LogLevel} from "domwires";
@@ -19,6 +20,9 @@ describe('ServerMainContextTest', function (this: Suite)
     let mainContext: IServerMainContext;
 
     const factoriesConfig: FactoriesConfig = {
+        serviceFactory: new Map([
+            [Types.ISocketServerService, {implementation: Types.SioSocketServerService}]
+        ]),
         modelFactory: new Map([
             [ConfigIds.netHost, {value: "127.0.0.1"}],
             [ConfigIds.httpPort, {value: 3123}],

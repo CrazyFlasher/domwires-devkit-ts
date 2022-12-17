@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "sourceMap": true,
+    "target": "ES2015",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "noImplicitOverride": true,
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "strict": true
+  }
+}
