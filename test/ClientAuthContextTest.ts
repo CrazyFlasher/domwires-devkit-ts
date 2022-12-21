@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import "reflect-metadata";
+import "../src/com/domwires/devkit/server/ServerRefs";
 
 import "../src/com/domwires/devkit/client/auth/context/IClientAuthContext";
 import "../src/com/domwires/devkit/common/main/model/IAccountModelContainer";
@@ -74,7 +74,12 @@ describe('ClientAuthContextTest', function (this: Suite)
                 const dropTokens = () =>
                 {
                     const factoriesConfig: FactoriesConfig = {
-                        modelFactory: new Map([
+                        serviceFactory: new Map([
+                            [Types.IHttpServerService, {implementation: Types.ExpressHttpServerService}],
+                            [Types.ISocketServerService, {implementation: Types.SioSocketServerService}],
+                            [Types.IAuthDataBaseService, {implementation: Types.AuthMongoDataBaseService}],
+                            [Types.IEmailService, {implementation: Types.NodemailerEmailService}],
+
                             [ConfigIds.netHost, {value: "127.0.0.1"}],
                             [ConfigIds.httpPort, {value: 3123}],
                             [ConfigIds.socketPort, {value: 3124}],

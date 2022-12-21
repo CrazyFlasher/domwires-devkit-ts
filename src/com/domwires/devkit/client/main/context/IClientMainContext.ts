@@ -11,7 +11,6 @@ import {
     NetClientServiceConfig,
     NetClientServiceMessageType
 } from "../../common/service/net/INetClientService";
-import {AxiosSioNetClientService} from "../../common/service/net/impl/AxiosSioNetClientService";
 import {ConfigIds} from "../../../common/ConfigIds";
 import {ServiceMessageType} from "../../../common/service/IService";
 import {ConnectNetClientServiceCommand} from "../command/ConnectNetClientServiceCommand";
@@ -54,8 +53,6 @@ export class ClientMainContext extends AbstractMainContext implements IClientMai
     {
         super.init();
 
-        this.mapServiceToType(Types.INetClientService, AxiosSioNetClientService);
-
         this.createNetClient();
         this.createUserAccount();
 
@@ -82,9 +79,9 @@ export class ClientMainContext extends AbstractMainContext implements IClientMai
 
     private createNetClient(): void
     {
-        const netHost: string = this.modelFactory.getInstance(Types.string, ConfigIds.netHost);
-        const httpPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.httpPort);
-        const socketPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.socketPort);
+        const netHost: string = this.serviceFactory.getInstance(Types.string, ConfigIds.netHost);
+        const httpPort: number = this.serviceFactory.getInstance(Types.number, ConfigIds.httpPort);
+        const socketPort: number = this.serviceFactory.getInstance(Types.number, ConfigIds.socketPort);
 
         const config: NetClientServiceConfig = {
             httpBaseUrl: "http://" + netHost + ":" + httpPort,

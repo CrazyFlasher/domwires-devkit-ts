@@ -7,7 +7,6 @@ import {Class, setDefaultImplementation} from "domwires";
 import {CliInputView} from "../view/CliInputView";
 import {IHttpServerService} from "../../common/service/net/http/IHttpServerService";
 import {ISocketServerService, SocketServerServiceConfig} from "../../common/service/net/socket/ISocketServerService";
-import {ExpressHttpServerService} from "../../common/service/net/http/impl/ExpressHttpServerService";
 import {NetServerServiceConfig, NetServerServiceMessageType} from "../../common/service/net/INetServerService";
 import {DataBaseServiceConfig} from "../../common/service/net/db/IDataBaseService";
 import {Types} from "../../../common/Types";
@@ -21,11 +20,9 @@ import {ServerConfigIds} from "../../ServerConfigIds";
 import {AbstractMainContext, IMainContext, IMainContextImmutable} from "../../../common/main/context/IMainContext";
 import {IServerAuthContext} from "../../auth/context/IServerAuthContext";
 import {IAuthDataBaseService} from "../../common/service/net/db/IAuthDataBaseService";
-import {AuthMongoDataBaseService} from "../../common/service/net/db/impl/AuthMongoDataBaseService";
 import {EmailServiceConfig, IEmailService} from "../../common/service/net/email/IEmailService";
 import {ServiceMessageType} from "../../../common/service/IService";
 import {InitEmailServiceCommand} from "../command/InitEmailServiceCommand";
-import {NodemailerEmailService} from "../../common/service/net/email/impl/NodemailerEmailService";
 
 export interface IServerMainContextImmutable extends IMainContextImmutable
 {
@@ -57,11 +54,6 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
     protected override init()
     {
         super.init();
-
-        this.mapServiceToType(Types.IHttpServerService, ExpressHttpServerService);
-        // this.mapServiceToType(Types.ISocketServerService, SioSocketServerService);
-        this.mapServiceToType(Types.IAuthDataBaseService, AuthMongoDataBaseService);
-        this.mapServiceToType(Types.IEmailService, NodemailerEmailService);
 
         this.createHttp();
         this.createSocket();
@@ -97,8 +89,8 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
 
     private createHttp(): void
     {
-        const netHost: string = this.modelFactory.getInstance(Types.string, ConfigIds.netHost);
-        const httpPort: number = this.modelFactory.getInstance(Types.number, ConfigIds.httpPort);
+        const netHost: string = this.serviceFactory.getInstance(Types.string, ConfigIds.netHost);
+        const httpPort: number = this.serviceFactory.getInstance(Types.number, ConfigIds.httpPort);
 
         const httpConfig: NetServerServiceConfig = {host: netHost, port: httpPort};
 
@@ -114,7 +106,7 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
         const socketConfig: SocketServerServiceConfig = {
             enabled: this._http.enabled,
             host: this._http.host,
-            port: this.modelFactory.getInstance(Types.number, ConfigIds.socketPort),
+            port: this.serviceFactory.getInstance(Types.number, ConfigIds.socketPort),
             http: this._http.nodeHttpServer
         };
 
@@ -128,9 +120,9 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
     private createDb(): void
     {
         const dbConfig: DataBaseServiceConfig = {
-            host: this.modelFactory.getInstance(Types.string, ServerConfigIds.dbHost),
-            port: this.modelFactory.getInstance(Types.number, ServerConfigIds.dbPort),
-            dataBaseName: this.modelFactory.getInstance(Types.string, ServerConfigIds.dbName),
+            host: this.serviceFactory.getInstance(Types.string, ServerConfigIds.dbHost),
+            port: this.serviceFactory.getInstance(Types.number, ServerConfigIds.dbPort),
+            dataBaseName: this.serviceFactory.getInstance(Types.string, ServerConfigIds.dbName),
         };
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, dbConfig);
@@ -143,10 +135,10 @@ export class ServerMainContext extends AbstractMainContext implements IServerMai
     private createEmail(): void
     {
         const emailConfig: EmailServiceConfig = {
-            host: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailHost),
-            port: this.modelFactory.getInstance(Types.number, ServerConfigIds.emailPort),
-            authUser: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailAuthUser),
-            authPassword: this.modelFactory.getInstance(Types.string, ServerConfigIds.emailAuthPassword)
+            host: this.serviceFactory.getInstance(Types.string, ServerConfigIds.emailHost),
+            port: this.serviceFactory.getInstance(Types.number, ServerConfigIds.emailPort),
+            authUser: this.serviceFactory.getInstance(Types.string, ServerConfigIds.emailAuthUser),
+            authPassword: this.serviceFactory.getInstance(Types.string, ServerConfigIds.emailAuthPassword)
         };
 
         this.serviceFactory.mapToValue(Types.ServiceConfig, emailConfig);

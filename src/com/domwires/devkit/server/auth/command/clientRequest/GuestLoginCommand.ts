@@ -1,7 +1,7 @@
-import {Utils} from "../../../../common/utils/Utils";
 import {AbstractClientRequestHandler} from "./AbstractClientRequestHandler";
 import {Enum} from "domwires";
 import {SocketAction} from "../../../../common/net/SocketAction";
+import {ServerUtils} from "../../../utils/ServerUtils";
 
 export class GuestLoginCommand extends AbstractClientRequestHandler
 {
@@ -10,7 +10,7 @@ export class GuestLoginCommand extends AbstractClientRequestHandler
         if (this.account)
         {
             this.account.setIsLoggedIn(true).setIsGuest(true)
-                .setSnapshot(Utils.newGuestDto);
+                .setSnapshot(ServerUtils.newGuestDto);
 
             this.socketResponse({success: true, data: this.account.snapshot});
         }

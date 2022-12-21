@@ -1,20 +1,20 @@
-import crypto, {createHmac} from "crypto";
-import {AccountDto} from "../net/Dto";
+import crypto from "crypto";
+import {AccountDto} from "../../common/net/Dto";
 
-export class Utils
+export class ServerUtils
 {
     private static guestIndex = 0;
 
     private static get newGuestId(): string
     {
-        Utils.guestIndex++;
+        ServerUtils.guestIndex++;
 
-        return "guest_" + Utils.guestIndex;
+        return "guest_" + ServerUtils.guestIndex;
     }
 
     public static get newGuestDto(): AccountDto
     {
-        const guestId: string = Utils.newGuestId;
+        const guestId: string = ServerUtils.newGuestId;
 
         return {email: guestId, nick: guestId, password: guestId};
     }
@@ -25,7 +25,7 @@ export class Utils
     {
         if (typeof value === "string")
         {
-            return createHmac("sha256", "it_is_very_secret")
+            return crypto.createHmac("sha256", "it_is_very_secret")
                 .update(value)
                 .digest("hex");
         }
@@ -34,7 +34,7 @@ export class Utils
 
         if (password)
         {
-            password = Utils.hashPassword(password);
+            password = ServerUtils.hashPassword(password);
         }
 
         return {email: value!.email, password, nick: value!.nick};
@@ -48,6 +48,6 @@ export class Utils
             .map((x) => chars[x as number % chars.length])
             .join('');
 
-        return hashed ? Utils.hashPassword(pass) : pass;
+        return hashed ? ServerUtils.hashPassword(pass) : pass;
     }
 }

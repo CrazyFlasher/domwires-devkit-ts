@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
-import "reflect-metadata";
-
-import "../src/com/domwires/devkit/server/main/context/IServerMainContext";
-import "../src/com/domwires/devkit/client/main/context/IClientMainContext";
+import "../src/com/domwires/devkit/server/ServerRefs";
+import "../src/com/domwires/devkit/client/ClientRefs";
 
 import {Suite} from "mocha";
 import {IServerMainContext} from "../src/com/domwires/devkit/server/main/context/IServerMainContext";
@@ -16,7 +14,7 @@ import {IClientMainContext} from "../src/com/domwires/devkit/client/main/context
 import {NetClientServiceMessageType} from "../src/com/domwires/devkit/client/common/service/net/INetClientService";
 import * as dotenv from "dotenv";
 
-describe('ClientAppContextTest', function (this: Suite)
+describe('ClientMainContextTest', function (this: Suite)
 {
     dotenv.config();
 
@@ -25,7 +23,12 @@ describe('ClientAppContextTest', function (this: Suite)
     let mainContext: IClientMainContext;
 
     const serverFactoriesConfig: FactoriesConfig = {
-        modelFactory: new Map([
+        serviceFactory: new Map([
+            [Types.IHttpServerService, {implementation: Types.ExpressHttpServerService}],
+            [Types.ISocketServerService, {implementation: Types.SioSocketServerService}],
+            [Types.IAuthDataBaseService, {implementation: Types.AuthMongoDataBaseService}],
+            [Types.IEmailService, {implementation: Types.NodemailerEmailService}],
+
             [ConfigIds.netHost, {value: "127.0.0.1"}],
             [ConfigIds.httpPort, {value: 3123}],
             [ConfigIds.socketPort, {value: 3124}],
@@ -40,7 +43,9 @@ describe('ClientAppContextTest', function (this: Suite)
     };
 
     const clientFactoriesConfig: FactoriesConfig = {
-        modelFactory: new Map([
+        serviceFactory: new Map([
+            [Types.INetClientService, {implementation: Types.AxiosSioNetClientService}],
+
             [ConfigIds.netHost, {value: "127.0.0.1"}],
             [ConfigIds.httpPort, {value: 3123}],
             [ConfigIds.socketPort, {value: 3124}]

@@ -1,5 +1,10 @@
 {
-  "modelFactory": {
+  "serviceFactory": {
+    "IHttpServerService": {"implementation": "ExpressHttpServerService"},
+    "ISocketServerService": {"implementation": "SioSocketServerService"},
+    "IAuthDataBaseService": {"implementation": "AuthMongoDataBaseService"},
+    "IEmailService": {"implementation": "NodemailerEmailService"},
+
     "netHost": {"value": "127.0.0.1"},
     "httpPort": {"value": 3123},
     "socketPort": {"value": 3124},

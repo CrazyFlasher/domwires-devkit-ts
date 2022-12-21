@@ -53,12 +53,12 @@ import {
 } from "../src/com/domwires/devkit/server/common/service/net/email/impl/NodemailerEmailService";
 import * as dotenv from "dotenv";
 import {ServiceMessageType} from "../src/com/domwires/devkit/common/service/IService";
-import Http from "http";
-import {Utils} from "../src/com/domwires/devkit/common/utils/Utils";
 import {IAuthDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/IAuthDataBaseService";
 import {
     AuthMongoDataBaseService
 } from "../src/com/domwires/devkit/server/common/service/net/db/impl/AuthMongoDataBaseService";
+import {ServerUtils} from "../src/com/domwires/devkit/server/utils/ServerUtils";
+import * as Http from "http";
 
 describe('ServerAuthContextTest', function (this: Suite)
 {
@@ -302,7 +302,7 @@ describe('ServerAuthContextTest', function (this: Suite)
                         expect(json.data.result.success).true;
                         expect(json.data.result.reason).undefined;
 
-                        expect(accounts.get(c.id)!.password).not.equals(Utils.hashPassword(oldPass));
+                        expect(accounts.get(c.id)!.password).not.equals(ServerUtils.hashPassword(oldPass));
 
                         c.disconnect();
                         done();
@@ -1109,7 +1109,7 @@ describe('ServerAuthContextTest', function (this: Suite)
         await db.insert(Collection.ACCOUNTS.name, [
             {
                 email: "anton@javelin.ee",
-                password: Utils.hashPassword("123qweASD"),
+                password: ServerUtils.hashPassword("123qweASD"),
                 nick: "Anton", gender: "male"
             }
         ]);

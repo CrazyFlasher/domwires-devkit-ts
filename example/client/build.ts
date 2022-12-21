@@ -1,25 +1,23 @@
 import {build} from "esbuild";
 import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill';
+import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill';
 import fs from "fs";
 
 class Build
 {
     private static readonly BASE: string = "./example/client";
-    private static readonly DIST: string = Build.BASE+ "/dist";
+    private static readonly DIST: string = Build.BASE + "../../../dist_client";
 
     public constructor()
     {
         build({
-                plugins: [NodeModulesPolyfills()],
+                plugins: [NodeModulesPolyfills(), GlobalsPolyfills({process: true, buffer: true})],
                 entryPoints: [
                     Build.BASE + '/SampleClientApp.ts',
                 ],
                 outfile: Build.DIST + "/main.js",
                 bundle: true,
-                loader: {".ts": "ts"},
-                define: {
-                    "global": 'window',
-                }
+                loader: {".ts": "ts"}
             }
         ).then(() => console.log("⚡ Done")).catch(() => process.exit(1));
 

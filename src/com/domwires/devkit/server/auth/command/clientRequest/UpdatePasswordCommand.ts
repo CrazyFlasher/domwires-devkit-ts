@@ -1,7 +1,7 @@
-import {Utils} from "../../../../common/utils/Utils";
 import {ErrorReason} from "../../../../common/ErrorReason";
 import {AbstractClientRequestHandler} from "./AbstractClientRequestHandler";
 import {Enum} from "domwires";
+import {ServerUtils} from "../../../utils/ServerUtils";
 
 export class UpdatePasswordCommand extends AbstractClientRequestHandler<{ oldPassword: string; newPassword: string }>
 {
@@ -12,12 +12,12 @@ export class UpdatePasswordCommand extends AbstractClientRequestHandler<{ oldPas
 
         if (this.account && this.account.isLoggedIn && !this.account.isGuest)
         {
-            if (Utils.hashPassword(this.reqData!.oldPassword) != this.account.password)
+            if (ServerUtils.hashPassword(this.reqData!.oldPassword) != this.account.password)
             {
                 reason = ErrorReason.OLD_PASSWORD_NO_MATCH;
             } else
             {
-                const newHashedPassword = Utils.hashPassword(this.reqData!.newPassword);
+                const newHashedPassword = ServerUtils.hashPassword(this.reqData!.newPassword);
                 const updateResult = await this.db.updateAccountPassword(this.account.id!, newHashedPassword);
 
                 if (updateResult.result)

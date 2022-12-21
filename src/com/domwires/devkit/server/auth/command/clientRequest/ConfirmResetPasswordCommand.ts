@@ -1,8 +1,8 @@
 import {ObjectId} from "bson";
-import {Utils} from "../../../../common/utils/Utils";
 import {ErrorReason} from "../../../../common/ErrorReason";
 import {AbstractClientRequestHandler} from "./AbstractClientRequestHandler";
 import {Enum} from "domwires";
+import {ServerUtils} from "../../../utils/ServerUtils";
 
 export class ConfirmResetPasswordCommand extends AbstractClientRequestHandler
 {
@@ -29,9 +29,9 @@ export class ConfirmResetPasswordCommand extends AbstractClientRequestHandler
 
                 if (token.expireDt >= Date.now())
                 {
-                    const newPass = Utils.getRandomPassword(false);
+                    const newPass = ServerUtils.getRandomPassword(false);
 
-                    await this.db.updateAccountPassword(account._id!, Utils.hashPassword(newPass));
+                    await this.db.updateAccountPassword(account._id!, ServerUtils.hashPassword(newPass));
 
                     const text = "Password reset! New password: " + newPass;
 

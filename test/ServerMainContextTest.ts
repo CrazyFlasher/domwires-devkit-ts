@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import "reflect-metadata";
 
-import "../src/com/domwires/devkit/server/main/context/IServerMainContext";
-import "../src/com/domwires/devkit/server/ServerDefs";
+import "../src/com/domwires/devkit/server/ServerRefs";
 
 import {Suite} from "mocha";
 import {Factory, Logger, LogLevel} from "domwires";
@@ -21,9 +19,11 @@ describe('ServerMainContextTest', function (this: Suite)
 
     const factoriesConfig: FactoriesConfig = {
         serviceFactory: new Map([
-            [Types.ISocketServerService, {implementation: Types.SioSocketServerService}]
-        ]),
-        modelFactory: new Map([
+            [Types.IHttpServerService, {implementation: Types.ExpressHttpServerService}],
+            [Types.ISocketServerService, {implementation: Types.SioSocketServerService}],
+            [Types.IAuthDataBaseService, {implementation: Types.AuthMongoDataBaseService}],
+            [Types.IEmailService, {implementation: Types.NodemailerEmailService}],
+
             [ConfigIds.netHost, {value: "127.0.0.1"}],
             [ConfigIds.httpPort, {value: 3123}],
             [ConfigIds.socketPort, {value: 3124}],

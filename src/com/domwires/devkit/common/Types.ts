@@ -40,6 +40,7 @@ export class Types
     public static readonly SocketServerServiceConfig = "SocketServerServiceConfig";
     public static readonly DataBaseServiceConfig = "DataBaseServiceConfig";
 
+    public static readonly ExpressHttpServerService = "ExpressHttpServerService";
     public static readonly IHttpServerService = "IHttpServerService";
     public static readonly IHttpServerServiceImmutable = "IHttpServerServiceImmutable";
 
@@ -50,15 +51,18 @@ export class Types
     public static readonly IDataBaseService = "IDataBaseService";
     public static readonly IDataBaseServiceImmutable = "IDataBaseServiceImmutable";
 
+    public static readonly AuthMongoDataBaseService = "AuthMongoDataBaseService";
     public static readonly IAuthDataBaseService = "IAuthDataBaseService";
     public static readonly IAuthDataBaseServiceImmutable = "IAuthDataBaseServiceImmutable";
 
+    public static readonly AxiosSioNetClientService = "AxiosSioNetClientService";
     public static readonly INetClientService = "INetClientService";
     public static readonly INetClientServiceImmutable = "INetClientServiceImmutable";
 
     public static readonly INetServerService = "INetServerService";
     public static readonly INetServerServiceImmutable = "INetServerServiceImmutable";
 
+    public static readonly NodemailerEmailService = "NodemailerEmailService";
     public static readonly IEmailService = "IEmailService";
     public static readonly IEmailServiceImmutable = "IEmailServiceImmutable";
 

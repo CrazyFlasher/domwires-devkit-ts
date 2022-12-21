@@ -1,9 +1,9 @@
-import {Utils} from "../../../../common/utils/Utils";
 import {AccountDto} from "../../../../common/net/Dto";
 import {ErrorReason} from "../../../../common/ErrorReason";
 import {AbstractClientRequestHandler} from "./AbstractClientRequestHandler";
 import {Enum} from "domwires";
 import {SocketAction} from "../../../../common/net/SocketAction";
+import {ServerUtils} from "../../../utils/ServerUtils";
 
 export class LoginCommand extends AbstractClientRequestHandler<AccountDto>
 {
@@ -11,7 +11,7 @@ export class LoginCommand extends AbstractClientRequestHandler<AccountDto>
     {
         if (this.account)
         {
-            this.account.setPassword(Utils.hashPassword(this.reqData!.password!));
+            this.account.setPassword(ServerUtils.hashPassword(this.reqData!.password!));
 
             const result = await this.db.findAccount(this.reqData!.email);
 

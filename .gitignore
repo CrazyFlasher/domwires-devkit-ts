@@ -1,4 +1,5 @@
 dist
+dist_server
 dist_client
 src/index.common.ts
 src/index.server.ts
