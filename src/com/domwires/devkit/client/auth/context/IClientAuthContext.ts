@@ -65,6 +65,8 @@ export class ClientAuthContext extends AppContext implements IAppContext
         this.factory.mapToValue(Types.INetClientService, this.netClient);
         this.factory.mapToValue(Types.IAccountModel, this.account);
 
+        this.addMediator(this.getMediatorInstance(Types.ISignUpMediator));
+
         this.registerCommandAliases();
 
         this.mapToResponseCommand(SocketAction.REGISTER, RegisterResponseCommand);

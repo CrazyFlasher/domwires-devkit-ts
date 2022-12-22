@@ -79,4 +79,6 @@ export class Types
     public static readonly SocketAction = "SocketAction";
     public static readonly HttpAction = "HttpAction";
     public static readonly ErrorReason = "ErrorReason";
+
+    public static readonly ISignUpMediator = "ISignUpMediator";
 }

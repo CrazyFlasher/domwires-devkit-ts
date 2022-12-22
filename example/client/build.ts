@@ -1,6 +1,7 @@
 import {build} from "esbuild";
 import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill';
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill';
+import { litCssPlugin } from 'esbuild-plugin-lit-css';
 import fs from "fs";
 
 class Build
@@ -11,7 +12,11 @@ class Build
     public constructor()
     {
         build({
-                plugins: [NodeModulesPolyfills(), GlobalsPolyfills({process: true, buffer: true})],
+                plugins: [
+                    NodeModulesPolyfills(),
+                    GlobalsPolyfills({process: true, buffer: true}),
+                    litCssPlugin()
+                ],
                 entryPoints: [
                     Build.BASE + '/SampleClientApp.ts',
                 ],
