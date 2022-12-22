@@ -31,6 +31,7 @@ class Build
 
         this.toDist(Build.BASE + "/dev.json", "dev.json");
         this.toDist(Build.BASE + "/index.html", "index.html");
+        this.toDist(Build.BASE + "/bootstrap.css", "bootstrap.css");
     }
 
     private toDist(input: string, file?: string): void
