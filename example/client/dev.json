@@ -8,5 +8,8 @@
   },
   "mediatorFactory": {
     "ISignUpMediator": {"implementation": "LitSignUpMediator"}
+  },
+  "viewFactory": {
+    "ISignUpView": {"implementation": "SignUpView"}
   }
 }

@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "noImplicitOverride": true,
     "moduleResolution": "Node",
-    "strict": true
+    "strict": true,
+    "noEmit": true
   }
 }

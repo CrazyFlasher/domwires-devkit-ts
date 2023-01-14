@@ -1,7 +1,7 @@
 import {build} from "esbuild";
 import NodeModulesPolyfills from '@esbuild-plugins/node-modules-polyfill';
 import GlobalsPolyfills from '@esbuild-plugins/node-globals-polyfill';
-import { litCssPlugin } from 'esbuild-plugin-lit-css';
+import {sassPlugin} from 'esbuild-sass-plugin';
 import fs from "fs";
 
 class Build
@@ -15,7 +15,9 @@ class Build
                 plugins: [
                     NodeModulesPolyfills(),
                     GlobalsPolyfills({process: true, buffer: true}),
-                    litCssPlugin()
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    sassPlugin({type: "lit-css", cssImports: true})
                 ],
                 entryPoints: [
                     Build.BASE + '/SampleClientApp.ts',
@@ -31,7 +33,7 @@ class Build
 
         this.toDist(Build.BASE + "/dev.json", "dev.json");
         this.toDist(Build.BASE + "/index.html", "index.html");
-        this.toDist(Build.BASE + "/bootstrap.css", "bootstrap.css");
+        this.toDist(Build.BASE + "/styles.css", "styles.css");
     }
 
     private toDist(input: string, file?: string): void
