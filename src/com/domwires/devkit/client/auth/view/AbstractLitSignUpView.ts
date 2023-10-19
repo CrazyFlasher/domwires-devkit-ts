@@ -1,5 +1,5 @@
 import {html, LitElement} from "lit";
-import {customElement, property} from 'lit/decorators.js';
+import {property} from 'lit/decorators.js';
 
 export interface ISignUpView
 {

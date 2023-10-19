@@ -1,5 +1,4 @@
 import {IHierarchyObject, MessageType} from "domwires";
-import {postConstruct} from "inversify";
 
 export class SignUpMediatorMessageType extends MessageType
 {

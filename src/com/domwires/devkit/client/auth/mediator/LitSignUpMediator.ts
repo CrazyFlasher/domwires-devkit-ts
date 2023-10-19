@@ -3,7 +3,7 @@ import {ISignUpMediator} from "./ISignUpMediator";
 import {inject, named, postConstruct} from "inversify";
 import {Types} from "../../../common/Types";
 import {FactoryNames} from "../../../common/FactoryNames";
-import {AbstractLitSignUpView, ISignUpView} from "../view/AbstractLitSignUpView";
+// import {ISignUpView} from "../view/AbstractLitSignUpView";
 
 // decorate(injectable(), LitElementView);
 
@@ -15,9 +15,9 @@ export class LitSignUpMediator extends AbstractHierarchyObject implements ISignU
     @postConstruct()
     private init():void
     {
-        const view = this.viewFactory.getInstance<ISignUpView>("ISignUpView");
+        // const view = this.viewFactory.getInstance<ISignUpView>("ISignUpView");
         // const view = new LitSignUpView();
 
-        document.body.appendChild(view as HTMLElement);
+        // document.body.appendChild(view as HTMLElement);
     }
 }

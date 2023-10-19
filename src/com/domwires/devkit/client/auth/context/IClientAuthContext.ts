@@ -3,7 +3,7 @@ import {Types} from "../../../common/Types";
 import {inject} from "inversify";
 import {IAccountModelContainer} from "../../../common/main/model/IAccountModelContainer";
 import {INetClientService, NetClientServiceMessageType} from "../../common/service/net/INetClientService";
-import {Class, ICommand, setDefaultImplementation} from "domwires";
+import {Class, ICommand, IFactory, setDefaultImplementation} from "domwires";
 import {IInputView} from "../../../common/app/view/IInputView";
 import {BrowserConsoleInputView} from "../../main/view/BrowserConsoleInputView";
 import {registerCommandAlias} from "../../../common/Global";
@@ -27,6 +27,10 @@ import {UpdateAccountDataCommand} from "../command/req/UpdateAccountDataCommand"
 import {UpdateEmailCommand} from "../command/req/UpdateEmailCommand";
 import {UpdatePasswordCommand} from "../command/req/UpdatePasswordCommand";
 import {DeleteAccountCommand} from "../command/req/DeleteAccountCommand";
+import {ISignUpMediator} from "../mediator/ISignUpMediator";
+import {LitSignUpMediator} from "../mediator/LitSignUpMediator";
+// import {ISignUpView} from "../view/AbstractLitSignUpView";
+// import {SignUpView} from "../../../../../../../example/client/view/SignUpView";
 
 export interface IClientAuthContextImmutable extends IAppContextImmutable
 {
@@ -79,6 +83,16 @@ export class ClientAuthContext extends AppContext implements IAppContext
         this.mapToResponseCommand(SocketAction.DELETE_ACCOUNT, DeleteAccountResponseCommand);
 
         setTimeout(this.ready.bind(this), 100);
+    }
+
+    protected override createFactories(): { contextFactory: IFactory; modelFactory: IFactory; serviceFactory: IFactory; mediatorFactory: IFactory; viewFactory: IFactory }
+    {
+        const factories = super.createFactories();
+
+        factories.mediatorFactory.mapToType<ISignUpMediator>(Types.ISignUpMediator, LitSignUpMediator);
+        // factories.viewFactory.mapToType<ISignUpView>(Types.ISignUpView, SignUpView);
+
+        return factories;
     }
 
     private mapToResponseCommand(responseAction: SocketAction, command: Class<ICommand>): void

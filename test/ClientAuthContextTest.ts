@@ -45,6 +45,8 @@ import {
 import {NetServerServiceMessageType} from "../src/com/domwires/devkit/server/common/service/net/INetServerService";
 import {Collection} from "../src/com/domwires/devkit/server/common/Collection";
 import {MongoDataBaseService} from "../src/com/domwires/devkit/server/common/service/net/db/impl/MongoDataBaseService";
+// import {LitSignUpMediator} from "../src/com/domwires/devkit/client/auth/mediator/LitSignUpMediator";
+// import {ISignUpMediator} from "../src/com/domwires/devkit/client/auth/mediator/ISignUpMediator";
 
 describe('ClientAuthContextTest', function (this: Suite)
 {

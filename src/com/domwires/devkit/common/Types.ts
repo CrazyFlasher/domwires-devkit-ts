@@ -1,3 +1,5 @@
+// import {ISignUpView} from "../client/auth/view/AbstractLitSignUpView";
+
 export class Types
 {
     public static readonly FactoriesConfig = "FactoriesConfig";
@@ -81,4 +83,5 @@ export class Types
     public static readonly ErrorReason = "ErrorReason";
 
     public static readonly ISignUpMediator = "ISignUpMediator";
+    public static readonly ISignUpView = "ISignUpView";
 }
